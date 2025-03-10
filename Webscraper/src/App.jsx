@@ -16,6 +16,8 @@ function App() {
     }
   }
 
+//cors issues
+
   async function callBackend() {
     try {
       const response = await axios.get(`${API_URL}/chapters`, {

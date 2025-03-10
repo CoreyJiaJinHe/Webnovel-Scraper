@@ -1,0 +1,43 @@
+{
+    "description": "This document records the details of a specific web-published novel",
+    "type": "object",
+    "required": [
+        "bookID",
+        "bookName",
+        "bookDescription",
+        "websiteHost",
+        "firstChapter",
+        "lastChapter",
+        "lastScraped"
+    ],
+    "properties": {
+        "bookID":{
+            "type":"int",
+            "description":"Must be a int and is required"
+        },
+        "bookName":{
+            "type":"string",
+            "description":"Must be a string and is required"
+        },
+        "bookDescription":{
+            "type":"string",
+            "description":"Must be a string and is required"
+        },
+        "websiteHost":{
+            "type":"string",
+            "description":"Must be a string and is required"
+        },
+        "firstChapter":{
+            "type":"int",
+            "description":"Must be an int and is required"
+        },
+        "lastChapter":{
+            "type":"int",
+            "description":"Must be an int and is required"
+        },
+        "lastScraped":{
+            "type":"date",
+            "description":"Must be a Date and is required"
+        }
+    }
+}
