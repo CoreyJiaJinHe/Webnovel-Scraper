@@ -8,6 +8,7 @@ class NovelTemplate():
     firstChapter:int
     lastChapter:int
     lastScraped:datetime.date
+    totalChapters:int
     
     def __init__(self, *args):
         

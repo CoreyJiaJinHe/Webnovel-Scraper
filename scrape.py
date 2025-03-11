@@ -61,7 +61,7 @@ def fetchNovelData(novelURL):
     #print(description)
     return (bookID,bookTitle,bookAuthor,description,lastScraped)
 
-fetchNovelData(url)
+#fetchNovelData(url)
 
 
 def fetchChapterList(novelURL):
@@ -76,7 +76,7 @@ def fetchChapterList(novelURL):
         chapterData["name"]=row.find("a").contents[0].strip()
         
         processChapterURL=row.find("a")["href"].split("/")
-        chapterURL=rooturl+""+processChapterURL[1]+"/"+processChapterURL[2]+"/"+processChapterURL[4]+"/"+processChapterURL[5]+"/"
+        chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
         #print(processChapterURL)
         chapterListURL.append(chapterURL)
         chapterData["url"]=processChapterURL
@@ -85,77 +85,28 @@ def fetchChapterList(novelURL):
     f.close()
     return chapterListURL
 
-#fetchChapterList(url)
+#logging.warning(fetchChapterList("https://www.royalroad.com/fiction/55927/"))
 
-#cors issues.
-
-#@app.get("/chapters")
 
 
 
 def fetchChapter(chapterURL):
     soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
     chapterContent=soup.find("div",{"class":"chapter-inner chapter-content"}).encode('ascii')
-    logging.warning(chapterContent)
     return chapterContent
     
-    '''
-    
-    #rows=chapterContent.find_all("p")
-    chapterText=list()
-    for row in rows[1:len(rows)-1]:
-        chapterLine={}
-        chapterLine=row.get_text()
-        chapterText.append(chapterLine)
-    print (chapterText)
-    #return (chapterText)'''
 
-def produceEpub(novelURL,bookTitle,Author):
-    new_epub=pypub.Epub(bookTitle, creator=Author)
-    
-    #Get Title, Format Pages
-    
-    for url in fetchChapterList(novelURL):
-        #url="https://www.royalroad.com/fiction/55927/the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy/chapter/937104/chapter-1-the-end-of-the-world"
-        #logging.warning(url)
-        time.sleep(0.5)
-        new_chapter=pypub.create_chapter_from_html(fetchChapter(url))
-        new_epub.add_chapter(new_chapter)
-    
-    if not os.path.exists("./epubs/"+bookTitle):
-        try:
-            os.makedirs("./epubs/"+bookTitle)
-        except OSError as e:
-            if e.errno!=errno.EEXIST:
-                raise
-    new_epub.create('./epubs/{bookTitle}/'+bookTitle)
-    
-    #pass
-
-produceEpub("https://www.royalroad.com/fiction/55927/","Newt")
-
-#fetchChapter("https://www.royalroad.com/fiction/55927/chapter/937273/")
-
-
-
-def mainInterface(chapterURL):
-    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",chapterURL)
-    bookurl=bookurl.group()
-    fetchNovelData(bookurl)
-    
-    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
-    pass
-    #check to see if epub already exists
-    #check if new chapter was published for given book
-    
-    #if yes, update epub.
-    #if no, return current epub.
-
-
-def getEpub(novelURL):
-    pass
-
-
+def check_directory_exists(path):
+    if os.path.exists(path):
+        return True
+    return False
+        
+def make_directory(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno!=errno.EEXIST:
+            raise
 
 def check_existing_book(bookID):
     results=savedBooks.find_one({"bookID":bookID})
@@ -164,6 +115,103 @@ def check_existing_book(bookID):
     else:
         return True
 
+
+def fetchChapterTitle(soup):
+    logging.warning(soup)
+    if not (isinstance(soup, bs4.BeautifulSoup)):
+        soup=bs4.BeautifulSoup(requests.get(soup).text, 'html.parser')
+    chapterTitle=soup.find("h1").get_text()
+    return chapterTitle
+
+
+#There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
+#This is because authors tend to go between Ch then Vol Ch, and then back to Ch
+
+def order_of_contents():
+    pass
+
+def produceEpub(novelURL,bookTitle,Author):
+    new_epub=pypub.Epub(bookTitle, creator=Author)
+    
+    for url in fetchChapterList(novelURL):
+        chapterTitle = fetchChapterTitle(url)
+        chapterContent=fetchChapter(url)
+        
+        store_chapter(chapterContent,bookTitle,chapterTitle)
+    
+        new_chapter=pypub.create_chapter_from_html(chapterContent, chapterTitle)
+        new_epub.add_chapter(new_chapter)
+        time.sleep(0.5)
+    dirLocation="./epubs/"+bookTitle
+    if not check_directory_exists(dirLocation):
+        make_directory(dirLocation)
+    
+    dirLocation="./epubs/"+bookTitle+"/"+bookTitle+".epub"
+    if (check_directory_exists(dirLocation)):
+        os.remove(dirLocation)
+    new_epub.create(dirLocation)
+    
+    #pass
+
+def store_chapter(content,bookTitle, chapterTitle):
+    #remove invalid characters from file name
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        bookTitle = bookTitle.replace(char, '')
+        chapterTitle = chapterTitle.replace(char, '')
+        
+    #Check if the folder for the book exists
+    bookDirLocation="./books/raw/"+bookTitle
+    if not (check_directory_exists(bookDirLocation)):
+        make_directory(bookDirLocation)
+
+    #check if the chapter already exists
+    
+    title = f"{bookTitle} - {chapterTitle}"
+    dirLocation=f"./books/raw/{bookTitle}/{title}.html"
+    #if it is, don't store
+    if check_directory_exists(dirLocation):
+        logging.warning("Chapter already stored")
+        return
+    #otherwise, do store the chapter.
+    chapterDirLocation = "./books/raw/"+bookTitle+"/"
+    completeName = os.path.join(chapterDirLocation, f"{title}.html")
+    with open(completeName, "x") as f:
+        f.write(content.decode('utf8'))
+    f.close()
+    
+
+
+
+produceEpub("https://www.royalroad.com/fiction/55927/","Newt", "Emgriffiths")
+
+#fetchChapter("https://www.royalroad.com/fiction/55927/chapter/937273/")
+
+#Main call interface.
+def mainInterface(chapterURL):
+    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",chapterURL)
+    bookurl=bookurl.group()
+    fetchNovelData(bookurl)
+    
+    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
+    
+    
+    
+    
+    pass
+    #check to see if epub already exists
+    #check if new chapter was published for given book
+    
+    #if yes, update epub.
+    #if no, return current epub.
+
+#Return existing epub if the latest chapter is already stored.
+def getEpub(novelURL):
+    pass
+
+
+def check_latest_chapter(bookID):
+    pass
 
 
 #Requires 6 inputs. BookID, bookName, bookDescription, WebsiteHost, firstChapter#, lastChapter#
@@ -175,7 +223,8 @@ def create_Entry(**kwargs):
         "bookDescription": "Template",
         "websiteHost": "Template",
         "firstChapter": -1,
-        "lastChapter": -1
+        "lastChapter": -1,
+        "totalChapters":-1
     }
     #If missing keyword arguments, fill with template values.
     book_data = {**default_values, **kwargs}
@@ -188,10 +237,9 @@ def create_Entry(**kwargs):
         "websiteHost": book_data["websiteHost"],
         "firstChapter": book_data["firstChapter"],
         "lastChapter": book_data["lastChapter"],
-        "lastScraped": datetime.datetime.now()
+        "lastScraped": datetime.datetime.now(),
+        "totalChapters": book_data["totalChapters"]
     }
-        
-    #book_json_schema=novelSchema
     
     if (check_existing_book(book_data["bookID"])):
         savedBooks.replace_one({"bookID": book_data["bookID"]}, book)

@@ -8,7 +8,8 @@
         "websiteHost",
         "firstChapter",
         "lastChapter",
-        "lastScraped"
+        "lastScraped",
+        "totalChapters"
     ],
     "properties": {
         "bookID":{
@@ -38,6 +39,10 @@
         "lastScraped":{
             "type":"date",
             "description":"Must be a Date and is required"
+        },
+        "totalChapters":{
+            "type":"int",
+            "description":"Total chapters"
         }
     }
 }
