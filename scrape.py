@@ -9,7 +9,7 @@ import datetime
 from novel_template import NovelTemplate
 import logging
 import time
-
+import io
 import jsonschema
 
 MONGODB_URL=os.getenv('MONGODB_URI')
@@ -41,60 +41,9 @@ app.add_middleware(
 url="https://www.royalroad.com/fiction/55927/"
 rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",url)
 rooturl=rooturl.group()
-print(rooturl)
+#print(rooturl)
 
 
-#https://([A-Za-z]+(\.[A-Za-z]+)+)/fiction/55927/
-
-def fetchNovelData(novelURL):
-    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
-    x=re.search("/[0-9]+/",novelURL)
-    bookID=x.group()
-    
-    novelData=soup.find("div",{"class":"fic-title"})
-    novelData=novelData.get_text().strip().split("\n")
-    bookTitle=novelData[0]
-    bookAuthor=novelData[len(novelData)-1]
-    
-    description=soup.find("div",{"class":"description"}).get_text()
-    lastScraped=datetime.datetime.now()
-    #print(description)
-    return (bookID,bookTitle,bookAuthor,description,lastScraped)
-
-#fetchNovelData(url)
-
-
-def fetchChapterList(novelURL):
-    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
-    chapterTable=soup.find("table",{"id":"chapters"})
-    rows=chapterTable.find_all("tr")
-    bookData=list()
-    chapterListURL=list()
-    f=open("chapters.txt","w")
-    for row in rows[1:len(rows)-1]:
-        chapterData={}
-        chapterData["name"]=row.find("a").contents[0].strip()
-        
-        processChapterURL=row.find("a")["href"].split("/")
-        chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
-        #print(processChapterURL)
-        chapterListURL.append(chapterURL)
-        chapterData["url"]=processChapterURL
-        bookData.append(chapterData)
-        f.write(str(chapterData)+"\n")        
-    f.close()
-    return chapterListURL
-
-#logging.warning(fetchChapterList("https://www.royalroad.com/fiction/55927/"))
-
-
-
-
-def fetchChapter(chapterURL):
-    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
-    chapterContent=soup.find("div",{"class":"chapter-inner chapter-content"}).encode('ascii')
-    return chapterContent
-    
 
 def check_directory_exists(path):
     if os.path.exists(path):
@@ -116,19 +65,128 @@ def check_existing_book(bookID):
         return True
 
 
+def fetchNovelData(novelURL):
+    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
+    x=re.search("/[0-9]+/",novelURL)
+    bookID=x.group()
+    
+    novelData=soup.find("div",{"class":"fic-title"})
+    novelData=novelData.get_text().strip().split("\n")
+    bookTitle=novelData[0]
+    bookAuthor=novelData[len(novelData)-1]
+    
+    description=soup.find("div",{"class":"description"}).get_text()
+    lastScraped=datetime.datetime.now()
+    #print(description)
+    return {bookID,bookTitle,bookAuthor,description,lastScraped}
+
+#fetchNovelData(url)
+
+def fetchChapterList(novelURL):
+    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
+    chapterTable=soup.find("table",{"id":"chapters"})
+    rows=chapterTable.find_all("tr")
+    
+    rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
+    rooturl=rooturl.group()
+    
+    
+    chapterListURL=list()
+    f=open("chapters.txt","w")
+    for row in rows[1:len(rows)-1]:
+        chapterData={}
+        chapterData["name"]=row.find("a").contents[0].strip()
+        
+        processChapterURL=row.find("a")["href"].split("/")
+        
+        #Process into shortened link
+        chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
+        
+        
+        chapterListURL.append(chapterURL)
+        chapterData["url"]=chapterURL
+        f.write(str(chapterData)+"\n")
+    f.close()
+    return chapterListURL
+
+
+#There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
+#This is because authors tend to go between Ch then Vol Ch, and then back to Ch
+
+def write_order_of_contents(chapterList,bookTitle):
+    bookDirLocation="./books/raw/"+bookTitle
+    if not (check_directory_exists(bookDirLocation)):
+        make_directory(bookDirLocation)
+    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(dirLocation)):
+        f= open(dirLocation,"w")
+    else:
+        f=open(dirLocation,"x")
+    for chapter in chapterList:
+        f.write(chapter +"\n")
+    f.close()
+
+
+
+
+#order_of_contents(fetchChapterList("https://www.royalroad.com/fiction/55927/"),"Newt")
+
+
+def check_order_of_contents(bookTitle,novelURL):
+    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (check_directory_exists(dirLocation)):
+        f= open(dirLocation,"r")
+        f.read()
+    else:
+        f=[]
+    
+    chapterList=fetchChapterList(novelURL)
+    newChapterList=update_order_of_contents(chapterList,f)
+    
+    write_order_of_contents(newChapterList,bookTitle)
+    
+    if (isinstance(f,io.IOBase)):
+        f.close()
+    
+def update_order_of_contents(chapterList, existingChapterList):
+    seen = set()
+    combined_list = []
+
+    for chapter in existingChapterList:
+        if chapter not in seen:
+            seen.add(chapter)
+            combined_list.append(chapter)
+
+    for chapter in chapterList:
+        if chapter not in seen:
+            seen.add(chapter)
+            combined_list.append(chapter)
+
+    return combined_list
+
+#check_order_of_contents("Stray Cat Strut","https://www.royalroad.com/fiction/33600")
+    
+
+#fetchChapterList("https://www.royalroad.com/fiction/55927/")
+
+
+
+
+def fetchChapter(chapterURL):
+    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
+    chapterContent=soup.find("div",{"class":"chapter-inner chapter-content"}).encode('ascii')
+    return chapterContent
+    
+
+
 def fetchChapterTitle(soup):
-    logging.warning(soup)
     if not (isinstance(soup, bs4.BeautifulSoup)):
         soup=bs4.BeautifulSoup(requests.get(soup).text, 'html.parser')
     chapterTitle=soup.find("h1").get_text()
     return chapterTitle
 
 
-#There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
-#This is because authors tend to go between Ch then Vol Ch, and then back to Ch
 
-def order_of_contents():
-    pass
 
 def produceEpub(novelURL,bookTitle,Author):
     new_epub=pypub.Epub(bookTitle, creator=Author)
@@ -142,6 +200,7 @@ def produceEpub(novelURL,bookTitle,Author):
         new_chapter=pypub.create_chapter_from_html(chapterContent, chapterTitle)
         new_epub.add_chapter(new_chapter)
         time.sleep(0.5)
+        
     dirLocation="./epubs/"+bookTitle
     if not check_directory_exists(dirLocation):
         make_directory(dirLocation)
@@ -166,7 +225,6 @@ def store_chapter(content,bookTitle, chapterTitle):
         make_directory(bookDirLocation)
 
     #check if the chapter already exists
-    
     title = f"{bookTitle} - {chapterTitle}"
     dirLocation=f"./books/raw/{bookTitle}/{title}.html"
     #if it is, don't store
@@ -183,9 +241,6 @@ def store_chapter(content,bookTitle, chapterTitle):
 
 
 
-produceEpub("https://www.royalroad.com/fiction/55927/","Newt", "Emgriffiths")
-
-#fetchChapter("https://www.royalroad.com/fiction/55927/chapter/937273/")
 
 #Main call interface.
 def mainInterface(chapterURL):

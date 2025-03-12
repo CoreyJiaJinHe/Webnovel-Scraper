@@ -1,336 +1,630 @@
-{'name': 'Maps and Misc Information', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1144229', 'maps-and-misc-information']}
-{'name': 'Glossary', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1458774', 'glossary']}
-{'name': 'Chapter 1: The end of the world', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '937104', 'chapter-1-the-end-of-the-world']}
-{'name': 'Chapter 2 - Awakening', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '937273', 'chapter-2-awakening']}
-{'name': 'Chapter 3 - Theo, The Alchemist', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '937274', 'chapter-3-theo-the-alchemist']}
-{'name': 'Chapter 4 - Pay your debts', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '937810', 'chapter-4-pay-your-debts']}
-{'name': 'Chapter 5 - Paying Customers', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '939189', 'chapter-5-paying-customers']}
-{'name': 'Chapter 6 - The vast swamp, the shy Marshling', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '941235', 'chapter-6-the-vast-swamp-the-shy-marshling']}
-{'name': 'Chapter 7 - The Newt and Demon', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '942828', 'chapter-7-the-newt-and-demon']}
-{'name': 'Chapter 8 - Alchemy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '944217', 'chapter-8-alchemy']}
-{'name': 'Chapter 9 - Perpetual Ledger', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '946216', 'chapter-9-perpetual-ledger']}
-{'name': "Chapter 10 - The Tara'hek", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '947540', 'chapter-10-the-tarahek']}
-{'name': 'Chapter 3.1 - Lady Administrator Alise', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1120160', 'chapter-31-lady-administrator-alise']}
-{'name': 'Chapter 3.2 - Drogramath is an Idiot', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1121899', 'chapter-32-drogramath-is-an-idiot']}
-{'name': 'Chapter 3.3 - Always Busy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1124256', 'chapter-33-always-busy']}
-{'name': 'Chapter 3.4 - Cheese!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1125930', 'chapter-34-cheese']}
-{'name': 'Chapter 3.5 - Drogramagic', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1127673', 'chapter-35-drogramagic']}
-{'name': 'Chapter 3.6 - Reveal Essence', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1130250', 'chapter-36-reveal-essence']}
-{'name': 'Chapter 3.7 - Geared For War', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1132098', 'chapter-37-geared-for-war']}
-{'name': 'Chapter 3.8 - Quality Goes a Long Way', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1133928', 'chapter-38-quality-goes-a-long-way']}
-{'name': 'Chapter 3.9 - Equipment Upgrades', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1136543', 'chapter-39-equipment-upgrades']}
-{'name': 'Chapter 3.10 - Mines and Mints', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1138436', 'chapter-310-mines-and-mints']}
-{'name': 'Chapter 3.11 - Pills Here', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1140520', 'chapter-311-pills-here']}
-{'name': 'Chapter 3.12 - Dreamwalk Tour', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1143228', 'chapter-312-dreamwalk-tour']}
-{'name': 'Chapter 3.13 - The Tunneling Potion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1145163', 'chapter-313-the-tunneling-potion']}
-{'name': 'Chapter 3.14 - Unfriendly Guest', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1147040', 'chapter-314-unfriendly-guest']}
-{'name': 'Chapter 3.15 - Big Old Horrible Monster', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1149727', 'chapter-315-big-old-horrible-monster']}
-{'name': 'Chapter 3.16 - Stabby Groves', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1151582', 'chapter-316-stabby-groves']}
-{'name': 'Chapter 3.17 - Mycology Cave', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1153384', 'chapter-317-mycology-cave']}
-{'name': 'Chapter 3.18 - Like a Plucked Pozwa', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1156650', 'chapter-318-like-a-plucked-pozwa']}
-{'name': 'Chapter 3.19 - A Treat', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1158927', 'chapter-319-a-treat']}
-{'name': 'Chapter 3.20 - House Southblade', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1161202', 'chapter-320-house-southblade']}
-{'name': 'Chapter 3.21 - Drogramathi Iron', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1164673', 'chapter-321-drogramathi-iron']}
-{'name': 'Chapter 3.22 - A Poison for Every Occasion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1167117', 'chapter-322-a-poison-for-every-occasion']}
-{'name': 'Chapter 3.23 - Mudball Fundamental', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1169561', 'chapter-323-mudball-fundamental']}
-{'name': 'Chapter 3.24 - Alchemy Constructs', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1183007', 'chapter-324-alchemy-constructs']}
-{'name': 'Chapter 3.25 - Limited Foresight', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1185390', 'chapter-325-limited-foresight']}
-{'name': 'Chapter 3.26 - Alran Cherman', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1187635', 'chapter-326-alran-cherman']}
-{'name': 'Chapter 3.27 - Lodestones', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1191050', 'chapter-327-lodestones']}
-{'name': "Chapter 3.28 - Fenian's Hallowed Ground", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1193330', 'chapter-328-fenians-hallowed-ground']}
-{'name': 'Chapter 3.29 - Have Faith in This!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1195464', 'chapter-329-have-faith-in-this']}
-{'name': "Chapter 3.30 - An'tal", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1198612', 'chapter-330-antal']}
-{'name': 'Chapter 3.31 - Spill the Beans', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1200846', 'chapter-331-spill-the-beans']}
-{'name': 'Chapter 3.32 - The Loot is All Ours', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1203043', 'chapter-332-the-loot-is-all-ours']}
-{'name': 'Chapter 3.33 - Overpowered and Awesome', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1206291', 'chapter-333-overpowered-and-awesome']}
-{'name': 'Chapter 3.34 - Avast Ye Newts', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1207693', 'chapter-334-avast-ye-newts']}
-{'name': 'Chapter 3.35 - The Egg', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1210485', 'chapter-335-the-egg']}
-{'name': 'Chapter 3.36 - Double Bonded', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1213604', 'chapter-336-double-bonded']}
-{'name': 'Chapter 3.37 - We All Love Zee', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1215756', 'chapter-337-we-all-love-zee']}
-{'name': 'Chapter 3.38 - Fight Club', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1217859', 'chapter-338-fight-club']}
-{'name': 'Chapter 3.39 - No Spoilers', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1221070', 'chapter-339-no-spoilers']}
-{'name': 'Chapter 3.40 - Dreampassage', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1223301', 'chapter-340-dreampassage']}
-{'name': 'Chapter 3.41 - Soft Hands and Fair Faces', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1225582', 'chapter-341-soft-hands-and-fair-faces']}
-{'name': 'Chapter 3.42 - Withdrawing From Hammer Range', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1228601', 'chapter-342-withdrawing-from-hammer-range']}
-{'name': 'Chapter 3.43 - Old Tworg', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1230712', 'chapter-343-old-tworg']}
-{'name': 'Chapter 3.44 - Plant Golems', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1232776', 'chapter-344-plant-golems']}
-{'name': 'Chapter 3.45 - Thim', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1235711', 'chapter-345-thim']}
-{'name': 'Chapter 3.46 - Time is Short', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1237738', 'chapter-346-time-is-short']}
-{'name': 'Chapter 3.47 - Pills Here', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1239875', 'chapter-347-pills-here']}
-{'name': 'Chapter 3.48 - Strong Walls Will See You Through', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1242864', 'chapter-348-strong-walls-will-see-you-through']}
-{'name': 'Chapter 3.49 - Goose', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1245375', 'chapter-349-goose']}
-{'name': 'Chapter 3.50 - Zoot and the Wave', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1247690', 'chapter-350-zoot-and-the-wave']}
-{'name': "Chapter 3.51 - What's In The Box", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1250929', 'chapter-351-whats-in-the-box']}
-{'name': 'Chapter 3.52 - A Visit to Rivers', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1253014', 'chapter-352-a-visit-to-rivers']}
-{'name': 'Chapter 3.53 - Synergy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1255260', 'chapter-353-synergy']}
-{'name': "3.54 - I'll Drink to That", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1258107', '354-ill-drink-to-that']}
-{'name': '3.55 - House Wavecrest', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1260377', '355-house-wavecrest']}
-{'name': '3.56 - A Man Must Have His Secrets', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1262372', '356-a-man-must-have-his-secrets']}
-{'name': '3.57 - The Punishment is Death', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1265426', '357-the-punishment-is-death']}
-{'name': '3.58 - Free Crystals', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1267573', '358-free-crystals']}
-{'name': "3.59 - D'goose", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1269706', '359-dgoose']}
-{'name': '3.60 - Be the Best You', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1272571', '360-be-the-best-you']}
-{'name': '3.61 - Red Smears', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1274681', '361-red-smears']}
-{'name': "3.62 - We'll Face It Together", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1276672', '362-well-face-it-together']}
-{'name': '3.63 - Khahar Departs', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1279891', '363-khahar-departs']}
-{'name': '3.64 - To Found a Kingdom', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1282147', '364-to-found-a-kingdom']}
-{'name': '3.65 - Blood and Stone', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1284381', '365-blood-and-stone']}
-{'name': "3.66 - Tero'Gal", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1287390', '366-terogal']}
-{'name': '3.67 - The Throne of the Arbiter', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1289656', '367-the-throne-of-the-arbiter']}
-{'name': '3.68 - The Fall of the Heavens', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1291814', '368-the-fall-of-the-heavens']}
-{'name': '3.69 - Epilogue', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1294813', '369-epilogue']}
-{'name': '4.1 - Nascent Realms', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1294814', '41-nascent-realms']}
-{'name': '4.2 - Archduke Theo Spencer', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1297058', '42-archduke-theo-spencer']}
-{'name': '4.3 - The Cork', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1299422', '43-the-cork']}
-{'name': '4.4 - Level 20', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1302524', '44-level-20']}
-{'name': '4.5 - Status and Schemes', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1304723', '45-status-and-schemes']}
-{'name': '4.6 - Eggplants and Realms', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1306838', '46-eggplants-and-realms']}
-{'name': '4.7 - For Science', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1309928', '47-for-science']}
-{'name': '4.8 - Essence Bonding', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1312186', '48-essence-bonding']}
-{'name': '4.9 - Fairy Plum Seeds', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1314314', '49-fairy-plum-seeds']}
-{'name': '4.10 - Honk', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1317202', '410-honk']}
-{'name': '4.11 - Property Discovered', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1319411', '411-property-discovered']}
-{'name': '4.12 - Synergistic Links', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1321523', '412-synergistic-links']}
-{'name': '4.13 - Wolves and the Spymaster', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1324640', '413-wolves-and-the-spymaster']}
-{'name': '4.14 - Swamp Adventure', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1326833', '414-swamp-adventure']}
-{'name': '4.15 - Respite', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1329123', '415-respite']}
-{'name': '4.16 - You Can Never Have Too Much Training', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1332281', '416-you-can-never-have-too-much-training']}
-{'name': '4.17 - The Cure', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1334454', '417-the-cure']}
-{'name': '4.18 - Big Rock', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1336357', '418-big-rock']}
-{'name': '4.19 - Unholy Army', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1339306', '419-unholy-army']}
-{'name': "4.20 - Fenian's Return", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1341482', '420-fenians-return']}
-{'name': '4.21 - Wraith Cleanup', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1343475', '421-wraith-cleanup']}
-{'name': '4.22 - Miltar of Partopour', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1346463', '422-miltar-of-partopour']}
-{'name': '4.23 - Advanced Hallow Ground Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1348696', '423-advanced-hallow-ground-potions']}
-{'name': '4.24 - Big Ideas', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1350925', '424-big-ideas']}
-{'name': '4.25 - Poor Application', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1353782', '425-poor-application']}
-{'name': "4.26 - Goofin' Around", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1356075', '426-goofin-around']}
-{'name': '4.27 - Thirst for Adventure', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1358129', '427-thirst-for-adventure']}
-{'name': '4.28 - Home and Hearth', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1361174', '428-home-and-hearth']}
-{'name': '4.29 - Mansion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1363300', '429-mansion']}
-{'name': '4.30 - A  Secret Most Evil', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1365415', '430-a-secret-most-evil']}
-{'name': '4.31 - Apprentice', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1368393', '431-apprentice']}
-{'name': "4.32 - Tara'hek Command", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1370521', '432-tarahek-command']}
-{'name': '4.33 - Farming', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1372729', '433-farming']}
-{'name': '4.34 - A Temple', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1375713', '434-a-temple']}
-{'name': '4.35 - Baby Arm', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1377981', '435-baby-arm']}
-{'name': '4.36 - A Soul Come to Roost', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1380052', '436-a-soul-come-to-roost']}
-{'name': '4.37 - Commanding The Realm', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1382995', '437-commanding-the-realm']}
-{'name': '4.38 - Dynamic Incorporation', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1385057', '438-dynamic-incorporation']}
-{'name': '4.39 - Therapy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1387146', '439-therapy']}
-{'name': '4.40 - Blessing the Temple', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1390062', '440-blessing-the-temple']}
-{'name': '4.41 - Patrons', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1392531', '441-patrons']}
-{'name': '4.42 - Bilgrob', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1395144', '442-bilgrob']}
-{'name': '4.43 - The Garden Party', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1398680', '443-the-garden-party']}
-{'name': '4.44 - Poker with the Gods', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1401144', '444-poker-with-the-gods']}
-{'name': '4.45 - Wisdom of the Soul', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1403718', '445-wisdom-of-the-soul']}
-{'name': '4.46 - Throwing Stuff', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1407380', '446-throwing-stuff']}
-{'name': '4.47 - Upgrades and Adventure', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1409998', '447-upgrades-and-adventure']}
-{'name': "4.48 - Spirits of Tero'gal", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1412614', '448-spirits-of-terogal']}
-{'name': "4.49 - Dragon's Breath", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1415958', '449-dragons-breath']}
-{'name': '4.50 - Champion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1418224', '450-champion']}
-{'name': '4.51 - Complications', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1420419', '451-complications']}
-{'name': '4.52 - Ward Upgrades', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1423853', '452-ward-upgrades']}
-{'name': '4.53 - Xotl', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1426180', '453-xotl']}
-{'name': '4.54 - Eat It! Eat It! Eat It!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1428468', '454-eat-it-eat-it-eat-it']}
-{'name': '4.55 - Wards and Wills', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1431764', '455-wards-and-wills']}
-{'name': '4.56 - Lizard Dudes', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1434244', '456-lizard-dudes']}
-{'name': '4.57 - Meeting the Lizard-Folk', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1436429', '457-meeting-the-lizard-folk']}
-{'name': '4.58 - Beach Stuff', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1439607', '458-beach-stuff']}
-{'name': '4.59 - Azrug, the Loremaster', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1441781', '459-azrug-the-loremaster']}
-{'name': '4.60 - Laying Down The Law', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1443809', '460-laying-down-the-law']}
-{'name': '4.61 - The Underworld', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1446671', '461-the-underworld']}
-{'name': '4.62 - The Nameless City', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1449003', '462-the-nameless-city']}
-{'name': '4.63 - Zureah Materials', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1451195', '463-zureah-materials']}
-{'name': '4.64 - Cookies and Poker', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1454621', '464-cookies-and-poker']}
-{'name': '4.65 - Hallowed Realm of the Dead', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1456582', '465-hallowed-realm-of-the-dead']}
-{'name': '4.66 - A Dark Pact', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1458619', '466-a-dark-pact']}
-{'name': '5.1 - Tainted Soil', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1461698', '51-tainted-soil']}
-{'name': '5.2 - Procession of Souls', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1464004', '52-procession-of-souls']}
-{'name': '5.3 - Cheese King', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1466345', '53-cheese-king']}
-{'name': "5.4 - Tero'gal's Sea", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1469727', '54-terogals-sea']}
-{'name': '5.5 - Riding the Maglev', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1472137', '55-riding-the-maglev']}
-{'name': '5.6 - Invaders', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1474556', '56-invaders']}
-{'name': "5.7 - Aarok's Dream", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1478019', '57-aaroks-dream']}
-{'name': '5.8 - Intruder', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1480511', '58-intruder']}
-{'name': '5.9 - A Trip to the Realm', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1487004', '59-a-trip-to-the-realm']}
-{'name': '5.10 - You Gotta Try', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1490516', '510-you-gotta-try']}
-{'name': '5.11 - Faux Coins', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1493065', '511-faux-coins']}
-{'name': '5.12 - The House of Healing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1495454', '512-the-house-of-healing']}
-{'name': '5.13 - The Moon Landing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1498715', '513-the-moon-landing']}
-{'name': '5.14 - Grimelings', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1501235', '514-grimelings']}
-{'name': '5.15 - Tea Parties', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1503748', '515-tea-parties']}
-{'name': '5.16 - Tram Ride', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1507083', '516-tram-ride']}
-{'name': '5.17 - Purge', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1509547', '517-purge']}
-{'name': '5.18 - Clearing The Way', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1511909', '518-clearing-the-way']}
-{'name': '5.19 - Sulvan Flametouched', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1515275', '519-sulvan-flametouched']}
-{'name': '5.20 - The Tunnel to Nowhere', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1517789', '520-the-tunnel-to-nowhere']}
-{'name': '5.21 - The Wavecrest Sails', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1520372', '521-the-wavecrest-sails']}
-{'name': '5.22 - Chatting with Droggy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1524079', '522-chatting-with-droggy']}
-{'name': '5.23 - One Zorp Too Many', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1526682', '523-one-zorp-too-many']}
-{'name': '5.24 - Dead Dog Upgrades', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1529055', '524-dead-dog-upgrades']}
-{'name': '5.25 - Grinding', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1532537', '525-grinding']}
-{'name': '5.26 - Twist', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1534998', '526-twist']}
-{'name': '5.27 - Anti-Magical Infusion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1537585', '527-anti-magical-infusion']}
-{'name': '5.28 - Imbue Phylactery', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1541092', '528-imbue-phylactery']}
-{'name': "5.29 - Don't Turn Fenian Into a LIch!", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1543662', '529-dont-turn-fenian-into-a-lich']}
-{'name': '5.30 - Potion of Return', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1546073', '530-potion-of-return']}
-{'name': '5.31 - More Golems', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1549977', '531-more-golems']}
-{'name': '5.32 - The Pale Elf', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1552594', '532-the-pale-elf']}
-{'name': "5.33 - Herbalist's Workshop", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1555272', '533-herbalists-workshop']}
-{'name': '5.34 - Pursued by Frog-Like Creatures', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1558739', '534-pursued-by-frog-like-creatures']}
-{'name': '5.35 - High Commander', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1561270', '535-high-commander']}
-{'name': '5.36 - The Holy Modifier', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1563914', '536-the-holy-modifier']}
-{'name': '5.37 - Old Gods, New Gods', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1567495', '537-old-gods-new-gods']}
-{'name': '5.38 - The Future', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1569889', '538-the-future']}
-{'name': '5.39 - Weaver and Butcher', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1572269', '539-weaver-and-butcher']}
-{'name': '5.40 - Drogramath Dedication', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1575796', '540-drogramath-dedication']}
-{'name': '5.41 - Reagent Splicing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1578844', '541-reagent-splicing']}
-{'name': '5.42 - Garden Plot', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1581641', '542-garden-plot']}
-{'name': '5.43 - Reagent Splicing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1585784', '543-reagent-splicing']}
-{'name': "5.44 - Just Hangin' Out in a Dungeon", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1588835', '544-just-hangin-out-in-a-dungeon']}
-{'name': "5.45 - Glantheir's Tears", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1591813', '545-glantheirs-tears']}
-{'name': '5.46 - Fairy Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1596240', '546-fairy-potions']}
-{'name': "5.47 - This Ain't Zalaban", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1599381', '547-this-aint-zalaban']}
-{'name': '5.48 - Utility Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1602120', '548-utility-potions']}
-{'name': '5.49 - Looking for a Core', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1605996', '549-looking-for-a-core']}
-{'name': "5.50 - Earth Sorcerer's Core", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1608843', '550-earth-sorcerers-core']}
-{'name': '5.51 - Rocky', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1611696', '551-rocky']}
-{'name': '5.52 - Reshape The Land', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1615667', '552-reshape-the-land']}
-{'name': '5.53 - Deadly Toxin', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1618622', '553-deadly-toxin']}
-{'name': '5.54 - Veil', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1621497', '554-veil']}
-{'name': '5.55 - Dam That River', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1625518', '555-dam-that-river']}
-{'name': '5.56 - Private Army', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1628066', '556-private-army']}
-{'name': '5.57 - Children of the Shard', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1630597', '557-children-of-the-shard']}
-{'name': '5.58 - Eyes on Qavell', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1634379', '558-eyes-on-qavell']}
-{'name': '5.59 - Bombardment', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1637093', '559-bombardment']}
-{'name': '5.60 - Zaul', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1639699', '560-zaul']}
-{'name': '5.61 - Theo is a Sad Boy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1643540', '561-theo-is-a-sad-boy']}
-{'name': '5.62 - Silly Splicing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1646196', '562-silly-splicing']}
-{'name': '5.63 - Pass the Pie!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1648786', '563-pass-the-pie']}
-{'name': '5.64 - Shadow Wrapped', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1652510', '564-shadow-wrapped']}
-{'name': '5.65 - Ascension', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1655330', '565-ascension']}
-{'name': '5.66 - The Throne of a Dreamer', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1657991', '566-the-throne-of-a-dreamer']}
-{'name': '5.67 - I Got This', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1661816', '567-i-got-this']}
-{'name': '5.68 - Sure, Buddy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1664536', '568-sure-buddy']}
-{'name': '5.69 - Hardly a King', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1667229', '569-hardly-a-king']}
-{'name': '5.70 -  Epilogue', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1667232', '570-epilogue']}
-{'name': '6.1 - A Curious Journey', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1670978', '61-a-curious-journey']}
-{'name': '6.2 - Auspicious Company', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1673676', '62-auspicious-company']}
-{'name': '6.3 - Deceit', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1676374', '63-deceit']}
-{'name': '6.4 - Purge', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1680357', '64-purge']}
-{'name': '6.5 - It Won’t Explode. I Promise.', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1683631', '65-it-wont-explode-i-promise']}
-{'name': '6.6 - Epic Plus', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1686519', '66-epic-plus']}
-{'name': '6.7 - Curious Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1690815', '67-curious-potions']}
-{'name': '6.8 - Unknown Reactions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1693531', '68-unknown-reactions']}
-{'name': "6.9 - Then You'll Wait", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1696182', '69-then-youll-wait']}
-{'name': '6.10 - Potent Poisons', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1700159', '610-potent-poisons']}
-{'name': '6.11 - Spheres', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1702923', '611-spheres']}
-{'name': '6.12 - Zero Percent Goblin', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1705517', '612-zero-percent-goblin']}
-{'name': '6.13 - Deathbloom', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1710328', '613-deathbloom']}
-{'name': '6.14 - Soulcleave Potion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1712202', '614-soulcleave-potion']}
-{'name': '6.15 - Unpossible', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1714690', '615-unpossible']}
-{'name': '6.16 - Insight Overwhelming', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1718194', '616-insight-overwhelming']}
-{'name': '6.17 - Evolution', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1720959', '617-evolution']}
-{'name': '6.18 - Order From Chaos', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1723576', '618-order-from-chaos']}
-{'name': '6.19 - Quaff Your Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1727432', '619-quaff-your-potions']}
-{'name': '6.20 - Uh-Oh', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1730086', '620-uh-oh']}
-{'name': '6.21 - Fallen Soul', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1732696', '621-fallen-soul']}
-{'name': '6.22 - New Alchemical Methods', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1736319', '622-new-alchemical-methods']}
-{'name': '6.23 - Failure Means Progress', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1739117', '623-failure-means-progress']}
-{'name': '6.24 - Explosions Are Essential To Alchemy', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1741587', '624-explosions-are-essential-to-alchemy']}
-{'name': '6.25 - Twist in the Wind', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1745442', '625-twist-in-the-wind']}
-{'name': '6.26 - Void', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1748132', '626-void']}
-{'name': "6.27 - Kuzan's Scheme", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1750849', '627-kuzans-scheme']}
-{'name': "6.28 - Bal'gon", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1754849', '628-balgon']}
-{'name': '6.29 - The Next Exploit', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1757616', '629-the-next-exploit']}
-{'name': '6.30 - Unique Potion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1760740', '630-unique-potion']}
-{'name': '6.31 - Who Slept With Who', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1765021', '631-who-slept-with-who']}
-{'name': '6.32 - Cheating With Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1767953', '632-cheating-with-potions']}
-{'name': '6.33 - Dizzying Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1770760', '633-dizzying-potions']}
-{'name': '6.34 - The Barn', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1774738', '634-the-barn']}
-{'name': '6.35 - Changes in the Realm', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1777682', '635-changes-in-the-realm']}
-{'name': '6.36 - Bad News, More Attributes', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1780598', '636-bad-news-more-attributes']}
-{'name': '6.37 - Creepy Statue Man', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1784822', '637-creepy-statue-man']}
-{'name': '6.38 - Thronies', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1787816', '638-thronies']}
-{'name': '6.39 - Wisdom! Wisdom! Wisdom!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1790670', '639-wisdom-wisdom-wisdom']}
-{'name': "6.40 - Tara'hek Union", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1795052', '640-tarahek-union']}
-{'name': '6.41 - The Fall of Twist', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1798060', '641-the-fall-of-twist']}
-{'name': '6.42 - Insane and Undying', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1801047', '642-insane-and-undying']}
-{'name': '6.43 - Evolution', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1805448', '643-evolution']}
-{'name': '6.44 - Duels and Mage Cores', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1808545', '644-duels-and-mage-cores']}
-{'name': '6.45 - Absurd Duration', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1811554', '645-absurd-duration']}
-{'name': '6.46 - Shadow', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1815952', '646-shadow']}
-{'name': '6.47 - Hazardous Working Conditions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1819333', '647-hazardous-working-conditions']}
-{'name': '6.48 - Back to Square One', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1822607', '648-back-to-square-one']}
-{'name': '6.49 - Quindalias', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1827606', '649-quindalias']}
-{'name': "6.50 - Don't Kill Each Other", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1831130', '650-dont-kill-each-other']}
-{'name': '6.51 - Can We Go To Bed?', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1834083', '651-can-we-go-to-bed']}
-{'name': '6.52 - Newer Stills', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1838630', '652-newer-stills']}
-{'name': '6.53 - Impure Essence', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1841586', '653-impure-essence']}
-{'name': '6.54 - Progress Report for the Gods', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1844843', '654-progress-report-for-the-gods']}
-{'name': "6.55 - Throk's Interesting Machines", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1849600', '655-throks-interesting-machines']}
-{'name': '6.56 - Odd Properties', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1852866', '656-odd-properties']}
-{'name': '6.57 - Help for the Space Elves', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1856264', '657-help-for-the-space-elves']}
-{'name': '6.58 - Something Below', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1860950', '658-something-below']}
-{'name': '6.59 - Entry Missing', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1864300', '659-entry-missing']}
-{'name': '6.60 - The Seal of Passage', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1867543', '660-the-seal-of-passage']}
-{'name': 'Stub Announcement', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1867811', 'stub-announcement']}
-{'name': '6.61 - Reforge Mind', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1871944', '661-reforge-mind']}
-{'name': '6.62 - A Cure for Madness', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1875248', '662-a-cure-for-madness']}
-{'name': '6.63 - The Bell Rang', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1878749', '663-the-bell-rang']}
-{'name': '6.64 - Dungeon Attack', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1884202', '664-dungeon-attack']}
-{'name': 'The Stubbening', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1884440', 'the-stubbening']}
-{'name': '6.65 - Chatting with the System', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1888205', '665-chatting-with-the-system']}
-{'name': '6.66 - The New Metal', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1891839', '666-the-new-metal']}
-{'name': "6.67 - We're Gonna Make Another Planet", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1897070', '667-were-gonna-make-another-planet']}
-{'name': '6.68 - Best Left Where They Are', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1900906', '668-best-left-where-they-are']}
-{'name': '6.69 - Chat with Death', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1904923', '669-chat-with-death']}
-{'name': "6.70 - Tol'bak", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1910453', '670-tolbak']}
-{'name': '6.71 - A Wheel of Cheese Will Do', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1914209', '671-a-wheel-of-cheese-will-do']}
-{'name': '6.72 - Making More Planets', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1917879', '672-making-more-planets']}
-{'name': '6.73 - Iaredin Before', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1923039', '673-iaredin-before']}
-{'name': '6.74 - Just Chilling', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1926835', '674-just-chilling']}
-{'name': "6.75 - Xol'sa, Your Name is Sa", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1930122', '675-xolsa-your-name-is-sa']}
-{'name': '6.76 - Foreign Reagents', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1935428', '676-foreign-reagents']}
-{'name': '6.77 - Fenian Needs More Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1939161', '677-fenian-needs-more-potions']}
-{'name': '6.78 - An Encounter in Tarantham', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1943023', '678-an-encounter-in-tarantham']}
-{'name': '6.79 - Elrin Manastream', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1947583', '679-elrin-manastream']}
-{'name': '6.80 - Tall Boys', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1951028', '680-tall-boys']}
-{'name': '6.81 - Epilogue', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1954351', '681-epilogue']}
-{'name': '7.1 - Decisions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1959016', '71-decisions']}
-{'name': '7.2 - Greater Reforge Soul', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1962512', '72-greater-reforge-soul']}
-{'name': '7.3 - Sniff Test', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1965756', '73-sniff-test']}
-{'name': '7.4 - Giant Flaming Toad Monster', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1970554', '74-giant-flaming-toad-monster']}
-{'name': '7.5 - A Crown for a Goose', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1974105', '75-a-crown-for-a-goose']}
-{'name': '7.6 - The Giant Doom Beast Named Frank', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1977273', '76-the-giant-doom-beast-named-frank']}
-{'name': '7.7 - An Impatient System', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1981997', '77-an-impatient-system']}
-{'name': '7.8 - Hooray, Alchemy!', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1985849', '78-hooray-alchemy']}
-{'name': '7.9 - Fluff and Expand', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1989442', '79-fluff-and-expand']}
-{'name': '7.10 - New Gods', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1994638', '710-new-gods']}
-{'name': '7.11 - Fluff, Pitch, Expand', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '1998591', '711-fluff-pitch-expand']}
-{'name': '7.12 - Evolution', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2002363', '712-evolution']}
-{'name': '7.13 - Feed the Masses', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2007340', '713-feed-the-masses']}
-{'name': '7.14 - Consistent Randomness', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2011135', '714-consistent-randomness']}
-{'name': '7.15 - Fluff Modifier', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2014639', '715-fluff-modifier']}
-{'name': '7.16 - The Sensation of Discovery', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2019959', '716-the-sensation-of-discovery']}
-{'name': '7.17 - Infusion Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2023508', '717-infusion-potions']}
-{'name': '7.18 - Doubling Down with Infusion', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2027310', '718-doubling-down-with-infusion']}
-{'name': '7.19 - Dorms', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2032311', '719-dorms']}
-{'name': '7.20 - Seal of Judgement', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2035952', '720-seal-of-judgement']}
-{'name': '7.21 - Tiny City', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2039691', '721-tiny-city']}
-{'name': '7.22 - Spiritfruit Properties', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2045047', '722-spiritfruit-properties']}
-{'name': '7.23 - Dainty Little Alchemist', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2048909', '723-dainty-little-alchemist']}
-{'name': '7.24 - Hairbrained Dungeon Schemes', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2052867', '724-hairbrained-dungeon-schemes']}
-{'name': '7.25 - Death Magic', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2058650', '725-death-magic']}
-{'name': '7.26 - Dungeon in a Dungeon', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2062511', '726-dungeon-in-a-dungeon']}
-{'name': '7.27- Nuked Nested Dungeon', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2066418', '727--nuked-nested-dungeon']}
-{'name': '7.28 - Free Booze', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2072110', '728-free-booze']}
-{'name': '7.29 - Hurricane in a Bottle', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2076142', '729-hurricane-in-a-bottle']}
-{'name': '7.30 - Plenty of Blubber', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2080572', '730-plenty-of-blubber']}
-{'name': "7.31 - Water Sorcerer's Core", 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2086322', '731-water-sorcerers-core']}
-{'name': '7.32 - The Lizard That Defied The System', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2090631', '732-the-lizard-that-defied-the-system']}
-{'name': '7.33 - A Shadow in the North', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2094545', '733-a-shadow-in-the-north']}
-{'name': '7.34 - The Gangs All Here', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2100619', '734-the-gangs-all-here']}
-{'name': '7.35 - Xotl Potions', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2105269', '735-xotl-potions']}
-{'name': '7.36 - Sausages and Tea', 'url': ['', 'fiction', '55927', 'the-newt-and-demon-book-1-2-on-amazon-cozy-alchemy', 'chapter', '2110763', '736-sausages-and-tea']}
+{'name': 'Stray Cat Strut - Official Art and Fanart!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/850960/'}
+{'name': 'Stray Cat Strut - Fanfiction List!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1495112/'}
+{'name': 'Chapter One - Pop-Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/515709/'}
+{'name': 'Chapter Two - Walkabout Punks', 'url': 'https://www.royalroad.com/fiction/33600/chapter/517882/'}
+{'name': 'Chapter Three - Incursion Detected', 'url': 'https://www.royalroad.com/fiction/33600/chapter/521129/'}
+{'name': 'Chapter Four - Pole Dancing', 'url': 'https://www.royalroad.com/fiction/33600/chapter/524391/'}
+{'name': 'Chapter Five - Dying is For Other People', 'url': 'https://www.royalroad.com/fiction/33600/chapter/527782/'}
+{'name': 'Chapter Six - Pill Pusher', 'url': 'https://www.royalroad.com/fiction/33600/chapter/528416/'}
+{'name': 'Chapter Seven - Hummingbird', 'url': 'https://www.royalroad.com/fiction/33600/chapter/530042/'}
+{'name': 'Chapter Eight - Piss Poor Disguise', 'url': 'https://www.royalroad.com/fiction/33600/chapter/530284/'}
+{'name': 'Chapter Nine - Saint', 'url': 'https://www.royalroad.com/fiction/33600/chapter/530784/'}
+{'name': 'Chapter Ten - Done Dirt Cheap', 'url': 'https://www.royalroad.com/fiction/33600/chapter/531086/'}
+{'name': 'Chapter Eleven - Like Santa, but With Guns', 'url': 'https://www.royalroad.com/fiction/33600/chapter/531185/'}
+{'name': 'Chapter Twelve - Vending Machines', 'url': 'https://www.royalroad.com/fiction/33600/chapter/531590/'}
+{'name': 'Chapter Thirteen - Talking To Yourself', 'url': 'https://www.royalroad.com/fiction/33600/chapter/531960/'}
+{'name': 'Chapter Fourteen - Curiosity', 'url': 'https://www.royalroad.com/fiction/33600/chapter/532215/'}
+{'name': 'Chapter Fifteen - Worm', 'url': 'https://www.royalroad.com/fiction/33600/chapter/532484/'}
+{'name': 'Chapter Sixteen - Life Finds a Way', 'url': 'https://www.royalroad.com/fiction/33600/chapter/532731/'}
+{'name': 'Chapter Seventeen - Mall Cops', 'url': 'https://www.royalroad.com/fiction/33600/chapter/533098/'}
+{'name': 'Chapter Eighteen - Going Back Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/533355/'}
+{'name': 'Chapter Nineteen - Future', 'url': 'https://www.royalroad.com/fiction/33600/chapter/533582/'}
+{'name': 'Chapter Twenty - Rescue Quest', 'url': 'https://www.royalroad.com/fiction/33600/chapter/533915/'}
+{'name': 'Chapter Twenty-One - Descent', 'url': 'https://www.royalroad.com/fiction/33600/chapter/534130/'}
+{'name': 'Chapter Twenty-Two - Cheesing it', 'url': 'https://www.royalroad.com/fiction/33600/chapter/534383/'}
+{'name': 'Chapter Twenty-Three - Sludge', 'url': 'https://www.royalroad.com/fiction/33600/chapter/534594/'}
+{'name': 'Chapter Twenty-Four - Dumb and Dumber', 'url': 'https://www.royalroad.com/fiction/33600/chapter/534909/'}
+{'name': 'Chapter Twenty-Five - A Pad on the Wound', 'url': 'https://www.royalroad.com/fiction/33600/chapter/535166/'}
+{'name': 'Chapter Twenty-Six - Masks On', 'url': 'https://www.royalroad.com/fiction/33600/chapter/535365/'}
+{'name': 'Chapter Twenty-Seven - Stairs', 'url': 'https://www.royalroad.com/fiction/33600/chapter/535572/'}
+{'name': 'Chapter Twenty-Eight - Speared', 'url': 'https://www.royalroad.com/fiction/33600/chapter/535894/'}
+{'name': 'Chapter Twenty-Nine - A Crying Shame', 'url': 'https://www.royalroad.com/fiction/33600/chapter/536077/'}
+{'name': 'Chapter Thirty - Model Six', 'url': 'https://www.royalroad.com/fiction/33600/chapter/536504/'}
+{'name': 'Chapter Thirty-One - The Bigger They Are', 'url': 'https://www.royalroad.com/fiction/33600/chapter/537190/'}
+{'name': 'Chapter Thirty-Two - Fried', 'url': 'https://www.royalroad.com/fiction/33600/chapter/537362/'}
+{'name': 'Chapter Thirty-Three - The Perfect Fit', 'url': 'https://www.royalroad.com/fiction/33600/chapter/537566/'}
+{'name': 'Chapter Thirty-Four - Rule', 'url': 'https://www.royalroad.com/fiction/33600/chapter/538096/'}
+{'name': 'Chapter Thirty-Five - Death Flags', 'url': 'https://www.royalroad.com/fiction/33600/chapter/538510/'}
+{'name': 'Chapter Thirty-Six - A Matter of Trust', 'url': 'https://www.royalroad.com/fiction/33600/chapter/539018/'}
+{'name': 'Chapter Thirty-Seven - Armed and ready', 'url': 'https://www.royalroad.com/fiction/33600/chapter/539500/'}
+{'name': 'Chapter Thirty-Eight - Flesh Melter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/540574/'}
+{'name': 'Chapter Thirty-Nine - Long Odds', 'url': 'https://www.royalroad.com/fiction/33600/chapter/540976/'}
+{'name': 'Chapter Forty - Rooftop', 'url': 'https://www.royalroad.com/fiction/33600/chapter/541496/'}
+{'name': 'Chapter Forty-One - Anti-Air', 'url': 'https://www.royalroad.com/fiction/33600/chapter/541858/'}
+{'name': 'Chapter Forty-Two - Back Against the Wall', 'url': 'https://www.royalroad.com/fiction/33600/chapter/542429/'}
+{'name': 'Chapter Forty-Three - Armed', 'url': 'https://www.royalroad.com/fiction/33600/chapter/543862/'}
+{'name': 'Chapter Forty-Four - Machina', 'url': 'https://www.royalroad.com/fiction/33600/chapter/544278/'}
+{'name': 'Chapter Forty-Five - Air Superiority', 'url': 'https://www.royalroad.com/fiction/33600/chapter/545419/'}
+{'name': 'Chapter Forty-Six - A Call', 'url': 'https://www.royalroad.com/fiction/33600/chapter/547906/'}
+{'name': 'Chapter Forty-Seven - Shopping Spree', 'url': 'https://www.royalroad.com/fiction/33600/chapter/548966/'}
+{'name': 'Chapter Forty-Eight - Rail Shooter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/549601/'}
+{'name': 'Chapter Forty-Nine - Hunters', 'url': 'https://www.royalroad.com/fiction/33600/chapter/551083/'}
+{'name': 'Chapter Fifty - Milk Run', 'url': 'https://www.royalroad.com/fiction/33600/chapter/551414/'}
+{'name': 'Chapter Fifty-One - Along for the Fun', 'url': 'https://www.royalroad.com/fiction/33600/chapter/552493/'}
+{'name': 'Chapter Fifty-Two - Down Down Down', 'url': 'https://www.royalroad.com/fiction/33600/chapter/553041/'}
+{'name': 'Chapter Fifty-Three - Z-Word', 'url': 'https://www.royalroad.com/fiction/33600/chapter/554589/'}
+{'name': 'Chapter Fifty-Four - Setting to Boil', 'url': 'https://www.royalroad.com/fiction/33600/chapter/554983/'}
+{'name': 'Chapter Fifty-Five - Low Expectations', 'url': 'https://www.royalroad.com/fiction/33600/chapter/555959/'}
+{'name': 'Chapter Fifty-Six - Leaving a Gift Behind', 'url': 'https://www.royalroad.com/fiction/33600/chapter/556504/'}
+{'name': 'Chapter Fifty-Seven - Collateral Damage', 'url': 'https://www.royalroad.com/fiction/33600/chapter/557761/'}
+{'name': 'Chapter Fifty-Eight - Hot Stuff', 'url': 'https://www.royalroad.com/fiction/33600/chapter/558358/'}
+{'name': 'Chapter Fifty-Nine - Looking Like a Big Damn Hero', 'url': 'https://www.royalroad.com/fiction/33600/chapter/559418/'}
+{'name': 'Chapter Sixty - A Unique Combat Doctrine', 'url': 'https://www.royalroad.com/fiction/33600/chapter/559899/'}
+{'name': 'Chapter Sixty-One - Trapsetter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/561444/'}
+{'name': 'Chapter Sixty-Two - Honour and Flames', 'url': 'https://www.royalroad.com/fiction/33600/chapter/562078/'}
+{'name': 'Chapter Sixty-Three - People are Stupid', 'url': 'https://www.royalroad.com/fiction/33600/chapter/562971/'}
+{'name': 'Chapter Sixty-Four - Tougher Means More Boom', 'url': 'https://www.royalroad.com/fiction/33600/chapter/565401/'}
+{'name': 'Chapter Sixty-Five - A Change in Tactics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/566370/'}
+{'name': 'Chapter Sixty-Six - Impaled... Again', 'url': 'https://www.royalroad.com/fiction/33600/chapter/568610/'}
+{'name': 'Chapter Sixty-Seven - Life Story', 'url': 'https://www.royalroad.com/fiction/33600/chapter/569510/'}
+{'name': 'Chapter Sixty-Eight - Hitting the Fan', 'url': 'https://www.royalroad.com/fiction/33600/chapter/570945/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/572022/'}
+{'name': 'Chapter Seventy - A Respite', 'url': 'https://www.royalroad.com/fiction/33600/chapter/572880/'}
+{'name': 'Chapter Seventy-One - Tail', 'url': 'https://www.royalroad.com/fiction/33600/chapter/575197/'}
+{'name': 'Chapter Seventy-Two - In Service to the Prevention of Stupidity', 'url': 'https://www.royalroad.com/fiction/33600/chapter/575724/'}
+{'name': 'Chapter Seventy-Three - Forms', 'url': 'https://www.royalroad.com/fiction/33600/chapter/576145/'}
+{'name': 'Chapter Seventy-Four - Thoughts and Prayers', 'url': 'https://www.royalroad.com/fiction/33600/chapter/578081/'}
+{'name': 'Chapter Seventy-Five - A Flock of Trouble', 'url': 'https://www.royalroad.com/fiction/33600/chapter/578675/'}
+{'name': 'Chapter Seventy-Six - The Big Players', 'url': 'https://www.royalroad.com/fiction/33600/chapter/579889/'}
+{'name': 'Chapter Seventy-Seven - Anticlimax', 'url': 'https://www.royalroad.com/fiction/33600/chapter/580345/'}
+{'name': "Stray Cat Strut - Volume Two - A Young Lady's Guide to Exploding the Corporate Ladder", 'url': 'https://www.royalroad.com/fiction/33600/chapter/589733/'}
+{'name': 'Chapter One - Heart-Warming', 'url': 'https://www.royalroad.com/fiction/33600/chapter/585806/'}
+{'name': 'Chapter Two - A Slice of Happiness', 'url': 'https://www.royalroad.com/fiction/33600/chapter/586419/'}
+{'name': 'Interlewd One', 'url': 'https://www.royalroad.com/fiction/33600/chapter/586878/'}
+{'name': 'Chapter Three - Post Coital Interruptions', 'url': 'https://www.royalroad.com/fiction/33600/chapter/587288/'}
+{'name': 'Chapter Four - Mean Minion Mode', 'url': 'https://www.royalroad.com/fiction/33600/chapter/587860/'}
+{'name': 'Chapter Five - Professionalism', 'url': 'https://www.royalroad.com/fiction/33600/chapter/589724/'}
+{'name': 'Chapter Six - Armour Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/590170/'}
+{'name': 'Chapter Seven - Lending an Ear', 'url': 'https://www.royalroad.com/fiction/33600/chapter/591231/'}
+{'name': 'Chapter Eight - Hover', 'url': 'https://www.royalroad.com/fiction/33600/chapter/591655/'}
+{'name': 'Chapter Nine - Twitchy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/592989/'}
+{'name': 'Chapter Ten - More Questions than Answers', 'url': 'https://www.royalroad.com/fiction/33600/chapter/594181/'}
+{'name': 'Chapter Eleven - Nobodies', 'url': 'https://www.royalroad.com/fiction/33600/chapter/595349/'}
+{'name': 'Chapter Twelve - Doorframe', 'url': 'https://www.royalroad.com/fiction/33600/chapter/597090/'}
+{'name': 'Chapter Thirteen - I Have Paws', 'url': 'https://www.royalroad.com/fiction/33600/chapter/603267/'}
+{'name': 'Stray Cat Sidestory: Canta Clause', 'url': 'https://www.royalroad.com/fiction/33600/chapter/605035/'}
+{'name': 'Chapter Fourteen - Mesh', 'url': 'https://www.royalroad.com/fiction/33600/chapter/606883/'}
+{'name': 'Chapter Fifteen - Surfing', 'url': 'https://www.royalroad.com/fiction/33600/chapter/607721/'}
+{'name': 'Chapter Sixteen - It', 'url': 'https://www.royalroad.com/fiction/33600/chapter/610195/'}
+{'name': 'Chapter Seventeen - Dial-Up and Lag', 'url': 'https://www.royalroad.com/fiction/33600/chapter/611251/'}
+{'name': 'Chapter Eighteen - Gotcha', 'url': 'https://www.royalroad.com/fiction/33600/chapter/613568/'}
+{'name': 'Chapter Nineteen - Log Off', 'url': 'https://www.royalroad.com/fiction/33600/chapter/614519/'}
+{'name': 'Chapter Twenty - Warpath', 'url': 'https://www.royalroad.com/fiction/33600/chapter/617179/'}
+{'name': 'Chapter Twenty-One - God’s Righteous Fury', 'url': 'https://www.royalroad.com/fiction/33600/chapter/618172/'}
+{'name': 'Chapter Twenty-Two - Reaction Time', 'url': 'https://www.royalroad.com/fiction/33600/chapter/620607/'}
+{'name': 'Chapter Twenty-Three - Phones', 'url': 'https://www.royalroad.com/fiction/33600/chapter/621592/'}
+{'name': 'Chapter Twenty-Four - Choosing to Die', 'url': 'https://www.royalroad.com/fiction/33600/chapter/623699/'}
+{'name': 'Chapter Twenty-Five - Ramen Break', 'url': 'https://www.royalroad.com/fiction/33600/chapter/624995/'}
+{'name': 'Chapter Twenty-Six - Red Carpet Treatment', 'url': 'https://www.royalroad.com/fiction/33600/chapter/626144/'}
+{'name': 'Chapter Twenty-Seven - Sometimes a Girl Just Wants to Blow Shit Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/628144/'}
+{'name': 'Chapter Twenty-Eight - The Opposite of Reassuring', 'url': 'https://www.royalroad.com/fiction/33600/chapter/629313/'}
+{'name': 'Chapter Twenty-Nine - Spider Cat ~ Spider Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/630364/'}
+{'name': 'Chapter Thirty - Blueprint for Success', 'url': 'https://www.royalroad.com/fiction/33600/chapter/632163/'}
+{'name': 'Chapter Thirty-One - Obsolete Worries', 'url': 'https://www.royalroad.com/fiction/33600/chapter/633214/'}
+{'name': 'Chapter Thirty-Two - Basse Couture', 'url': 'https://www.royalroad.com/fiction/33600/chapter/634405/'}
+{'name': 'Chapter Thirty-Three - Stealth, But For Real This Time', 'url': 'https://www.royalroad.com/fiction/33600/chapter/636016/'}
+{'name': 'Chapter Thirty-Four - Thump', 'url': 'https://www.royalroad.com/fiction/33600/chapter/637034/'}
+{'name': 'Chapter Thirty-Five - Dog Gone Wrong', 'url': 'https://www.royalroad.com/fiction/33600/chapter/638214/'}
+{'name': 'Chapter Thirty-Six - Catkiller', 'url': 'https://www.royalroad.com/fiction/33600/chapter/640441/'}
+{'name': 'Chapter Thirty-Seven - Cash Money', 'url': 'https://www.royalroad.com/fiction/33600/chapter/641449/'}
+{'name': 'Chapter Thirty-Eight - Kittens!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/644136/'}
+{'name': 'Chapter Thirty-Nine - Where Things Go', 'url': 'https://www.royalroad.com/fiction/33600/chapter/645233/'}
+{'name': 'Chapter Forty - Bicker Bicker', 'url': 'https://www.royalroad.com/fiction/33600/chapter/648043/'}
+{'name': 'Chapter Forty-One - Big ol’ Mecha Cats', 'url': 'https://www.royalroad.com/fiction/33600/chapter/649115/'}
+{'name': 'Chapter Forty-Two - Invasive', 'url': 'https://www.royalroad.com/fiction/33600/chapter/651389/'}
+{'name': 'Chapter Forty-Three - Comfy Morning Rituals', 'url': 'https://www.royalroad.com/fiction/33600/chapter/652361/'}
+{'name': 'Chapter Forty-Four - Kinda Cute', 'url': 'https://www.royalroad.com/fiction/33600/chapter/655102/'}
+{'name': 'Chapter Forty-Five - Realtoring', 'url': 'https://www.royalroad.com/fiction/33600/chapter/656382/'}
+{'name': 'Chapter Forty-Six - Impeccable Mathematics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/659602/'}
+{'name': 'Chapter Forty-Seven - Closing a Deal', 'url': 'https://www.royalroad.com/fiction/33600/chapter/660751/'}
+{'name': 'Chapter Forty-Eight - A Date', 'url': 'https://www.royalroad.com/fiction/33600/chapter/664068/'}
+{'name': 'Chapter Forty-Nine - Being Hella Fancy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/664704/'}
+{'name': 'Chapter Fifty - Salad', 'url': 'https://www.royalroad.com/fiction/33600/chapter/665429/'}
+{'name': 'Interlewd Two', 'url': 'https://www.royalroad.com/fiction/33600/chapter/675920/'}
+{'name': 'Chapter Fifty-One - Fashioning a Home', 'url': 'https://www.royalroad.com/fiction/33600/chapter/668490/'}
+{'name': 'Chapter Fifty-Two - Fab', 'url': 'https://www.royalroad.com/fiction/33600/chapter/672602/'}
+{'name': 'Chapter Fifty-Three - Palace', 'url': 'https://www.royalroad.com/fiction/33600/chapter/675902/'}
+{'name': 'Chapter Fifty-Four - Phoenix', 'url': 'https://www.royalroad.com/fiction/33600/chapter/676903/'}
+{'name': 'Chapter Fifty-Five - Making an Entrance', 'url': 'https://www.royalroad.com/fiction/33600/chapter/678248/'}
+{'name': 'Chapter Fifty-Six - Small and in Charge', 'url': 'https://www.royalroad.com/fiction/33600/chapter/679982/'}
+{'name': 'Chapter Fifty-Seven - Greedy Bits', 'url': 'https://www.royalroad.com/fiction/33600/chapter/680584/'}
+{'name': 'Chapter Fifty-Eight - Gimmick', 'url': 'https://www.royalroad.com/fiction/33600/chapter/681252/'}
+{'name': 'Chapter Fifty-Nine - Cause Player', 'url': 'https://www.royalroad.com/fiction/33600/chapter/681801/'}
+{'name': 'Chapter Sixty - M9', 'url': 'https://www.royalroad.com/fiction/33600/chapter/682359/'}
+{'name': 'Chapter Sixty-One - Mimics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/684079/'}
+{'name': 'Chapter Sixty-Two - Arena', 'url': 'https://www.royalroad.com/fiction/33600/chapter/685236/'}
+{'name': 'Chapter Sixty-Three - Rod of God', 'url': 'https://www.royalroad.com/fiction/33600/chapter/686235/'}
+{'name': 'Chapter Sixty-Four - Aftermath, but we’re Really Bad at Math', 'url': 'https://www.royalroad.com/fiction/33600/chapter/687896/'}
+{'name': 'Chapter Sixty-Five - Politics According to Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/688146/'}
+{'name': 'Chapter Sixty-Six - Tanks and Soldiers and Guns, Oh My!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/688619/'}
+{'name': 'Chapter Sixty-Seven - Exploring New Holes with Your Favorite Nun', 'url': 'https://www.royalroad.com/fiction/33600/chapter/689084/'}
+{'name': 'Chapter Sixty-Eight - Darkness', 'url': 'https://www.royalroad.com/fiction/33600/chapter/689142/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/689682/'}
+{'name': 'Chapter Seventy - A Perfect Time for a Picnic', 'url': 'https://www.royalroad.com/fiction/33600/chapter/690122/'}
+{'name': 'Stray Bun Art Contest!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/680000/'}
+{'name': 'Chapter Seventy-One - Chlorine Trifluoride', 'url': 'https://www.royalroad.com/fiction/33600/chapter/691235/'}
+{'name': 'Chapter Seventy-Two - Model Thirteen', 'url': 'https://www.royalroad.com/fiction/33600/chapter/692533/'}
+{'name': 'Chapter Seventy-Three - A Walkabout', 'url': 'https://www.royalroad.com/fiction/33600/chapter/693807/'}
+{'name': 'Chapter Seventy-Four - Sprint', 'url': 'https://www.royalroad.com/fiction/33600/chapter/695340/'}
+{'name': 'Chapter Seventy-Five - Triggering, But the Fun Sort Where Things Explode', 'url': 'https://www.royalroad.com/fiction/33600/chapter/696508/'}
+{'name': 'Chapter Seventy-Six - Fight Fire with Fire', 'url': 'https://www.royalroad.com/fiction/33600/chapter/697644/'}
+{'name': 'Chapter Seventy-Seven - Deeper', 'url': 'https://www.royalroad.com/fiction/33600/chapter/699401/'}
+{'name': 'Chapter Seventy-Eight - M21', 'url': 'https://www.royalroad.com/fiction/33600/chapter/700527/'}
+{'name': 'Chapter Seventy-Nine - Boss Fight', 'url': 'https://www.royalroad.com/fiction/33600/chapter/701661/'}
+{'name': 'Chapter Eighty - Burning Away', 'url': 'https://www.royalroad.com/fiction/33600/chapter/703453/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/704567/'}
+{'name': "Stray Cat Strut \u2060- Volume Three - A Young Lady's Hopepunk Safari", 'url': 'https://www.royalroad.com/fiction/33600/chapter/707372/'}
+{'name': 'Prologue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/707373/'}
+{'name': 'Chapter One - Bliss', 'url': 'https://www.royalroad.com/fiction/33600/chapter/708230/'}
+{'name': 'Chapter Two - Because being a BAMF is Easier in Power Armour', 'url': 'https://www.royalroad.com/fiction/33600/chapter/709441/'}
+{'name': 'Chapter Three - Taxi', 'url': 'https://www.royalroad.com/fiction/33600/chapter/711145/'}
+{'name': 'Chapter Four - Below the City', 'url': 'https://www.royalroad.com/fiction/33600/chapter/712433/'}
+{'name': 'Chapter Five - Rac', 'url': 'https://www.royalroad.com/fiction/33600/chapter/713623/'}
+{'name': 'Chapter Six - Queen Takes Pawn', 'url': 'https://www.royalroad.com/fiction/33600/chapter/715405/'}
+{'name': 'Chapter Seven - Knocking Over the Board', 'url': 'https://www.royalroad.com/fiction/33600/chapter/715938/'}
+{'name': 'Chapter Eight - The Bar At The Bottom of The City', 'url': 'https://www.royalroad.com/fiction/33600/chapter/716186/'}
+{'name': 'Chapter Nine - Halfstar', 'url': 'https://www.royalroad.com/fiction/33600/chapter/716981/'}
+{'name': 'Chapter Ten - Tensions', 'url': 'https://www.royalroad.com/fiction/33600/chapter/717643/'}
+{'name': 'Chapter Eleven - Playing with Gomorrah’s Franny', 'url': 'https://www.royalroad.com/fiction/33600/chapter/718001/'}
+{'name': 'Chapter Twelve - STP-44 The Oasis', 'url': 'https://www.royalroad.com/fiction/33600/chapter/718978/'}
+{'name': 'Chapter Thirteen - What Old People Say', 'url': 'https://www.royalroad.com/fiction/33600/chapter/719743/'}
+{'name': 'Chapter Fourteen - Mally\u200b', 'url': 'https://www.royalroad.com/fiction/33600/chapter/720250/'}
+{'name': 'Chapter Fifteen - The Cultures Beneath', 'url': 'https://www.royalroad.com/fiction/33600/chapter/720907/'}
+{'name': 'Chapter Sixteen - Fun in the Washroom', 'url': 'https://www.royalroad.com/fiction/33600/chapter/721475/'}
+{'name': 'Chapter Seventeen - Shit Bureaucracy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/723184/'}
+{'name': 'Chapter Eighteen - Flush Prime', 'url': 'https://www.royalroad.com/fiction/33600/chapter/724449/'}
+{'name': 'Chapter Nineteen - Humanity Degraded', 'url': 'https://www.royalroad.com/fiction/33600/chapter/725714/'}
+{'name': 'Chapter Twenty - Up Shit’s Creek', 'url': 'https://www.royalroad.com/fiction/33600/chapter/727831/'}
+{'name': 'Chapter Twenty-One - Disposal', 'url': 'https://www.royalroad.com/fiction/33600/chapter/728961/'}
+{'name': 'Chapter Twenty-Two - Piracy Across the Shitty Seas', 'url': 'https://www.royalroad.com/fiction/33600/chapter/731672/'}
+{'name': 'Chapter Twenty-Three - Surprise!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/732799/'}
+{'name': 'Chapter Twenty-Four - Ingenious', 'url': 'https://www.royalroad.com/fiction/33600/chapter/735484/'}
+{'name': 'Chapter Twenty-Five - Sneaky Ghillie Lemon Squeezy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/736547/'}
+{'name': 'Chapter Twenty-Six - Bip Bap Bam', 'url': 'https://www.royalroad.com/fiction/33600/chapter/739396/'}
+{'name': 'Chapter Twenty-Seven - A Good Job', 'url': 'https://www.royalroad.com/fiction/33600/chapter/740478/'}
+{'name': 'Chapter Twenty-Eight - Stepping Up and Out', 'url': 'https://www.royalroad.com/fiction/33600/chapter/742972/'}
+{'name': 'Chapter Twenty-Nine - The Popo', 'url': 'https://www.royalroad.com/fiction/33600/chapter/744134/'}
+{'name': 'Chapter Thirty - Bypass', 'url': 'https://www.royalroad.com/fiction/33600/chapter/746697/'}
+{'name': 'Chapter Thirty-One - Saying Hello to the Good Doctor', 'url': 'https://www.royalroad.com/fiction/33600/chapter/747330/'}
+{'name': 'Chapter Thirty-Two - The Doctor’s In the House', 'url': 'https://www.royalroad.com/fiction/33600/chapter/747837/'}
+{'name': 'Chapter Thirty-Three - No Surrender', 'url': 'https://www.royalroad.com/fiction/33600/chapter/750876/'}
+{'name': 'Chapter Thirty-Four - The Edge of the Sword', 'url': 'https://www.royalroad.com/fiction/33600/chapter/751711/'}
+{'name': 'Chapter Thirty-Five - Void Terminus', 'url': 'https://www.royalroad.com/fiction/33600/chapter/754249/'}
+{'name': 'Chapter Thirty-Six - Wrapping Shit Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/755389/'}
+{'name': 'Chapter Thirty-Seven - Heading For Greener Pastures', 'url': 'https://www.royalroad.com/fiction/33600/chapter/758187/'}
+{'name': 'Chapter Thirty-Eight - The Rat and the Hungry Tiger', 'url': 'https://www.royalroad.com/fiction/33600/chapter/759388/'}
+{'name': 'Chapter Thirty-Nine - Meetingus Interuptus', 'url': 'https://www.royalroad.com/fiction/33600/chapter/762062/'}
+{'name': 'Chapter Forty - Real Politics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/763259/'}
+{'name': 'Chapter Forty-One - Physical Comfort in the Presence of Another', 'url': 'https://www.royalroad.com/fiction/33600/chapter/765575/'}
+{'name': 'Chapter Forty-Two - R&R', 'url': 'https://www.royalroad.com/fiction/33600/chapter/766561/'}
+{'name': 'Chapter Forty-Three - Nothing But Cuddles', 'url': 'https://www.royalroad.com/fiction/33600/chapter/768666/'}
+{'name': 'Chapter Forty-Four - Sword Talk', 'url': 'https://www.royalroad.com/fiction/33600/chapter/769891/'}
+{'name': 'Interlewd Three', 'url': 'https://www.royalroad.com/fiction/33600/chapter/770945/'}
+{'name': 'Chapter Forty-Five - Mall Day', 'url': 'https://www.royalroad.com/fiction/33600/chapter/770950/'}
+{'name': 'Chapter Forty-Six - A Bit Fancy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/772686/'}
+{'name': 'Chapter Forty-Seven - In Which Lucy Does Politics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/773850/'}
+{'name': 'Chapter Forty-Eight - Family Matters', 'url': 'https://www.royalroad.com/fiction/33600/chapter/774926/'}
+{'name': 'Chapter Forty-Nine - Peter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/776603/'}
+{'name': 'Chapter Fifty - Sans But Lucratif', 'url': 'https://www.royalroad.com/fiction/33600/chapter/777361/'}
+{'name': 'Chapter Fifty-One - Community Feelings', 'url': 'https://www.royalroad.com/fiction/33600/chapter/778152/'}
+{'name': 'Chapter Fifty-Two - Collar and Leash', 'url': 'https://www.royalroad.com/fiction/33600/chapter/778947/'}
+{'name': 'Chapter Fifty-Three - The Gem', 'url': 'https://www.royalroad.com/fiction/33600/chapter/779640/'}
+{'name': 'Chapter Fifty-Four - Moments', 'url': 'https://www.royalroad.com/fiction/33600/chapter/782850/'}
+{'name': 'Chapter Fifty-Five - Dancing to the Music', 'url': 'https://www.royalroad.com/fiction/33600/chapter/784487/'}
+{'name': 'Chapter Fifty-Six - Speaking Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/788391/'}
+{'name': 'Chapter Fifty-Seven - Assassination', 'url': 'https://www.royalroad.com/fiction/33600/chapter/788776/'}
+{'name': 'Chapter Fifty-Eight - Interrogation', 'url': 'https://www.royalroad.com/fiction/33600/chapter/789790/'}
+{'name': 'Chapter Fifty-Nine - Popularity', 'url': 'https://www.royalroad.com/fiction/33600/chapter/792891/'}
+{'name': 'Chapter Sixty - Emoting', 'url': 'https://www.royalroad.com/fiction/33600/chapter/794331/'}
+{'name': 'Chapter Sixty-One - Introspection', 'url': 'https://www.royalroad.com/fiction/33600/chapter/797447/'}
+{'name': 'Chapter Sixty-Two - Attempting Common Sense', 'url': 'https://www.royalroad.com/fiction/33600/chapter/817619/'}
+{'name': 'Chapter Sixty-Three - A Very Nice and Civil Discussion', 'url': 'https://www.royalroad.com/fiction/33600/chapter/818300/'}
+{'name': 'Chapter Sixty-Four - Trying out that Stealth Stuff', 'url': 'https://www.royalroad.com/fiction/33600/chapter/819565/'}
+{'name': 'Chapter Sixty-Five - Reckless', 'url': 'https://www.royalroad.com/fiction/33600/chapter/822557/'}
+{'name': 'Chapter Sixty-Six - Return to Form', 'url': 'https://www.royalroad.com/fiction/33600/chapter/824116/'}
+{'name': 'Chapter Sixty-Seven - Things get Better', 'url': 'https://www.royalroad.com/fiction/33600/chapter/827078/'}
+{'name': 'Chapter Sixty-Eight - Things Get Worse', 'url': 'https://www.royalroad.com/fiction/33600/chapter/828582/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/831737/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/833225/'}
+{'name': 'Stray Cat Strut \u2060— Volume Four — A Young Ladies Guide to Aggravated Civil Service', 'url': 'https://www.royalroad.com/fiction/33600/chapter/835741/'}
+{'name': 'Prologue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/835742/'}
+{'name': 'Chapter One - Feed the Machine', 'url': 'https://www.royalroad.com/fiction/33600/chapter/836299/'}
+{'name': 'Chapter Two - The Scrounger', 'url': 'https://www.royalroad.com/fiction/33600/chapter/837718/'}
+{'name': 'Chapter Three - The Little Meet', 'url': 'https://www.royalroad.com/fiction/33600/chapter/838401/'}
+{'name': 'Chapter Four - How to Stall the End of the World', 'url': 'https://www.royalroad.com/fiction/33600/chapter/840668/'}
+{'name': 'Chapter Five - Logistics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/841313/'}
+{'name': 'Chapter Six - Kitty Cat Palace', 'url': 'https://www.royalroad.com/fiction/33600/chapter/842897/'}
+{'name': 'Chapter Seven - Home Sweet Fortress', 'url': 'https://www.royalroad.com/fiction/33600/chapter/843557/'}
+{'name': 'Chapter Eight - The Cats Who Were Herded', 'url': 'https://www.royalroad.com/fiction/33600/chapter/845383/'}
+{'name': 'Chapter Nine - Round Table', 'url': 'https://www.royalroad.com/fiction/33600/chapter/846152/'}
+{'name': 'Chapter Ten - Marketing Your Way Home', 'url': 'https://www.royalroad.com/fiction/33600/chapter/847433/'}
+{'name': 'Chapter Eleven - Getting Ready to Get Hot', 'url': 'https://www.royalroad.com/fiction/33600/chapter/848101/'}
+{'name': 'Chapter Twelve - Thousand Gardens', 'url': 'https://www.royalroad.com/fiction/33600/chapter/850158/'}
+{'name': 'Chapter Thirteen - On the Up and Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/850943/'}
+{'name': 'Chapter Fourteen - Resonating', 'url': 'https://www.royalroad.com/fiction/33600/chapter/852318/'}
+{'name': 'Chapter Fifteen - Passionate', 'url': 'https://www.royalroad.com/fiction/33600/chapter/853069/'}
+{'name': 'Chapter Sixteen - It’s Technically Not a Nuke', 'url': 'https://www.royalroad.com/fiction/33600/chapter/855171/'}
+{'name': 'Chapter Seventeen - Kaboom', 'url': 'https://www.royalroad.com/fiction/33600/chapter/858057/'}
+{'name': 'Chapter Eighteen - The Low Down', 'url': 'https://www.royalroad.com/fiction/33600/chapter/859744/'}
+{'name': 'Chapter Nineteen - Where the Heart Might Be', 'url': 'https://www.royalroad.com/fiction/33600/chapter/862849/'}
+{'name': 'Chapter Twenty - Pitbulls and Tacos', 'url': 'https://www.royalroad.com/fiction/33600/chapter/864685/'}
+{'name': 'Chapter Twenty-One - The Calm', 'url': 'https://www.royalroad.com/fiction/33600/chapter/867340/'}
+{'name': 'Chapter Twenty-Two - Jolly Old Day Job', 'url': 'https://www.royalroad.com/fiction/33600/chapter/869019/'}
+{'name': 'Chapter Twenty-Three - Gonna Be', 'url': 'https://www.royalroad.com/fiction/33600/chapter/871254/'}
+{'name': 'Chapter Twenty-Four - Setting the Table', 'url': 'https://www.royalroad.com/fiction/33600/chapter/873094/'}
+{'name': 'Chapter Twenty-Five - Dinner is Served, and it’s You', 'url': 'https://www.royalroad.com/fiction/33600/chapter/875215/'}
+{'name': 'Chapter ??? - The Wish 2', 'url': 'https://www.royalroad.com/fiction/33600/chapter/875408/'}
+{'name': 'Chapter Twenty-Six - Breach, Load, Charge', 'url': 'https://www.royalroad.com/fiction/33600/chapter/876076/'}
+{'name': 'Chapter Twenty-Seven - Onwards', 'url': 'https://www.royalroad.com/fiction/33600/chapter/877992/'}
+{'name': 'Chapter Twenty-Eight - What Newton’s Good For', 'url': 'https://www.royalroad.com/fiction/33600/chapter/881273/'}
+{'name': 'Chapter Twenty-Nine - Trench Run', 'url': 'https://www.royalroad.com/fiction/33600/chapter/883444/'}
+{'name': 'Chapter Thirty - When the Trees Start Speaking Plant', 'url': 'https://www.royalroad.com/fiction/33600/chapter/886948/'}
+{'name': 'Chapter Thirty-One - Gold Star', 'url': 'https://www.royalroad.com/fiction/33600/chapter/889035/'}
+{'name': 'Chapter Thirty-Two - Meat Thinking', 'url': 'https://www.royalroad.com/fiction/33600/chapter/892068/'}
+{'name': 'Chapter Thirty-Three - Long Road Ahead', 'url': 'https://www.royalroad.com/fiction/33600/chapter/894424/'}
+{'name': 'Chapter Thirty-Four - The Next Move', 'url': 'https://www.royalroad.com/fiction/33600/chapter/897210/'}
+{'name': 'Chapter Thirty-Five - A Terrible Mistake', 'url': 'https://www.royalroad.com/fiction/33600/chapter/900005/'}
+{'name': "Chapter Thirty-Six - The Survivalists Who Probably Won't", 'url': 'https://www.royalroad.com/fiction/33600/chapter/901088/'}
+{'name': 'Chapter Thirty-Seven - Trigger Happy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/904456/'}
+{'name': 'Chapter Thirty-Eight - Basement', 'url': 'https://www.royalroad.com/fiction/33600/chapter/905824/'}
+{'name': 'Chapter Thirty-Nine - Interrupt', 'url': 'https://www.royalroad.com/fiction/33600/chapter/909089/'}
+{'name': 'Chapter Forty - Oncoming', 'url': 'https://www.royalroad.com/fiction/33600/chapter/910329/'}
+{'name': 'Chapter Forty-One - Rapid Return', 'url': 'https://www.royalroad.com/fiction/33600/chapter/913355/'}
+{'name': 'Chapter Forty-Two - Earning the Tier', 'url': 'https://www.royalroad.com/fiction/33600/chapter/918032/'}
+{'name': 'Chapter Forty-Three - Danger Close', 'url': 'https://www.royalroad.com/fiction/33600/chapter/918679/'}
+{'name': 'Chapter Forty-Four - Dirty Break', 'url': 'https://www.royalroad.com/fiction/33600/chapter/919327/'}
+{'name': 'Chapter Forty-Five - Gear On', 'url': 'https://www.royalroad.com/fiction/33600/chapter/922745/'}
+{'name': 'Chapter Forty-Six - New Plan: Kill Everything', 'url': 'https://www.royalroad.com/fiction/33600/chapter/923526/'}
+{'name': 'Chapter Forty-Seven - Safe, Not Sound', 'url': 'https://www.royalroad.com/fiction/33600/chapter/924243/'}
+{'name': "Chapter Forty-Eight - It's Never Easy", 'url': 'https://www.royalroad.com/fiction/33600/chapter/927719/'}
+{'name': 'AI-pocrypha - GPT-3 Written Epigraphs', 'url': 'https://www.royalroad.com/fiction/33600/chapter/927773/'}
+{'name': 'Chapter Forty-Nine - Those Who Love Cannons', 'url': 'https://www.royalroad.com/fiction/33600/chapter/928330/'}
+{'name': 'Chapter Fifty - Emoscythe', 'url': 'https://www.royalroad.com/fiction/33600/chapter/929194/'}
+{'name': 'Ai-pocrypha Two - AI Written Chapter Segments', 'url': 'https://www.royalroad.com/fiction/33600/chapter/929974/'}
+{'name': 'Chapter Fifty-One - Gothic Public Relations', 'url': 'https://www.royalroad.com/fiction/33600/chapter/932756/'}
+{'name': 'Chapter Fifty-Two - Contact', 'url': 'https://www.royalroad.com/fiction/33600/chapter/933560/'}
+{'name': 'Chapter Fifty-Three - Mop Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/934313/'}
+{'name': 'Chapter Fifty-Four - Essentially Doomed', 'url': 'https://www.royalroad.com/fiction/33600/chapter/937574/'}
+{'name': 'Chapter Fifty-Five - The Calm Before', 'url': 'https://www.royalroad.com/fiction/33600/chapter/938117/'}
+{'name': 'Chapter Fifty-Six - Wait for it', 'url': 'https://www.royalroad.com/fiction/33600/chapter/939007/'}
+{'name': 'Chapter Fifty-Seven - Before the Storm', 'url': 'https://www.royalroad.com/fiction/33600/chapter/943089/'}
+{'name': 'Chapter Fifty-Eight - Crackshot Cowboy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/947355/'}
+{'name': 'Chapter Fifty-Nine - Nyanpalm', 'url': 'https://www.royalroad.com/fiction/33600/chapter/948847/'}
+{'name': "Chapter Sixty - The Enemy Won't Do As You Wish", 'url': 'https://www.royalroad.com/fiction/33600/chapter/951897/'}
+{'name': 'Chapter Sixty-One - Go Kill the Thing', 'url': 'https://www.royalroad.com/fiction/33600/chapter/953329/'}
+{'name': 'Chapter Sixty-Two - Getting Out of Hand', 'url': 'https://www.royalroad.com/fiction/33600/chapter/957003/'}
+{'name': 'Chapter Sixty-Three - Burning', 'url': 'https://www.royalroad.com/fiction/33600/chapter/958473/'}
+{'name': 'Chapter Sixty-Four - Climate Change Via Mass Destruction', 'url': 'https://www.royalroad.com/fiction/33600/chapter/962242/'}
+{'name': 'Chapter Sixty-Five - Raining Fried Chicken', 'url': 'https://www.royalroad.com/fiction/33600/chapter/963741/'}
+{'name': 'Chapter Sixty-Six - Move Faster', 'url': 'https://www.royalroad.com/fiction/33600/chapter/967287/'}
+{'name': 'Chapter Sixty-Seven - Becoming Strong Enough', 'url': 'https://www.royalroad.com/fiction/33600/chapter/969129/'}
+{'name': 'Chapter Sixty-Eight - Getting Home', 'url': 'https://www.royalroad.com/fiction/33600/chapter/971890/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/972721/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/974163/'}
+{'name': 'Interlewd Four', 'url': 'https://www.royalroad.com/fiction/33600/chapter/974902/'}
+{'name': 'Chapter One - Good Investments', 'url': 'https://www.royalroad.com/fiction/33600/chapter/987874/'}
+{'name': 'Chapter Two - Finally Getting Good', 'url': 'https://www.royalroad.com/fiction/33600/chapter/989810/'}
+{'name': 'Chapter Three - A Not So Quiet Home Life', 'url': 'https://www.royalroad.com/fiction/33600/chapter/993454/'}
+{'name': 'Chapter Four - Where the Fuck is Burlington?', 'url': 'https://www.royalroad.com/fiction/33600/chapter/994963/'}
+{'name': 'Chapter Five - Leadershipping', 'url': 'https://www.royalroad.com/fiction/33600/chapter/998440/'}
+{'name': 'Chapter Six - Outrank', 'url': 'https://www.royalroad.com/fiction/33600/chapter/999971/'}
+{'name': 'Chapter Seven - Big Gun Politics', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1002312/'}
+{'name': 'Chapter Eight - River Heights', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1003991/'}
+{'name': 'Chapter Nine - Eyy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1005431/'}
+{'name': 'Chapter Ten - Hope', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1013209/'}
+{'name': 'Chapter Eleven - Iron Spines', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1014226/'}
+{'name': 'Chapter Twelve - Almost Cool', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1015800/'}
+{'name': 'Chapter Thirteen - Actually Cool', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1017914/'}
+{'name': 'Stray Cat Strut - Myalis Art Contest!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1018584/'}
+{'name': 'Chapter Fourteen - Opposites Distract', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1018586/'}
+{'name': 'Chapter Fifteen - The Bad Kind of Interesting', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1021078/'}
+{'name': 'Chapter Sixteen - Making Lots of Little Problems', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1023900/'}
+{'name': 'Chapter Seventeen - Growth', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1025372/'}
+{'name': 'Chapter Eighteen - Meeting of the Greats', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1029084/'}
+{'name': 'Chapter Nineteen - Vital Defensive Preparation', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1030948/'}
+{'name': 'Chapter Twenty - Nanomachines, Son', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1035281/'}
+{'name': 'Chapter Twenty-One - Shouldering', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1037054/'}
+{'name': 'Chapter Twenty-Two - Welcoming', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1041399/'}
+{'name': 'Chapter Twenty-Three - Cat Themed Tower Defence', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1043006/'}
+{'name': 'Chapter Twenty-Four - Holding On', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1046509/'}
+{'name': 'Chapter Twenty-Five - Trickle Down', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1048152/'}
+{'name': 'Chapter Twenty-Six - Intel-chan', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1051793/'}
+{'name': 'Chapter Twenty-Seven - Walk the Walk', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1053486/'}
+{'name': 'Chapter Twenty-Eight - Morale', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1057171/'}
+{'name': 'Chapter Twenty-Nine - Weaponized Cringe', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1058692/'}
+{'name': 'Chapter Thirty - Dog Gone', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1063405/'}
+{'name': 'Chapter Thirty-One - Sprout', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1068248/'}
+{'name': 'Chapter Thirty-Two - Horses to Water', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1072928/'}
+{'name': 'Chapter Thirty-Three - Minor Improvements', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1074030/'}
+{'name': 'Interlude SNO', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1074036/'}
+{'name': 'Chapter Thirty-Four - Knife Edge', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1077939/'}
+{'name': 'Chapter Thirty-Five - When Business Takes Care of Itself', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1080246/'}
+{'name': 'Chapter Thirty-Six - Catmodore Lucy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1083966/'}
+{'name': 'Chapter Thirty-Seven - A Genius Idea', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1085618/'}
+{'name': 'Chapter Thirty-Eight - Fire and Hammer', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1089998/'}
+{'name': 'Chapter Thirty-Nine - Getting a Clue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1091656/'}
+{'name': 'Chapter Forty - All at Once', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1096255/'}
+{'name': 'Chapter Forty-One - Extinction of a New Sort', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1098041/'}
+{'name': 'Chapter Forty-Two - Quiet', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1101835/'}
+{'name': 'Chapter Forty-Three - And I Have Killed It', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1103841/'}
+{'name': 'Chapter Forty-Four - Jennifer', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1113995/'}
+{'name': 'Chapter Forty-Five - Uncanny', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1115785/'}
+{'name': 'Chapter Forty-Six - Monster Interrupt', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1119425/'}
+{'name': 'Stray Cat Strut - Volume Three is Out!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1119439/'}
+{'name': 'Chapter Forty-Seven - Cover', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1121263/'}
+{'name': 'Chapter Forty-Eight - A Time for Explanations', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1125196/'}
+{'name': 'Stray Cat Strut Fanfiction Contest', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1126062/'}
+{'name': 'Chapter Forty-Nine - Back Stage Story', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1127388/'}
+{'name': 'Chapter Fifty - Thigh Pillow', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1131606/'}
+{'name': 'Chapter Fifty-One - Wake Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1133632/'}
+{'name': "Chapter Fifty-Two - A Cat's Strut", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1137696/'}
+{'name': 'Chapter Fifty-Three - Intimidation', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1139837/'}
+{'name': 'Chapter Fifty-Four - All That Wealth is Good For', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1144335/'}
+{'name': 'Chapter Fifty-Five - Hunger of the Masses', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1146500/'}
+{'name': 'Chapter Fifty-Six - A Great Idea', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1152202/'}
+{'name': 'Interlude - Chef Lucy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1154434/'}
+{'name': 'Chapter Fifty-Seven - The Okay Before the Oof', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1157927/'}
+{'name': 'Chapter Fifty-Eight - Final Hours', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1161603/'}
+{'name': 'Chapter Fifty-Nine - Enjoying the View', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1167831/'}
+{'name': 'Chapter Sixty - Callsigns', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1168984/'}
+{'name': 'Chapter Sixty-One - KittyKopter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1184773/'}
+{'name': 'Chapter Sixty-Two - Quick Thinking', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1186660/'}
+{'name': 'Chapter Sixty-Three - Mechcatular Nyanzerfaust Activate', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1192786/'}
+{'name': 'Chapter Sixty-Four - Getting Hot', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1194874/'}
+{'name': 'SCS Fanfiction Contest Winner - Above the Clouds - By\xa0Luke W. Logan', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1198164/'}
+{'name': 'Chapter Sixty-Five - T-Rex Vs Giant Mecha Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1198610/'}
+{'name': 'Chapter Sixty-Six - Spinning a Yarn', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1199987/'}
+{'name': 'Chapter Sixty-Seven - Late', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1202016/'}
+{'name': 'Chapter Sixty-Eight - Paperworker', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1207007/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1208917/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1211128/'}
+{'name': "Stray Cat Strut - Volume Six - A Young Lady's Guide to Taking Uncivil Liberties", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1216454/'}
+{'name': 'Prologue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1216456/'}
+{'name': 'Chapter One - Staring', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1222298/'}
+{'name': 'Chapter Two - Like a Raccoon to a Trashbag', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1224750/'}
+{'name': "Interlude - A Roaming Raccoon's Reasonable Relationships [Part One]", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1229805/'}
+{'name': "Interlude - A Roaming Raccoon's Reasonable Relationships [Part Two]", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1232164/'}
+{'name': 'Chapter Three - Strange Animals', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1237460/'}
+{'name': 'Chapter Four - Back to Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1239703/'}
+{'name': 'Chapter Five - Funny Business', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1244349/'}
+{'name': 'Chapter Six - Fine Little Fighter', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1247268/'}
+{'name': 'Chapter Seven - The Kind of Work That Makes You Happy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1252574/'}
+{'name': 'Chapter Eight - Checking Out the Stink', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1266905/'}
+{'name': 'Chapter Nine - Useless Crap', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1269401/'}
+{'name': 'Chapter Ten - The Stink', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1274029/'}
+{'name': 'Chapter Eleven - Smiling Faces', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1276276/'}
+{'name': 'Chapter Twelve - The Taste of Boot', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1281326/'}
+{'name': 'Chapter Thirteen - Long Day', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1282941/'}
+{'name': 'Chapter Fourteen - Mayoral Image', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1283951/'}
+{'name': 'Chapter Fifteen - Empirical', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1289354/'}
+{'name': 'Chapter Sixteen - Board Meeting', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1291555/'}
+{'name': 'Chapter Seventeen - A Home Visit', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1296459/'}
+{'name': 'Chapter Eighteen - Home', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1298991/'}
+{'name': 'Chapter Nineteen - Hardware', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1304312/'}
+{'name': 'Chapter Twenty - Unsub', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1306685/'}
+{'name': 'Chapter Twenty-One - Eternal Optimism and Petty Spite', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1311382/'}
+{'name': 'Chapter Twenty-Two - Dress for Stress', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1313883/'}
+{'name': 'Chapter Twenty-Three - Free and Compulsory', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1321039/'}
+{'name': 'Chapter Twenty-Four - Rude, Crass, Common', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1326505/'}
+{'name': 'Chapter Twenty-Five - Cottagecore Samurai Power-Couple', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1328152/'}
+{'name': "Chapter Twenty-Six - Stray Cat's Cut", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1335717/'}
+{'name': 'Chapter Twenty-Seven - Nun Too Soon', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1340713/'}
+{'name': 'The Tragic Life and Times of Hyper Cutie Bubblechan Zoom Ranger Sparkle Girl, Magical Girl Mercenary', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1340716/'}
+{'name': 'Chapter Twenty-Eight - Master Of Nun', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1342963/'}
+{'name': 'Chapter Twenty-Nine - Un-convent-ional Interior Design', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1348221/'}
+{'name': 'Magical Girl Mercenary For Hire - Chapter One', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1348232/'}
+{'name': 'Chapter Thirty - Cat Nap Mishap', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1350394/'}
+{'name': 'Chapter Thirty-One - The Skinny Lowdown', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1355151/'}
+{'name': 'Magical Girl Mercenary for Hire - Chapter Two', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1355271/'}
+{'name': 'Chapter Thirty-Two - Rathunt', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1357405/'}
+{'name': 'Chapter Thirty-Three - Cleaning Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1362733/'}
+{'name': 'Magical Girl Mercenary for Hire - Chapter Three', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1362753/'}
+{'name': "Chapter Thirty-Four - Something's Dirty Down In CleanTown", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1364730/'}
+{'name': 'Chapter Thirty-Five - Outfoxed', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1369990/'}
+{'name': 'Magical Girl Mercenary for Hire - Chapter Four', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1369995/'}
+{'name': 'Chapter Thirty-Six - Sleepy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1372244/'}
+{'name': "Interlude - A Roaming Raccoon's Reasonable Relationships [Part Three]", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1377544/'}
+{'name': 'Magical Girl Mercenary for Hire - Chapter Five', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1377547/'}
+{'name': "Interlude - A Roaming Raccoon's Reasonable Relationships [Part Four]", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1379374/'}
+{'name': 'Chapter Thirty-Seven - The Call', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1384649/'}
+{'name': 'Magical Girl Mercenary for Hire - Chapter Six', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1384650/'}
+{'name': "Interlude - A Roaming Raccoon's Reasonable Relationships [Part Five]", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1385687/'}
+{'name': 'Chapter Thirty-Eight - Boo-Boos and Body Bags', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1386519/'}
+{'name': 'Chapter Thirty-Nine - Shots, Spots, Stretchers', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1391988/'}
+{'name': 'Side Story Poll!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1392033/'}
+{'name': 'Chapter Forty - Creative Kleptomania', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1394645/'}
+{'name': 'Chapter Forty-One - Recreational Urban Warfare', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1400687/'}
+{'name': 'Somnus Deus Ex - Chapter One', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1400689/'}
+{'name': 'Chapter Forty-Two - Trash Panda Feelings', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1402544/'}
+{'name': 'Chapter Forty-Three - Finders, Not Keepers', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1408788/'}
+{'name': 'Somnus Deus Ex - Chapter Two', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1409238/'}
+{'name': 'Chapter Forty-Four - Jam and Drains', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1412189/'}
+{'name': 'Chapter Forty-Five - Corpo Shit Show', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1417562/'}
+{'name': 'Chapter Forty-Six - Getting Down To Your Business', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1419908/'}
+{'name': 'Somnus Deus Ex - Chapter Three', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1419910/'}
+{'name': 'Chapter Forty-Seven - Feline Fringe', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1425493/'}
+{'name': 'Somnus Deus Ex - Chapter Four', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1425546/'}
+{'name': 'Chapter Forty-Eight - Recreational Respiratory Deterioration', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1427542/'}
+{'name': 'Interlewd Five', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1427543/'}
+{'name': 'Chapter Forty-Nine - I Spy with my Meaty Eye', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1433324/'}
+{'name': 'Somnus Deus Ex - Chapter Five', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1433327/'}
+{'name': 'Chapter Fifty - A Date Among Ghosts', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1435742/'}
+{'name': 'Stray Cat Strut - Volume Five - A Young Ladies Guide to Interpersonal Ballistic Missiles, is Out!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1441198/'}
+{'name': 'Chapter Fifty-One - Live Laugh Lobsters', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1441207/'}
+{'name': 'Chapter Fifty-Two - Cat Nap Wrap', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1443517/'}
+{'name': 'Somnus Deus Ex - Chapter Six', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1443551/'}
+{'name': 'Chapter Fifty-Three - Who Let the Worms Out?', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1447999/'}
+{'name': 'Somnus Deus Ex - Chapter Seven', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1448030/'}
+{'name': "Chapter Fifty-Four - It's fun to play with the P.M.C.", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1450422/'}
+{'name': 'Somnus Deus Ex - Chapter Eight', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1450741/'}
+{'name': 'Side Story Poll Two!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1451326/'}
+{'name': 'Chapter Fifty-Five - I Meant To Do That', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1455736/'}
+{'name': 'Chapter Fifty-Six - Country Cat, City Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1457875/'}
+{'name': 'Miss Grasshopper - Chapter One', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1458071/'}
+{'name': 'Chapter Fifty-Seven - Hit Everything, Everywhere, All At Once', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1462921/'}
+{'name': 'Chapter Fifty-Eight - Burn Silent Into That Good Night', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1465178/'}
+{'name': 'Miss Grasshopper - Chapter Two', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1465192/'}
+{'name': '10,000 Followers!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1469573/'}
+{'name': 'Chapter Fifty-Nine - Hot Hives in Your Area!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1469576/'}
+{'name': 'Chapter Sixty - How To Skin A Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1471237/'}
+{'name': 'Miss Grasshopper - Chapter Three', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1471593/'}
+{'name': 'Chapter Sixty-One - With Great Cats Comes Great Responsibility', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1473566/'}
+{'name': 'Chapter Sixty-Two - Miniature Wargaming', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1479627/'}
+{'name': 'Miss Grasshopper - Chapter Four', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1480228/'}
+{'name': 'Chapter Sixty-Three - Meals Refusing Exit', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1486251/'}
+{'name': 'Chapter Sixty-Four - New Hair Day', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1492456/'}
+{'name': 'Chapter Sixty-Five - Your Average Roleplaying Group', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1495072/'}
+{'name': 'Side Story Poll Three!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1495094/'}
+{'name': 'Chapter Sixty-Six - Peanut Butter and Lesbian Time', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1500209/'}
+{'name': 'The First - Chapter One', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1501663/'}
+{'name': 'Chapter Sixty-Seven - Tank You (For The Sandwiches)', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1502673/'}
+{'name': 'Chapter Sixty-Eight - Do Not The Princess', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1508710/'}
+{'name': 'Glossary: Model One\u200b', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1509146/'}
+{'name': 'Chapter Sixty-Nine - Nice?', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1509851/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1511257/'}
+{'name': 'Glossary: Model Three', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1517399/'}
+{'name': 'Prologue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1518533/'}
+{'name': 'Chapter One - Fighter, Cat, Ranger', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1525901/'}
+{'name': 'Chapter Two - IRC Is Forever', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1528196/'}
+{'name': 'Chapter Three - Coffee Break-in', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1534117/'}
+{'name': 'Glossary: Model Four', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1534548/'}
+{'name': 'Chapter Four - Big Cat Attack', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1537267/'}
+{'name': 'Chapter Five - 105mm Armour-Piercing Fin-Stabilised Discarding Sabots For Fun and Profit', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1543269/'}
+{'name': 'Chapter Six - Forbidden Bath Salt', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1545151/'}
+{'name': 'Chapter Seven - Exotic Cuisines', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1551585/'}
+{'name': "Chapter Eight - What's a Metaphor?", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1554410/'}
+{'name': "Chapter Nine - Gotta Kill 'Em All", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1563063/'}
+{'name': 'Myalis at Large [Non-Canon Think Piece]', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1564370/'}
+{'name': 'Chapter Ten - Rainbows of Death', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1569296/'}
+{'name': 'Chapter Eleven - A Teachable Moment', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1571087/'}
+{'name': 'A Tale of Nice Tails', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1575601/'}
+{'name': 'Chapter Twelve - Salt The Earth', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1577341/'}
+{'name': 'Glossary: Model Five', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1577563/'}
+{'name': 'Chapter Thirteen - Flick My Switches', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1580570/'}
+{'name': 'Chapter Fourteen - Combustion Beam Flag-tillery OR; Flying Disco Balls of Death', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1587742/'}
+{'name': 'Chapter Fifteen - Mech Makes Might', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1591067/'}
+{'name': 'Chapter Sixteen - Command Critique', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1598157/'}
+{'name': 'Chapter Seventeen - Local Sorts of Problems', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1601497/'}
+{'name': 'Chapter Eighteen - Better Than Some, Worse Than Most', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1607681/'}
+{'name': 'Glossary: Model Six', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1608241/'}
+{'name': 'Chapter Nineteen - Excuse My French', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1610725/'}
+{'name': '2024 Stray Cat Strut Fanfiction Contest!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1610728/'}
+{'name': 'Chapter Twenty - Feed Me In The Shower', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1617791/'}
+{'name': 'Glossary: Model Seven', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1618269/'}
+{'name': 'Chapter Twenty-One - Fuzzies, Fries, Flaking', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1620358/'}
+{'name': 'Chapter Twenty-Two - Lazy Pillow Talk', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1627379/'}
+{'name': 'Chapter Twenty-Three - Dr. Myalis, Medicine AI', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1629397/'}
+{'name': 'Chapter Twenty-Four - The Second Hand Clinic', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1635797/'}
+{'name': 'Glossary: Model Eight', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1638492/'}
+{'name': 'Chapter Twenty-Five - Hundred Burgers With Fries And Drink', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1638624/'}
+{'name': 'Chapter Twenty-Six - Even In Death I Serve My Waifus', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1645114/'}
+{'name': 'Chapter Twenty-Seven - Three Star Pull', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1648164/'}
+{'name': 'Chapter Twenty-Eight - Escape Velocity', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1654656/'}
+{'name': 'Glossary: Model Nine', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1654979/'}
+{'name': 'The 2024 Stray Cat Strut Fanfiction Contest - Reading Phase!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1656255/'}
+{'name': 'Chapter Twenty-Nine - Successfully Participated', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1657314/'}
+{'name': "Chapter Thirty - Grasshopper's Guide to Discreet Destruction", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1663277/'}
+{'name': 'Chapter Thirty-One - Casanova Howitzer', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1666424/'}
+{'name': 'Chapter Thirty-Two - This One Time, In Bible Club', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1672778/'}
+{'name': 'Glossary: Model Ten', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1674247/'}
+{'name': 'Chapter Thirty-Three - The Art of Being Fashionably Late', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1675184/'}
+{'name': "Chapter Thirty-Four - Can't Glare Away the Truth", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1682988/'}
+{'name': 'Chapter Thirty-Five - The Cat, the Raccoon, and the Cowboy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1685659/'}
+{'name': "Interlude - A Crackshot's Crack Shot", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1693069/'}
+{'name': "News: The Contest's General Category Winners have been announced!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1701639/'}
+{'name': 'SCS Fanfiction Contest Winner: Havoc, by Kenny Celican', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1701640/'}
+{'name': 'SCS Fanfiction Contest Winner: Libitania, by NiameScrawls', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1701643/'}
+{'name': 'Chapter Thirty-Six - Diggy Diggy Hole', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1701648/'}
+{'name': 'Chapter Thirty-Seven - Honest Samurai Reviews', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1705180/'}
+{'name': 'Chapter Thirty-Eight - Eggs Burny Side Up', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1711247/'}
+{'name': 'Chapter Thirty-Nine - I Want to Lick Your Eyeball', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1714363/'}
+{'name': 'Chapter Forty - Race Me to the Moon', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1720403/'}
+{'name': 'Chapter Forty-One - Operation Moon Boom', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1723185/'}
+{'name': 'Chapter Forty-Two - Cat to the Moon', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1729132/'}
+{'name': 'The Ongoing Contest has come to a close!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1729262/'}
+{'name': "SCS Fanfiction Contest Winner:\xa0A Joytoy's Journey to become a Hive-Queen\xa0By PhyonesArc!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1729281/'}
+{'name': 'Chapter Forty-Three - Buying the Gate to Nowhere', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1731859/'}
+{'name': 'Chapter Forty-Four - The Weltraum-Gewittermeister Tesla-Kollisionsgenerator', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1738319/'}
+{'name': "Chapter Forty-Five - If You're Unhappy and You Know It, Flap Your Wings!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1740985/'}
+{'name': 'Stray Cat Strut Music! - Kill and Buy [Kuro-P]', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1742750/'}
+{'name': 'Chapter Forty-Six - Eww, What Even Is That?', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1747678/'}
+{'name': "Chapter Forty-Seven\xa0- Kami-Can't", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1749664/'}
+{'name': 'Chapter Forty-Eight - Push My Red Button', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1756696/'}
+{'name': 'Interlude - The Free Radikal', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1760353/'}
+{'name': "Interlude - The Samurai's Samurai", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1767306/'}
+{'name': 'Glossary: Model Eleven', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1768759/'}
+{'name': "Chapter Forty-Nine - I'm Cat and You Are Watching Deep Space Ballistics!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1769966/'}
+{'name': 'Chapter Fifty - Trash Panda Pondering', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1777122/'}
+{'name': 'Chapter Fifty-One - Adamantium Toenails', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1780099/'}
+{'name': 'Glossary: Model Twelve', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1782282/'}
+{'name': 'Chapter Fifty-Two - Fingerguns', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1786981/'}
+{'name': 'Chapter Fifty-Three - Egg Shells', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1790011/'}
+{'name': 'Chapter Fifty-Four - Burned/Scarred/Butch, Scary, and Notorious', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1797389/'}
+{'name': 'Chapter Fifty-Five - Cutting To The Heart of The Moon', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1800408/'}
+{'name': 'Chapter Fifty-Six - Le Bad Suck', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1807791/'}
+{'name': 'Chapter Fifty-Seven - In Space No One Can Hear You Buzz', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1810356/'}
+{'name': 'Chapter Fifty-Eight - Knight Takes Moon', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1818169/'}
+{'name': 'Chapter Fifty-Nine - The Full Stop Does Not Stop', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1821796/'}
+{'name': 'Chapter Sixty - Religious Exemption', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1830207/'}
+{'name': 'Chapter Sixty-One - Lights! Camera! Bullshit!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1833609/'}
+{'name': 'SCS Fanfiction Contest Winner: Cassy the Clowns Big Top Bonanza, by FullAutoAlice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1835357/'}
+{'name': 'Chapter Sixty-Two - Cat Out of the Bag', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1841100/'}
+{'name': 'Interlude - Stay At Home PR Manager/GF', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1845621/'}
+{'name': 'Chapter Sixty-Three - Cat Called', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1853451/'}
+{'name': 'Chapter Sixty-Four - Anti-Antithesis-Anti-Air', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1863302/'}
+{'name': "Chapter Sixty-Five - Sky's the Limit, But I Can Reach", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1866893/'}
+{'name': 'Chapter Sixty-Six - Points Are Precious, But Explosions Are Priceless', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1874910/'}
+{'name': 'SCS Halloween Special', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1876901/'}
+{'name': 'Chapter Sixty-Seven - The Quiche of Commitment', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1878687/'}
+{'name': 'Chapter Sixty-Eight - Late, Locked, and Loaded', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1886327/'}
+{'name': 'Chapter Sixty-Nine - Nice', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1890842/'}
+{'name': 'Chapter Seventy - I Just Want The Sky On Fire', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1899462/'}
+{'name': 'Chapter Seventy-One - She Without Sin Drops The First Shoe', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1903734/'}
+{'name': 'Chapter Seventy-Two - Behold My Catlike Grace', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1913116/'}
+{'name': "Chapter Seventy-Three - It's Always The Quiet Ones", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1916678/'}
+{'name': 'Chapter Seventy-Four - I Have The Shy Ground', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1926056/'}
+{'name': 'Chapter Seventy-Five - The Worth of a Human', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1929255/'}
+{'name': 'WE HAVE MERCH!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1931389/'}
+{'name': 'Chapter Seventy-Six - A Giggle and a Rocket', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1937735/'}
+{'name': 'Chapter Seventy-Seven - Dead Samurai Tell No Tales', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1942907/'}
+{'name': 'Chapter Seventy-Eight - You Are Being Hunted', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1941963/'}
+{'name': 'Chapter Seventy-Nine - More Than the Machine', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1949958/'}
+{'name': 'Chapter Eighty - No Country For Old Cats', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1953375/'}
+{'name': 'Chapter Eighty-One - Touch Me...', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1961885/'}
+{'name': 'Chapter Eighty-Two - Till I Can Get Mine', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1964332/'}
+{'name': 'Chapter Eighty-Three - Cat of All Trades', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1972977/'}
+{'name': 'Chapter Eighty-Four - Modern Goddesses', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1976710/'}
+{'name': "SCS Contest Winner: Isabelle's Little Idea - By the WackyWombat!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1980892/'}
+{'name': 'A Cyber New Year', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1984426/'}
+{'name': "Chapter Eighty-Five - M.E.O.W, That's Right!", 'url': 'https://www.royalroad.com/fiction/33600/chapter/1984526/'}
+{'name': 'Epilogue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/1988098/'}
+{'name': 'SCS Art Contest!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2009649/'}
+{'name': 'Foreword by the Author', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2009667/'}
+{'name': 'Volume Eight - Prologue', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2009672/'}
+{'name': 'Chapter One - Armored Elegance Takes the Stage', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2013383/'}
+{'name': "Chapter Two - It Doesn't Say No Parking", 'url': 'https://www.royalroad.com/fiction/33600/chapter/2022409/'}
+{'name': 'Chapter Three - Electives in Future Tribulations', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2026502/'}
+{'name': 'Chapter Four - Revolutionary Girl Lucy', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2034101/'}
+{'name': 'Chapter Five - I Really Wanna Visit Your Home', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2038977/'}
+{'name': 'Interlude Lucy - School Days', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2047634/'}
+{'name': 'Chapter Six - Invisible Cougars in Your Area', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2051400/'}
+{'name': 'Chapter Seven - Where Rules Bend to Power', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2061199/'}
+{'name': 'Chapter Eight - Cat Skips the Ethics Module', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2065162/'}
+{'name': 'Interlude Lucy - School Days Part Two', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2075233/'}
+{'name': 'SCS Fan Art Contest - Winners!', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2075858/'}
+{'name': 'Chapter Nine - Sweet Schemes Are Made of This', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2079638/'}
+{'name': 'Chapter Ten - Fight Like A Cat', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2088914/'}
+{'name': 'Chapter Eleven - A Duel at Dawn', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2093788/'}
+{'name': "Chapter Twelve - Survival 101: Don't Be Weak", 'url': 'https://www.royalroad.com/fiction/33600/chapter/2103982/'}
+{'name': 'Chapter Thirteen - Carl Phillip Gottfried von Clauswitz', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2106048/'}
+{'name': 'Chapter Fourteen - Unexpected Fallout', 'url': 'https://www.royalroad.com/fiction/33600/chapter/2108563/'}
