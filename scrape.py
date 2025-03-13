@@ -74,11 +74,17 @@ def fetchNovelData(novelURL):
     novelData=novelData.get_text().strip().split("\n")
     bookTitle=novelData[0]
     bookAuthor=novelData[len(novelData)-1]
-    
+    logging.warning(novelData)
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        bookTitle = bookTitle.replace(char, '')
+        bookTitle=re.sub(r"[\(\[].*?[\)\]]", "", bookTitle)
+        bookTitle=bookTitle.strip()
+        
     description=soup.find("div",{"class":"description"}).get_text()
     lastScraped=datetime.datetime.now()
     #print(description)
-    return {bookID,bookTitle,bookAuthor,description,lastScraped}
+    return bookID,bookTitle,bookAuthor,description,lastScraped
 
 #fetchNovelData(url)
 
@@ -140,13 +146,22 @@ def check_order_of_contents(bookTitle,novelURL):
     else:
         f=[]
     
-    chapterList=fetchChapterList(novelURL)
+    chapterList=extract_chapter_ID(fetchChapterList(novelURL))
     newChapterList=update_order_of_contents(chapterList,f)
     
     write_order_of_contents(newChapterList,bookTitle)
     
     if (isinstance(f,io.IOBase)):
         f.close()
+
+#Get only the chapter ID.
+def extract_chapter_ID(chapterList):
+    chapterID=[]
+    for chapter in chapterList:
+        chapter=chapter.split("/")
+        chapterID.append(chapter[len(chapter)-2])
+    return chapterID
+
     
 def update_order_of_contents(chapterList, existingChapterList):
     seen = set()
@@ -217,6 +232,8 @@ def store_chapter(content,bookTitle, chapterTitle):
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
         bookTitle = bookTitle.replace(char, '')
+        bookTitle=re.sub(r"[\(\[].*?[\)\]]", "", bookTitle)
+        bookTitle=bookTitle.strip()
         chapterTitle = chapterTitle.replace(char, '')
         
     #Check if the folder for the book exists
@@ -243,23 +260,52 @@ def store_chapter(content,bookTitle, chapterTitle):
 
 
 #Main call interface.
-def mainInterface(chapterURL):
-    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",chapterURL)
+def mainInterface(novelURL):
+    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
     bookurl=bookurl.group()
-    fetchNovelData(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped=fetchNovelData(bookurl)
+    logging.warning(bookID+"/"+bookTitle+"/"+bookAuthor)
+    #soup = bs4.BeautifulSoup(requests.get(bookurl).text, 'html.parser')
+    produceEpub(novelURL,bookTitle,bookAuthor)
+    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+    rooturl = rooturl.group()
+    first,last,total=get_first_last_chapter(bookTitle)
     
-    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
-    
-    
-    
-    
-    pass
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        bookID = bookID.replace(char, '')
+    create_Entry(
+        bookID=int(bookID),
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total
+    )
+    #pass
     #check to see if epub already exists
     #check if new chapter was published for given book
     
     #if yes, update epub.
     #if no, return current epub.
 
+    #implement store order of chapters
+
+
+def get_first_last_chapter(bookTitle):
+    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (check_directory_exists(dirLocation)):
+        f= open(dirLocation,"r")
+        f.read()
+    else:
+        return -1,-1,-1
+    
+    f.close()
+    return f[0],f[len(f)-1],len(f)
+    
+    
 #Return existing epub if the latest chapter is already stored.
 def getEpub(novelURL):
     pass
@@ -269,12 +315,13 @@ def check_latest_chapter(bookID):
     pass
 
 
-#Requires 6 inputs. BookID, bookName, bookDescription, WebsiteHost, firstChapter#, lastChapter#
+#Requires 8 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters
 def create_Entry(**kwargs):
     logging.warning(kwargs)
     default_values = {
         "bookID": 0,
         "bookName": "Template",
+        "bookAuthor": "Template",
         "bookDescription": "Template",
         "websiteHost": "Template",
         "firstChapter": -1,
@@ -288,6 +335,7 @@ def create_Entry(**kwargs):
     book = {
         "bookID": book_data["bookID"],
         "bookName": book_data["bookName"],
+        "bookAuthor":book_data["bookAuthor"],
         "bookDescription": book_data["bookDescription"],
         "websiteHost": book_data["websiteHost"],
         "firstChapter": book_data["firstChapter"],
@@ -304,6 +352,7 @@ def create_Entry(**kwargs):
 #create_Entry(bookID=0, bookName="Template", bookDescription="Template")
 
 
+mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
 
 
 @app.get("/")
