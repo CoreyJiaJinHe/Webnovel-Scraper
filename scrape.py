@@ -74,19 +74,24 @@ def fetchNovelData(novelURL):
     novelData=novelData.get_text().strip().split("\n")
     bookTitle=novelData[0]
     bookAuthor=novelData[len(novelData)-1]
-    logging.warning(novelData)
-    invalid_chars = '<>:"/\\|?*'
-    for char in invalid_chars:
-        bookTitle = bookTitle.replace(char, '')
-        bookTitle=re.sub(r"[\(\[].*?[\)\]]", "", bookTitle)
-        bookTitle=bookTitle.strip()
-        
+    #logging.warning(novelData)
+    
+    bookTitle=remove_invalid_characters(bookTitle)
+            
     description=soup.find("div",{"class":"description"}).get_text()
     lastScraped=datetime.datetime.now()
+    
+    chapterTable=soup.find("table",{"id":"chapters"})
+    rows=chapterTable.find_all("tr")
+    
+    latestChapter=rows[len(rows)-1]
+    latestChapter=latestChapter.find("a")["href"].split("/")
+    latestChapterID=latestChapter[5]
+    
     #print(description)
-    return bookID,bookTitle,bookAuthor,description,lastScraped
+    return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
-#fetchNovelData(url)
+#logging.warning(fetchNovelData(url))
 
 def fetchChapterList(novelURL):
     soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
@@ -96,48 +101,29 @@ def fetchChapterList(novelURL):
     rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
     rooturl=rooturl.group()
     
-    
     chapterListURL=list()
     f=open("chapters.txt","w")
     for row in rows[1:len(rows)-1]:
         chapterData={}
         chapterData["name"]=row.find("a").contents[0].strip()
-        
         processChapterURL=row.find("a")["href"].split("/")
-        
         #Process into shortened link
         chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
-        
-        
         chapterListURL.append(chapterURL)
         chapterData["url"]=chapterURL
         f.write(str(chapterData)+"\n")
     f.close()
     return chapterListURL
 
+#logging.warning(fetchChapterList(url))
+
+
+
+
+""" 
 
 #There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
 #This is because authors tend to go between Ch then Vol Ch, and then back to Ch
-
-def write_order_of_contents(chapterList,bookTitle):
-    bookDirLocation="./books/raw/"+bookTitle
-    if not (check_directory_exists(bookDirLocation)):
-        make_directory(bookDirLocation)
-    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (os.path.exists(dirLocation)):
-        f= open(dirLocation,"w")
-    else:
-        f=open(dirLocation,"x")
-    for chapter in chapterList:
-        f.write(chapter +"\n")
-    f.close()
-
-
-#Get the chapter ID and title.
-def extract_chapter_ID(chapterURL):
-    chapter=chapterURL.split("/")
-    return chapter[len(chapter)-2]
-    
 
 def check_order_of_contents(bookTitle,novelURL):
     dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
@@ -172,15 +158,12 @@ def update_order_of_contents(chapterList, existingChapterList):
 
     return combined_list
 
-def get_existing_order_of_contents(bookTitle):
-    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (check_directory_exists(dirLocation)):
-        f= open(dirLocation,"r")
-        f.readlines()
-        return f
-    else:
-        return False
-        
+
+
+ """
+
+
+
 
 def fetchChapter(chapterURL):
     soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
@@ -188,6 +171,46 @@ def fetchChapter(chapterURL):
     return chapterContent
     
 
+
+#Get the chapter ID and title.
+def extract_chapter_ID(chapterURL):
+    chapter=chapterURL.split("/")
+    return chapter[len(chapter)-2]
+
+def extract_chapter_title(string):
+    extractedTitle=string.split("/")
+    return extractedTitle[len(extractedTitle)-1]
+    
+    
+def get_existing_order_of_contents(bookTitle):
+    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (check_directory_exists(dirLocation)):
+        f= open(dirLocation,"r")
+        return f.readlines()
+    else:
+        return False
+        
+        
+
+def write_order_of_contents(bookTitle, chapterData):
+    logging.warning(bookTitle)
+    bookDirLocation=f"./books/raw/{bookTitle}"
+    if not (check_directory_exists(bookDirLocation)):
+        make_directory(bookDirLocation)
+    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(fileLocation)):
+        f=open(fileLocation,"w")
+    else:
+        f=open(fileLocation,"x")
+    
+    for dataLine in chapterData:
+        chapterID=dataLine[0]
+        chapterLink=dataLine[1]
+        chapterTitle=dataLine[2]
+        f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
+    f.close()
+        
+        
 
 def fetchChapterTitle(soup):
     if not (isinstance(soup, bs4.BeautifulSoup)):
@@ -197,26 +220,73 @@ def fetchChapterTitle(soup):
 
 def retrieveStoredChapter(bookTitle,chapterID):
 
+    pass
+
+def remove_invalid_characters(inputString):
+    invalid_chars = '<>:"/\\|?*'
+    for char in invalid_chars:
+        inputString=inputString.replace(char,'')
+    inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
+    inputString=inputString.strip()
+    return inputString
+
+def check_if_chapter_exists(chapterID,savedChapters):
+    
+    if (savedChapters is False):
+        return False
+    for chapter in savedChapters:
+        if chapterID in chapter:
+            return True
+    return False
+
+def get_chapter_from_saved(chapterID,savedChapters):
+    for chapter in savedChapters:
+        chapter=chapter.split(";")
+        #logging.warning(chapterID+" "+chapter[0])
+        if chapterID == chapter[0]:
+            return chapter[0],chapter[2].replace("\n","")
+    return -1,-1
+    
+def get_chapter_contents_from_saved(dirLocation):
+    logging.warning(dirLocation)
+    f=open(dirLocation,"r")
+    
+    return f.read()
 
 def produceEpub(novelURL,bookTitle,Author):
     new_epub=pypub.Epub(bookTitle, creator=Author)
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    chapterMetaData=list()
     for url in fetchChapterList(novelURL):
+        #logging.warning(url)
         chapterID=extract_chapter_ID(url)
-        if (chapterID in already_saved_chapters):
+        chapterTitle=fetchChapterTitle(url)
+        if (already_saved_chapters is False):
+            title = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{title}.html"])
+            chapterContent=fetchChapter(url)
+            
+            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+            
+        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            logging.warning('Chapter exists')
+            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+            chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
+            chapterTitle=extract_chapter_title(dirLocation)
+            
         
-        
-        
-        
-        chapterTitle = fetchChapterTitle(url)
-        chapterContent=fetchChapter(url)
-        logging.warning(url)
-        store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
     
         new_chapter=pypub.create_chapter_from_html(chapterContent, chapterTitle)
         new_epub.add_chapter(new_chapter)
         time.sleep(0.5)
         
+    if (already_saved_chapters is False):
+        write_order_of_contents(bookTitle, chapterMetaData)
+    
+    
+    storeEpub(bookTitle,new_epub)
+    
+def storeEpub(bookTitle,new_epub):
     dirLocation="./epubs/"+bookTitle
     if not check_directory_exists(dirLocation):
         make_directory(dirLocation)
@@ -225,17 +295,12 @@ def produceEpub(novelURL,bookTitle,Author):
     if (check_directory_exists(dirLocation)):
         os.remove(dirLocation)
     new_epub.create(dirLocation)
-    
-    #pass
 
 def store_chapter(content,bookTitle, chapterTitle,chapterID):
     #remove invalid characters from file name
-    invalid_chars = '<>:"/\\|?*'
-    for char in invalid_chars:
-        bookTitle = bookTitle.replace(char, '')
-        bookTitle=re.sub(r"[\(\[].*?[\)\]]", "", bookTitle)
-        bookTitle=bookTitle.strip()
-        chapterTitle = chapterTitle.replace(char, '')
+    
+    bookTitle=remove_invalid_characters(bookTitle)
+    chapterTitle=remove_invalid_characters(chapterTitle)
         
     #Check if the folder for the book exists
     bookDirLocation="./books/raw/"+bookTitle
@@ -272,23 +337,33 @@ def get_first_last_chapter(bookTitle):
         f.close()
     else:
         return -1,-1,-1
-    return extract_chapter_ID(lines[0]),extract_chapter_ID(lines[len(lines)-1]),len(lines)
+    firstChapterID=lines[0].split(";")[0]
+    lastChapterID=lines[0].split(";")[len(lines)-1]
     
+    
+    
+    return firstChapterID,lastChapterID,len(lines)
+
+
+
+
 #Return existing epub directory if the latest chapter is already stored.
 def getEpub(bookID):
     results=savedBooks.find_one({"bookID":bookID})
     directory=results["directory"]
     return directory
 
+    
+    
 
 def check_latest_chapter(bookID,bookTitle,latestChapter):
     bookData=get_Entry(bookID)
+    if (bookData is None):
+        return False
     if (bookData["lastChapter"]==latestChapter):
         return True
     elif (bookData["lastChapter"]<=latestChapter):
         #update epub
-        return False
-    elif (bookData is None):
         return False
     return True
 
@@ -297,24 +372,22 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 def mainInterface(novelURL):
     bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
     bookurl=bookurl.group()
-    bookID,bookTitle,bookAuthor,description,lastScraped=fetchNovelData(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=fetchNovelData(bookurl)
     
     
-    if(check_latest_chapter):
+    if(check_latest_chapter(bookID,bookTitle,latestChapter)):
         getEpub(bookID)
     else:
         produceEpub(novelURL,bookTitle,bookAuthor)
 
-        write_order_of_contents(fetchChapterList(novelURL),bookTitle)
         
         
         rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
         rooturl = rooturl.group()
         first,last,total=get_first_last_chapter(bookTitle)
         
-        invalid_chars = '<>:"/\\|?*'
-        for char in invalid_chars:
-            bookID = bookID.replace(char, '')
+        bookID=remove_invalid_characters(bookID)
+
         create_Entry(
             bookID=int(bookID),
             bookName=bookTitle,
@@ -340,7 +413,7 @@ def mainInterface(novelURL):
 
 
 
-#Requires 8 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters
+#Requires 9 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
 def create_Entry(**kwargs):
     logging.warning(kwargs)
     default_values = {
@@ -376,7 +449,7 @@ def create_Entry(**kwargs):
     else:
         savedBooks.insert_one(book)
 
-
+#Retrieve book data from MongoDB
 def get_Entry(bookID):
     results=savedBooks.find_one({"bookID":bookID})
     return results
@@ -384,7 +457,7 @@ def get_Entry(bookID):
 
 #logging.warning(read_Entry(54046))
 
-#mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
+mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
 
 
 @app.get("/")
