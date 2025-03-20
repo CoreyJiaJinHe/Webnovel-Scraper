@@ -12,6 +12,18 @@ import time
 import io
 import jsonschema
 
+
+
+#MIGRATE OVER FROM PYPUB TO EBOOKLIB
+#https://pypi.org/project/EbookLib/
+
+#pypub does not retain inline css. This is a problem for basically everything.
+
+
+
+
+
+
 MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
 mydb=myclient["Webnovels"]
@@ -187,8 +199,8 @@ def fetchChapter(chapterURL):
     chapterContent=soup.find("div",{"class":"chapter-inner chapter-content"}).encode('ascii')
     return chapterContent
     
-
-
+    
+    
 #Get the chapter ID and title.
 def extract_chapter_ID(chapterURL):
     chapter=chapterURL.split("/")
