@@ -15,15 +15,8 @@ from ebooklib import epub
 from PIL import Image
 
 
-#MIGRATE OVER FROM PYPUB TO EBOOKLIB
-#https://pypi.org/project/EbookLib/
 
-#pypub does not retain inline css. This is a problem for basically everything.
-
-
-
-
-
+#Figure out how to swap tables text color in epub.
 
 MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
@@ -51,10 +44,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
 url="https://www.royalroad.com/fiction/55927/"
 rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",url)
 rooturl=rooturl.group()
-#print(rooturl)
 
 
 
@@ -97,7 +92,8 @@ def get_cover(title,novelURL,saveDirectory):
             response=response.content
             with open (fileNameDir,'wb') as f:
                 f.write(response)
-            
+    f.close()
+         
 
 def fetchNovelData(novelURL):
     soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
@@ -387,6 +383,14 @@ def produceEpub(new_epub,novelURL,bookTitle):
         new_epub.add_item(chapter)
         time.sleep(0.5)
     
+    img1=retrieve_cover_from_storage(bookTitle)
+    b=io.BytesIO()
+    img1.save(b,'jpeg')
+    b_image1=b.getvalue()
+    
+    image1_item=epub.EpubItem(uid='cover_image',file_name='images/image1.jpeg', media_type='image/jpeg', content=b_image1)
+    new_epub.add_item(image1_item)
+    
     new_epub.toc=tocList
     new_epub.spine=tocList
     new_epub.add_item(epub.EpubNcx())
@@ -398,7 +402,12 @@ def produceEpub(new_epub,novelURL,bookTitle):
         write_order_of_contents(bookTitle, chapterMetaData)
     
     storeEpub(bookTitle,new_epub)
-    
+
+def retrieve_cover_from_storage(bookTitle):
+    dirLocation=f"./books/raw/{bookTitle}/cover_image.jpg"
+    return Image.open(dirLocation)
+
+
 def storeEpub(bookTitle,new_epub):
     dirLocation="./epubs/"+bookTitle
     if not check_directory_exists(dirLocation):
@@ -471,6 +480,32 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
     return True
 
 
+
+
+
+#https://github.com/aerkalov/ebooklib/issues/194
+#Do this to embed images into the epub.
+#Will need to have a counter as the html files are being stored.
+#So that image_01 -> image_02 -> image_03
+#Will also need to replace the src="link here" to src="images/image_01.jpg" while chapters are being stored.
+#Will need to store the images into the raw epub folder.
+#Will need to add_item(image_01) into the epub each time.
+
+
+#Will need to write a css sheet for tables.
+#Set base text to black
+#Set table text to white
+
+
+
+
+#Aside from Royalroad, write scrape functions for Spacebattles, Fanfiction.net, NovelCool(Aggregators)
+
+#ToDO:Also scrape from raw websites, feed into google translate or AI translate api, then store.
+
+
+
+
 #Main call interface.
 def mainInterface(novelURL):
     bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
@@ -485,6 +520,7 @@ def mainInterface(novelURL):
     if(check_latest_chapter(bookID,bookTitle,latestChapter)):
         directory=getEpub(bookID)
     else:
+        get_cover("cover_image",novelURL,f"./books/raw/{bookTitle}")
         new_epub=epub.EpubBook()
         new_epub.set_identifier(bookID)
         new_epub.set_title(bookTitle)
