@@ -73,7 +73,7 @@ def check_existing_book(bookID):
         return True
 
 
-def get_cover(title,novelURL,saveDirectory):
+def save_cover_image(title,novelURL,saveDirectory):
     soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
     img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
     response =requests.get(img_url["src"],stream=True)
@@ -92,8 +92,8 @@ def get_cover(title,novelURL,saveDirectory):
             response=response.content
             with open (fileNameDir,'wb') as f:
                 f.write(response)
-    f.close()
-         
+            f.close()
+
 
 def fetchNovelData(novelURL):
     soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
@@ -132,8 +132,7 @@ def fetchChapterList(novelURL):
     rooturl=rooturl.group()
     
     chapterListURL=list()
-    f=open("chapters.txt","w")
-    for row in rows[1:len(rows)-1]:
+    for row in rows[1:len(rows)]:
         chapterData={}
         chapterData["name"]=row.find("a").contents[0].strip()
         processChapterURL=row.find("a")["href"].split("/")
@@ -141,8 +140,6 @@ def fetchChapterList(novelURL):
         chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
         chapterListURL.append(chapterURL)
         chapterData["url"]=chapterURL
-        f.write(str(chapterData)+"\n")
-    f.close()
     return chapterListURL
 
 #logging.warning(fetchChapterList(url))
@@ -213,9 +210,15 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
     
     
 def fetchChapter(chapterURL):
-    soup = bs4.BeautifulSoup(requests.get(chapterURL).text, 'html.parser')
-    chapterContent=soup.find("div",{"class":"chapter-inner chapter-content"}).encode('ascii')
-    return chapterContent
+    response = requests.get(chapterURL)
+    if response.status_code != 200:
+        logging.warning(f"Failed to fetch chapter URL: {chapterURL}, Status Code: {response.status_code}")
+        return None
+    soup = bs4.BeautifulSoup(response.text, 'html.parser')
+    chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
+    if chapterContent is None:
+        logging.warning(f"Could not find chapter content for URL: {chapterURL}")
+    return chapterContent#.encode('ascii')
     
     
     
@@ -283,18 +286,10 @@ def check_if_chapter_exists(chapterID,savedChapters):
     return False
 
 def get_chapter_from_saved(chapterID,savedChapters):
-    
-    
-    #logging.warning(savedChapters)
-    
-    
     for chapter in savedChapters:
-        #logging.warning(chapter)
         chapter=chapter.split(";")
         if chapterID == chapter[0]:
             return chapter[0],chapter[2].replace("\n","")
-        
-        
         
     return -1,-1
     
@@ -352,6 +347,29 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
     storeEpub(bookTitle,new_epub)
     
 
+def save_images_in_chapter(img_urls,saveDirectory,imageCount):
+    if not (check_directory_exists(saveDirectory)):
+        make_directory(saveDirectory)
+    for image in img_urls:
+        imageDir=f"{saveDirectory}image_{imageCount}.jpg"
+        if not (check_directory_exists(imageDir)):
+            response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
+            time.sleep(0.5)
+            imageCount+=1
+            if response.ok:
+                response=response.content
+                with open (imageDir,'wb') as f:
+                    f.write(response)
+                f.close()
+    return imageCount
+
+def retrieve_stored_image(imageDir):
+    if os.path.exists(imageDir):
+        return Image.open(imageDir)
+    else:
+        logging.warning(f"Image file not found: {imageDir}")
+    return None
+
 def produceEpub(new_epub,novelURL,bookTitle):
     
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
@@ -359,36 +377,76 @@ def produceEpub(new_epub,novelURL,bookTitle):
     
     tocList=list()
     
+    imageCount=0
+    
+    logging.warning(fetchChapterList(novelURL))
     for url in fetchChapterList(novelURL):
         chapterID=extract_chapter_ID(url)
         chapterTitle=fetchChapterTitle(url)
+        logging.warning(url)
         if (already_saved_chapters is False):
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
             chapterContent=fetchChapter(url)
-
             
+            if chapterContent:
+                images=chapterContent.find_all('img')
+                images=[image['src'] for image in images]
+            else:
+                logging.warning("chapterContent is None")
+
+            imageDir=f"./books/raw/{bookTitle}/images/"
+            currentImageCount=imageCount
+            #logging.warning(images)
+            if (images):
+                imageCount=save_images_in_chapter(images,imageDir,imageCount)
+            for img,image in zip(chapterContent.find_all('img'),images):
+                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.jpg")
+                
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'jpeg')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode('ascii')
             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
             
-        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+        elif (check_if_chapter_exists(chapterID,already_saved_chapters)):
             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
-            chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
+            chapterContent=get_chapter_contents_from_saved(dirLocation)
             fileChapterTitle=extract_chapter_title(dirLocation)
-        
+            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+            
+            currentImageCount=imageCount
+            for image in images:
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'jpeg')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode("utf-8")
         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
         chapter.set_content(chapterContent)
             
         tocList.append(chapter)
-            
         new_epub.add_item(chapter)
         time.sleep(0.5)
     
+    logging.warning("We reached produceEpub")
     img1=retrieve_cover_from_storage(bookTitle)
     b=io.BytesIO()
     img1.save(b,'jpeg')
     b_image1=b.getvalue()
     
-    image1_item=epub.EpubItem(uid='cover_image',file_name='images/image1.jpeg', media_type='image/jpeg', content=b_image1)
+    image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.jpeg', media_type='image/jpeg', content=b_image1)
     new_epub.add_item(image1_item)
     
     new_epub.toc=tocList
@@ -401,6 +459,7 @@ def produceEpub(new_epub,novelURL,bookTitle):
     if (already_saved_chapters is False):
         write_order_of_contents(bookTitle, chapterMetaData)
     
+    logging.warning("Attempting to store epub")
     storeEpub(bookTitle,new_epub)
 
 def retrieve_cover_from_storage(bookTitle):
@@ -418,29 +477,29 @@ def storeEpub(bookTitle,new_epub):
         os.remove(dirLocation)
     epub.write_epub(dirLocation,new_epub)
 
-def store_chapter(content,bookTitle, chapterTitle,chapterID):
-    #remove invalid characters from file name
-    bookTitle=remove_invalid_characters(bookTitle)
-    chapterTitle=remove_invalid_characters(chapterTitle)
+def store_chapter(content, bookTitle, chapterTitle, chapterID):
+    # Remove invalid characters from file name
+    bookTitle = remove_invalid_characters(bookTitle)
+    chapterTitle = remove_invalid_characters(chapterTitle)
         
-    #Check if the folder for the book exists
-    bookDirLocation="./books/raw/"+bookTitle
-    if not (check_directory_exists(bookDirLocation)):
+    # Check if the folder for the book exists
+    bookDirLocation = "./books/raw/" + bookTitle
+    if not check_directory_exists(bookDirLocation):
         make_directory(bookDirLocation)
 
-    #check if the chapter already exists
+    # Check if the chapter already exists
     title = f"{bookTitle} - {chapterID} - {chapterTitle}"
-    dirLocation=f"./books/raw/{bookTitle}/{title}.html"
-    #if it is, don't store
+    dirLocation = f"./books/raw/{bookTitle}/{title}.html"
     if check_directory_exists(dirLocation):
         return
-    #otherwise, do store the chapter.
-    chapterDirLocation = "./books/raw/"+bookTitle+"/"
+
+    # Write the chapter content to the file with UTF-8 encoding
+    chapterDirLocation = "./books/raw/" + bookTitle + "/"
     completeName = os.path.join(chapterDirLocation, f"{title}.html")
-    with open(completeName, "x") as f:
-        f.write(content.decode('utf8'))
-    f.close()
-    
+    with open(completeName, "w", encoding="utf-8") as f:
+        if not isinstance(content, str):
+            content = content.decode("utf-8")  # Decode bytes to string if necessary
+        f.write(content)
 
 def create_epub_directory_url(bookTitle):
     dirLocation="./epubs/"+bookTitle+"/"+bookTitle+".epub"
@@ -455,10 +514,9 @@ def get_first_last_chapter(bookTitle):
     else:
         return -1,-1,-1
     firstChapterID=lines[0].split(";")[0]
-    lastChapterID=lines[0].split(";")[len(lines)-1]
+    lastChapterID=lines[len(lines)-1].split(";")[0]
     
     return firstChapterID,lastChapterID,len(lines)
-
 
 
 
@@ -487,9 +545,11 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 #Do this to embed images into the epub.
 #Will need to have a counter as the html files are being stored.
 #So that image_01 -> image_02 -> image_03
-#Will also need to replace the src="link here" to src="images/image_01.jpg" while chapters are being stored.
-#Will need to store the images into the raw epub folder.
-#Will need to add_item(image_01) into the epub each time.
+#DONE #Will also need to replace the src="link here" to src="images/image_01.jpg" while chapters are being stored.
+#DONE #Will need to store the images into the raw epub folder.
+#DONE #Will need to add_item(image_01) into the epub each time.
+
+
 
 
 #Will need to write a css sheet for tables.
@@ -520,7 +580,7 @@ def mainInterface(novelURL):
     if(check_latest_chapter(bookID,bookTitle,latestChapter)):
         directory=getEpub(bookID)
     else:
-        get_cover("cover_image",novelURL,f"./books/raw/{bookTitle}")
+        save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
         new_epub=epub.EpubBook()
         new_epub.set_identifier(bookID)
         new_epub.set_title(bookTitle)

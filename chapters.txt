@@ -1,3 +1,0 @@
-{'name': 'GALLERY', 'url': 'https://www.royalroad.com/fiction/54046/chapter/1014914/'}
-{'name': 'Chapter 1: The monster with three faces', 'url': 'https://www.royalroad.com/fiction/54046/chapter/901254/'}
-{'name': 'Chapter 2: A high roost must first start down on the lowest soil', 'url': 'https://www.royalroad.com/fiction/54046/chapter/903477/'}
