@@ -121,7 +121,6 @@ def fetchNovelData(novelURL):
     #print(description)
     return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
-#logging.warning(fetchNovelData(url))
 
 def fetchChapterList(novelURL):
     soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
@@ -141,10 +140,6 @@ def fetchChapterList(novelURL):
         chapterListURL.append(chapterURL)
         chapterData["url"]=chapterURL
     return chapterListURL
-
-#logging.warning(fetchChapterList(url))
-
-
 
 
 """ 
@@ -189,6 +184,7 @@ def update_order_of_contents(chapterList, existingChapterList):
 
  """
 
+#TODO: MANUAL INSERT AND DELETE RANGES
 #Cut out and insert function
 def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
     cutOutChapters=chapterList[cutOutRange[0]:cutOutRange[1]]
@@ -206,7 +202,12 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
     newChapters=existingChapterList.remove(cutOutChapters)
     
     pass
-    
+
+
+
+
+
+
     
     
 def fetchChapter(chapterURL):
@@ -370,7 +371,7 @@ def retrieve_stored_image(imageDir):
         logging.warning(f"Image file not found: {imageDir}")
     return None
 
-def produceEpub(new_epub,novelURL,bookTitle):
+def produceEpub(new_epub,novelURL,bookTitle,css):
     
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
@@ -435,7 +436,7 @@ def produceEpub(new_epub,novelURL,bookTitle):
             chapterContent=chapterContent.encode("utf-8")
         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
         chapter.set_content(chapterContent)
-            
+        chapter.add_item(css)
         tocList.append(chapter)
         new_epub.add_item(chapter)
         time.sleep(0.5)
@@ -565,7 +566,6 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 
 
 
-
 #Main call interface.
 def mainInterface(novelURL):
     bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
@@ -586,7 +586,11 @@ def mainInterface(novelURL):
         new_epub.set_title(bookTitle)
         new_epub.set_language('en')
         new_epub.add_author(bookAuthor)
-        produceEpub(new_epub,bookurl,bookTitle)
+        style=open("style.css","r").read()
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+
+        new_epub.add_item(default_css)
+        produceEpub(new_epub,bookurl,bookTitle,default_css)
 
         
         
