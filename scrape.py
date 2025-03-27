@@ -184,27 +184,6 @@ def update_order_of_contents(chapterList, existingChapterList):
 
  """
 
-#TODO: MANUAL INSERT AND DELETE RANGES
-#Cut out and insert function
-def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
-    cutOutChapters=chapterList[cutOutRange[0]:cutOutRange[1]]
-    
-    firstHalfChapters=existingChapterList[0:insertRange[0]]
-    secondHalfChapters=existingChapterList[insertRange[1]:len(existingChapterList)]
-    
-    newChapterList=firstHalfChapters+cutOutChapters+secondHalfChapters
-    
-    pass
-
-def delete_from_Chapter_List(deleteRange,existingChapterList):
-    cutOutChapters=existingChapterList[deleteRange[0]:deleteRange[1]]
-    
-    newChapters=existingChapterList.remove(cutOutChapters)
-    
-    pass
-
-
-
 
 
 
@@ -236,9 +215,12 @@ def extract_chapter_title(string):
     
 def get_existing_order_of_contents(bookTitle):
     dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    logging.warning(dirLocation)
     if (check_directory_exists(dirLocation)):
-        f= open(dirLocation,"r")
-        return f.readlines()
+        f=open(dirLocation,"r")
+        chapters=f.readlines()
+        logging.warning(chapters)
+        return chapters
     else:
         return False
         
@@ -255,13 +237,13 @@ def write_order_of_contents(bookTitle, chapterData):
         f=open(fileLocation,"x")
     
     for dataLine in chapterData:
+        #logging.warning(dataLine)
         chapterID=dataLine[0]
         chapterLink=dataLine[1]
         chapterTitle=dataLine[2]
         f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
     f.close()
-        
-        
+
 
 def fetchChapterTitle(soup):
     if not (isinstance(soup, bs4.BeautifulSoup)):
@@ -278,7 +260,6 @@ def remove_invalid_characters(inputString):
     return inputString
 
 def check_if_chapter_exists(chapterID,savedChapters):
-    
     if (savedChapters is False):
         return False
     for chapter in savedChapters:
@@ -376,17 +357,38 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
     
+    #logging.warning(already_saved_chapters)
     tocList=list()
     
     imageCount=0
     
-    logging.warning(fetchChapterList(novelURL))
+    #logging.warning(fetchChapterList(novelURL))
     for url in fetchChapterList(novelURL):
         chapterID=extract_chapter_ID(url)
         chapterTitle=fetchChapterTitle(url)
-        logging.warning(url)
-        if (already_saved_chapters is False):
+        #logging.warning(url)
+        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
+            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+            chapterContent=get_chapter_contents_from_saved(dirLocation)
+            fileChapterTitle=extract_chapter_title(dirLocation)
+            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+            
+            currentImageCount=imageCount
+            for image in images:
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'jpeg')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode("utf-8")
+        else:
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+            #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
             chapterContent=fetchChapter(url)
             
@@ -416,24 +418,9 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
             chapterContent=chapterContent.encode('ascii')
             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
             
-        elif (check_if_chapter_exists(chapterID,already_saved_chapters)):
-            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
-            chapterContent=get_chapter_contents_from_saved(dirLocation)
-            fileChapterTitle=extract_chapter_title(dirLocation)
-            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+        
             
-            currentImageCount=imageCount
-            for image in images:
-                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
-                epubImage=retrieve_stored_image(imageDir)
-                b=io.BytesIO()
-                epubImage.save(b,'jpeg')
-                b_image1=b.getvalue()
-                
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
-                new_epub.add_item(image_item)
-                currentImageCount+=1
-            chapterContent=chapterContent.encode("utf-8")
+        #logging.warning(fileChapterTitle)
         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
         chapter.set_content(chapterContent)
         chapter.add_item(css)
@@ -454,10 +441,8 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
     new_epub.spine=tocList
     new_epub.add_item(epub.EpubNcx())
     new_epub.add_item(epub.EpubNav())
-    #NCX and Navigation Tile is needed.
-    #DEFINITELY NEEDS A Spine.
     
-    if (already_saved_chapters is False):
+    if (already_saved_chapters is False or not already_saved_chapters):
         write_order_of_contents(bookTitle, chapterMetaData)
     
     logging.warning("Attempting to store epub")
@@ -514,12 +499,17 @@ def get_first_last_chapter(bookTitle):
         f.close()
     else:
         return -1,-1,-1
+    if is_empty(lines):
+        return -1,-1,-1
     firstChapterID=lines[0].split(";")[0]
     lastChapterID=lines[len(lines)-1].split(";")[0]
     
     return firstChapterID,lastChapterID,len(lines)
 
-
+def is_empty(chapterList):
+    if not chapterList:
+        return True
+    return False
 
 #Return existing epub directory if the latest chapter is already stored.
 def getEpub(bookID):
@@ -553,9 +543,9 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 
 
 
-#Will need to write a css sheet for tables.
-#Set base text to black
-#Set table text to white
+#DONE Will need to write a css sheet for tables.
+#DONE Set base text to black
+#DONE Set table text to white
 
 
 
@@ -668,6 +658,57 @@ def get_Entry(bookID):
 #logging.warning(read_Entry(54046))
 #mainInterface("https://www.royalroad.com/my/follows")
 mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
+
+
+def update_existing_order_of_contents(bookTitle,chapterList):
+    bookDirLocation=f"./books/raw/{bookTitle}"
+    if not (check_directory_exists(bookDirLocation)):
+        make_directory(bookDirLocation)
+    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(fileLocation)):
+        f=open(fileLocation,"w")
+    else:
+        f=open(fileLocation,"x")
+    for line in chapterList:
+        f.write(str(line)) #FORMATTING IS FUCKED
+    f.close()
+    
+    
+    
+#TODO: MANUAL INSERT AND DELETE RANGES
+#Cut out and insert function
+#Take [range1:range2] from the chapterList and insert into position [insertRange1] of existingChapterList
+def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
+    #logging.warning(chapterList)
+    #logging.warning(existingChapterList)
+    cutOutChapters=chapterList[cutOutRange[0]:cutOutRange[1]]
+    logging.warning(cutOutChapters)
+    firstHalfChapters=existingChapterList[0:insertRange]
+    logging.warning(firstHalfChapters)
+    secondHalfChapters=existingChapterList[insertRange+1:len(existingChapterList)]
+    logging.warning(secondHalfChapters)
+    newChapterList=list()
+    newChapterList.append(firstHalfChapters)
+    newChapterList.append(cutOutChapters)
+    newChapterList.append(secondHalfChapters)
+    
+    return newChapterList
+f=open ("chapters.txt","r")
+chapterList=f.readlines() #Use readlines to get list object
+f.close()
+newChapterList=insert_into_Chapter_List([2,3],1,chapterList,get_existing_order_of_contents("FINAL CORE"))
+
+logging.warning(newChapterList)
+update_existing_order_of_contents("FINAL CORE",newChapterList)
+
+def delete_from_Chapter_List(deleteRange,existingChapterList):
+    cutOutChapters=existingChapterList[deleteRange[0]:deleteRange[1]]
+    
+    newChapters=existingChapterList.remove(cutOutChapters)
+    
+    pass
+
+
 
 
 @app.get("/")
