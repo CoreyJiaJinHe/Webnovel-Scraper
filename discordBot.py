@@ -9,7 +9,7 @@ import scrape
 load_dotenv()
 PUBLIC_KEY=os.getenv('PUBLIC_KEY')
 DISCORD_TOKEN=os.getenv('DISCORD_TOKEN')
-
+PUBLIC_URL =os.getenv('PUBLIC_URL')
 
     
 intents=discord.Intents.default()
@@ -27,18 +27,23 @@ import mongodbBotChannels
 
 @bot.command(aliases=['epub','getnovel'])
 async def getNovel(ctx):
-    channel=ctx.channel
-    
-    novelURL=ctx.message.content.split(' ')[1]
-    
-    book=scrape.mainInterface(novelURL)
-    if(book==None):
-        await ctx.send("Invalid URL")
-        return
-    else:
-        await ctx.send("Novel Found. Generating epub")
-        file=discord.File(book)
-        await ctx.send(file=file)    
+    if(checkChannel(ctx)):
+        novelURL=ctx.message.content.split(' ')[1]
+        book=scrape.mainInterface(novelURL)
+        if(book==None):
+            await ctx.send("Invalid URL")
+            return
+        else:
+            await ctx.send("Novel Found. Generating epub")
+            os.stat(book)
+            if os.path.getsize(book) > 8*1024*1024:
+                await ctx.send("File too large")
+                await ctx.send("Please download the file from the link below")
+                await ctx.send(PUBLIC_URL)
+                return
+            
+            file=discord.File(book)
+            await ctx.send(file=file)
         
         
     #await ctx.send(novelURL)

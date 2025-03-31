@@ -4,13 +4,11 @@ import re
 from pathlib import Path
 from pymongo import MongoClient
 import os, errno
-#import pypub
 import datetime
 from novel_template import NovelTemplate
 import logging
 import time
 import io
-import jsonschema
 from ebooklib import epub 
 from PIL import Image
 
@@ -23,27 +21,6 @@ myclient=MongoClient(MONGODB_URL)
 mydb=myclient["Webnovels"]
 savedBooks=mydb["Books"]
 
-
-from typing import Union
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-
-app=FastAPI()
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-    "http://127.0.0.1",
-    "http://127.0.0.1:5173"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 
@@ -142,50 +119,6 @@ def fetchChapterList(novelURL):
     return chapterListURL
 
 
-""" 
-
-#There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
-#This is because authors tend to go between Ch then Vol Ch, and then back to Ch
-
-def check_order_of_contents(bookTitle,novelURL):
-    dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (check_directory_exists(dirLocation)):
-        f= open(dirLocation,"r")
-        f.read()
-    else:
-        f=[]
-    
-    chapterList=extract_chapter_ID(fetchChapterList(novelURL))
-    newChapterList=update_order_of_contents(chapterList,f)
-    
-    write_order_of_contents(newChapterList,bookTitle)
-    
-    if (isinstance(f,io.IOBase)):
-        f.close()
-
-    
-def update_order_of_contents(chapterList, existingChapterList):
-    seen = set()
-    combined_list = []
-
-    for chapter in existingChapterList:
-        if chapter not in seen:
-            seen.add(chapter)
-            combined_list.append(chapter)
-
-    for chapter in chapterList:
-        if chapter not in seen:
-            seen.add(chapter)
-            combined_list.append(chapter)
-
-    return combined_list
-
-
-
- """
-
-
-
 
     
     
@@ -219,7 +152,7 @@ def get_existing_order_of_contents(bookTitle):
     if (check_directory_exists(dirLocation)):
         f=open(dirLocation,"r")
         chapters=f.readlines()
-        logging.warning(chapters)
+        #logging.warning(chapters)
         return chapters
     else:
         return False
@@ -531,6 +464,231 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 
 
 
+#Main call interface.
+def mainInterface(novelURL):
+    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
+    
+    if (bookurl is None):
+        return False
+    
+    
+    bookurl=bookurl.group()
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=fetchNovelData(bookurl)
+    
+    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
+        pass
+        #directory=getEpub(bookID)
+    else:
+        logging.warning("Doing else)")
+        save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
+        new_epub=epub.EpubBook()
+        new_epub.set_identifier(bookID)
+        new_epub.set_title(bookTitle)
+        new_epub.set_language('en')
+        new_epub.add_author(bookAuthor)
+        style=open("style.css","r").read()
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+
+        new_epub.add_item(default_css)
+        produceEpub(new_epub,bookurl,bookTitle,default_css)
+
+        
+        
+        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+        rooturl = rooturl.group()
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        bookID=int(remove_invalid_characters(bookID))
+        #logging.warning(bookID)
+        directory = create_epub_directory_url(bookTitle)
+        create_Entry(
+            bookID=bookID,
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+        
+        create_latest(
+            bookID=int(bookID),
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+    
+    return directory
+    
+    #pass
+    #check to see if epub already exists
+    #check if new chapter was published for given book
+    
+    #if yes, update epub.
+    #if no, return current epub.
+
+    #implement store order of chapters
+
+
+
+#Requires 10 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
+def create_Entry(**kwargs):
+    default_values = {
+        "bookID": 0,
+        "bookName": "Template",
+        "bookAuthor": "Template",
+        "bookDescription": "Template",
+        "websiteHost": "Template",
+        "firstChapter": -1,
+        "lastChapter": -1,
+        "totalChapters":-1,
+        "directory": "Template"
+    }
+    #If missing keyword arguments, fill with template values.
+    book_data = {**default_values, **kwargs}
+    logging.warning(f"book_data['bookID']: {book_data['bookID']}")
+    logging.warning(book_data["bookID"])
+    book = {
+        "bookID": book_data["bookID"],
+        "bookName": book_data["bookName"],
+        "bookAuthor":book_data["bookAuthor"],
+        "bookDescription": book_data["bookDescription"],
+        "websiteHost": book_data["websiteHost"],
+        "firstChapter": book_data["firstChapter"],
+        "lastChapter": book_data["lastChapter"],
+        "lastScraped": datetime.datetime.now(),
+        "totalChapters": book_data["totalChapters"],
+        "directory": book_data["directory"]
+    }
+    
+    
+    logging.warning(book)
+    
+    if (check_existing_book(book_data["bookID"])):
+        result=savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
+        logging.warning(f"Replaced book: {result}")
+    else:
+        result = savedBooks.insert_one(book)
+        logging.warning(f"Inserted book: {result}")
+
+def create_latest(**kwargs):
+        default_values = {
+            "bookID": -1,
+            "bookName": "Template",
+            "bookAuthor": "Template",
+            "bookDescription": "Template",
+            "websiteHost": "Template",
+            "firstChapter": -1,
+            "lastChapter": -1,
+            "totalChapters":-1,
+            "directory": "Template"
+        }
+        #If missing keyword arguments, fill with template values.
+        book_data = {**default_values, **kwargs}
+        
+        book = {
+            "bookID": -1,
+            "bookName": book_data["bookName"],
+            "bookAuthor":book_data["bookAuthor"],
+            "bookDescription": book_data["bookDescription"],
+            "websiteHost": book_data["websiteHost"],
+            "firstChapter": book_data["firstChapter"],
+            "lastChapter": book_data["lastChapter"],
+            "lastScraped": datetime.datetime.now(),
+            "totalChapters": book_data["totalChapters"],
+            "directory": book_data["directory"]
+        }
+        
+        if (check_existing_book(-1)):
+            savedBooks.replace_one({"bookID": -1}, book)
+        else:
+            savedBooks.insert_one(book)
+
+#Retrieve book data from MongoDB
+def get_Entry(bookID):
+    results=savedBooks.find_one({"bookID":bookID})
+    return results
+#Retrieve latest book data from MongoDB
+def getLatest():
+    result=savedBooks.find_one({"bookID":-1})
+    return result
+    
+#mainInterface("https://www.royalroad.com/my/follows")
+mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
+
+
+def update_existing_order_of_contents(bookTitle,chapterList):
+    bookDirLocation=f"./books/raw/{bookTitle}"
+    if not (check_directory_exists(bookDirLocation)):
+        make_directory(bookDirLocation)
+    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(fileLocation)):
+        f=open(fileLocation,"w")
+    else:
+        f=open(fileLocation,"x")
+    for line in chapterList:
+        f.write(str(line)) #FORMATTING IS FUCKED
+    f.close()
+    
+    
+
+#Cut out and insert function
+#Take [range1:range2] from the chapterList and insert into position [insertRange1] of existingChapterList
+def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
+    
+    if (cutOutRange[0]<= cutOutRange[1]):
+        logging.warning("Invalid range")
+        return False
+    if (cutOutRange[0] >=len(existingChapterList or cutOutRange[1]>=len(existingChapterList))):
+        logging.warning("Out of bounds error")
+        return False
+    if (insertRange>=len(existingChapterList) or insertRange<0):
+        logging.warning("Insert range out of bounds")
+        return False
+    if (existingChapterList):
+        logging.warning("Existing chapter list is empty")
+        return False
+    
+    #Get the desired chapters to cut out from "chapterList" of the new file to be inserted into the saved existingChapterList.
+    cutOutChapters=chapterList[cutOutRange[0]:cutOutRange[1]]
+    
+    #Split the existing chapterList in half to insert
+    firstHalfChapters=existingChapterList[0:insertRange]
+    secondHalfChapters=existingChapterList[insertRange:]
+    
+    #Create new chapterlist, insert the cutout in
+    newChapterList=list()
+    newChapterList=firstHalfChapters+cutOutChapters+secondHalfChapters
+    return newChapterList
+
+
+
+        
+def delete_from_Chapter_List(deleteRange,existingChapterList):
+    if (deleteRange[0]<= deleteRange[1]):
+        logging.warning("Invalid range")
+        return False
+    if (deleteRange[0] >=len(existingChapterList or deleteRange[1]>=len(existingChapterList))):
+        logging.warning("Out of bounds error")
+        return False
+    
+    cutOutChapters=existingChapterList[deleteRange[0]:deleteRange[1]]
+    for item in cutOutChapters:
+        existingChapterList.remove(item)
+    newChapterList=existingChapterList
+    return newChapterList
+    
+
+
+
+#TODO: Create a epub function that generates from links, and existing file retrievals if link isn't available
 
 #https://github.com/aerkalov/ebooklib/issues/194
 #Do this to embed images into the epub.
@@ -556,161 +714,82 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
 
 
 
-#Main call interface.
-def mainInterface(novelURL):
-    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
+
+#There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
+#This is because authors tend to go between Ch then Vol Ch, and then back to Ch
+
+# def check_order_of_contents(bookTitle,novelURL):
+#     dirLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+#     if (check_directory_exists(dirLocation)):
+#         f= open(dirLocation,"r")
+#         f.read()
+#     else:
+#         f=[]
     
-    if (bookurl is None):
-        return False
+#     chapterList=extract_chapter_ID(fetchChapterList(novelURL))
+#     newChapterList=update_order_of_contents(chapterList,f)
     
+#     write_order_of_contents(newChapterList,bookTitle)
     
-    bookurl=bookurl.group()
-    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=fetchNovelData(bookurl)
+#     if (isinstance(f,io.IOBase)):
+#         f.close()
+
     
-    if(check_latest_chapter(bookID,bookTitle,latestChapter)):
-        directory=getEpub(bookID)
-    else:
-        save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
-        new_epub=epub.EpubBook()
-        new_epub.set_identifier(bookID)
-        new_epub.set_title(bookTitle)
-        new_epub.set_language('en')
-        new_epub.add_author(bookAuthor)
-        style=open("style.css","r").read()
-        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+# def update_order_of_contents(chapterList, existingChapterList):
+#     seen = set()
+#     combined_list = []
 
-        new_epub.add_item(default_css)
-        produceEpub(new_epub,bookurl,bookTitle,default_css)
+#     for chapter in existingChapterList:
+#         if chapter not in seen:
+#             seen.add(chapter)
+#             combined_list.append(chapter)
 
-        
-        
-        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
-        rooturl = rooturl.group()
-        first,last,total=get_first_last_chapter(bookTitle)
-        
-        bookID=remove_invalid_characters(bookID)
-        directory = create_epub_directory_url(bookTitle)
-        create_Entry(
-            bookID=int(bookID),
-            bookName=bookTitle,
-            bookAuthor=bookAuthor,
-            bookDescription=description,
-            websiteHost=rooturl,
-            firstChapter=first,
-            lastChapter=last,
-            totalChapters=total,
-            directory=directory
-        )
-    
-    return directory
-    
-    #pass
-    #check to see if epub already exists
-    #check if new chapter was published for given book
-    
-    #if yes, update epub.
-    #if no, return current epub.
+#     for chapter in chapterList:
+#         if chapter not in seen:
+#             seen.add(chapter)
+#             combined_list.append(chapter)
 
-    #implement store order of chapters
+#     return combined_list
+
+# def test_delete():
+#     newChapterList=delete_from_Chapter_List([2,4],get_existing_order_of_contents("FINAL CORE"))
+#     if (newChapterList==False):
+#         logging.warning("Delete failed")
+#     else:
+#         test_update_existing_order_of_contents("FINAL CORE",newChapterList)
+
+# def test_insert():
+#     f=open ("chapters.txt","r")
+#     chapterList=f.readlines() #Use readlines to get list object
+#     f.close()
+#     newChapterList=insert_into_Chapter_List([2,5],1,chapterList,get_existing_order_of_contents("FINAL CORE"))
+#     test_update_existing_order_of_contents("FINAL CORE",newChapterList)
 
 
-
-#Requires 9 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
-def create_Entry(**kwargs):
-    default_values = {
-        "bookID": 0,
-        "bookName": "Template",
-        "bookAuthor": "Template",
-        "bookDescription": "Template",
-        "websiteHost": "Template",
-        "firstChapter": -1,
-        "lastChapter": -1,
-        "totalChapters":-1,
-        "directory": "Template"
-    }
-    #If missing keyword arguments, fill with template values.
-    book_data = {**default_values, **kwargs}
-    
-    book = {
-        "bookID": book_data["bookID"],
-        "bookName": book_data["bookName"],
-        "bookAuthor":book_data["bookAuthor"],
-        "bookDescription": book_data["bookDescription"],
-        "websiteHost": book_data["websiteHost"],
-        "firstChapter": book_data["firstChapter"],
-        "lastChapter": book_data["lastChapter"],
-        "lastScraped": datetime.datetime.now(),
-        "totalChapters": book_data["totalChapters"],
-        "directory": book_data["directory"]
-    }
-    
-    if (check_existing_book(book_data["bookID"])):
-        savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
-    else:
-        savedBooks.insert_one(book)
-
-#Retrieve book data from MongoDB
-def get_Entry(bookID):
-    results=savedBooks.find_one({"bookID":bookID})
-    return results
-
-
-#logging.warning(read_Entry(54046))
-#mainInterface("https://www.royalroad.com/my/follows")
-mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
-
-
-def update_existing_order_of_contents(bookTitle,chapterList):
-    bookDirLocation=f"./books/raw/{bookTitle}"
-    if not (check_directory_exists(bookDirLocation)):
-        make_directory(bookDirLocation)
-    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (os.path.exists(fileLocation)):
-        f=open(fileLocation,"w")
-    else:
-        f=open(fileLocation,"x")
-    for line in chapterList:
-        f.write(str(line)) #FORMATTING IS FUCKED
-    f.close()
-    
-    
-    
-#TODO: MANUAL INSERT AND DELETE RANGES
-#Cut out and insert function
-#Take [range1:range2] from the chapterList and insert into position [insertRange1] of existingChapterList
-def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
-    #logging.warning(chapterList)
-    #logging.warning(existingChapterList)
-    cutOutChapters=chapterList[cutOutRange[0]:cutOutRange[1]]
-    logging.warning(cutOutChapters)
-    firstHalfChapters=existingChapterList[0:insertRange]
-    logging.warning(firstHalfChapters)
-    secondHalfChapters=existingChapterList[insertRange+1:len(existingChapterList)]
-    logging.warning(secondHalfChapters)
-    newChapterList=list()
-    newChapterList.append(firstHalfChapters)
-    newChapterList.append(cutOutChapters)
-    newChapterList.append(secondHalfChapters)
-    
-    return newChapterList
-f=open ("chapters.txt","r")
-chapterList=f.readlines() #Use readlines to get list object
-f.close()
-newChapterList=insert_into_Chapter_List([2,3],1,chapterList,get_existing_order_of_contents("FINAL CORE"))
-
-logging.warning(newChapterList)
-update_existing_order_of_contents("FINAL CORE",newChapterList)
-
-def delete_from_Chapter_List(deleteRange,existingChapterList):
-    cutOutChapters=existingChapterList[deleteRange[0]:deleteRange[1]]
-    
-    newChapters=existingChapterList.remove(cutOutChapters)
-    
-    pass
+# def test_update_existing_order_of_contents(bookTitle,chapterList):
+#     bookDirLocation=f"./books/raw/{bookTitle}"
+#     if not (check_directory_exists(bookDirLocation)):
+#         make_directory(bookDirLocation)
+#     fileLocation=f"./books/raw/{bookTitle}/test.txt"
+#     if (os.path.exists(fileLocation)):
+#         f=open(fileLocation,"w")
+#     else:
+#         f=open(fileLocation,"x")
+#     for line in chapterList:
+#         f.write(str(line)) #FORMATTING IS FUCKED
+#     f.close()
 
 
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# def test_get_existing_order_of_contents(bookTitle):
+#     dirLocation=f"./books/raw/{bookTitle}/test.txt"
+#     if (check_directory_exists(dirLocation)):
+#         f=open(dirLocation,"r")
+#         chapters=f.readlines()
+#         return chapters
+#     else:
+#         return False
+
+ 
+
