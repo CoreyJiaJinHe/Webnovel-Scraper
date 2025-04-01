@@ -39,6 +39,12 @@ app.add_middleware(
 async def root():
     
     return {"message":"Hello World"}
+#https://fastapi.tiangolo.com/advanced/custom-response/?h=fileresponse#fileresponse
+#https://stackoverflow.com/questions/60716529/download-file-using-fastapi
+#https://stackoverflow.com/questions/63048825/how-to-upload-file-using-fastapi
+
+#https://fastapi.tiangolo.com/tutorial/first-steps/
+
 
 async def getFiles():
     latestBook=scrape.getLatestBook()

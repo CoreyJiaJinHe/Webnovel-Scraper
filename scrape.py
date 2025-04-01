@@ -621,7 +621,7 @@ def getLatest():
     return result
     
 #mainInterface("https://www.royalroad.com/my/follows")
-mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
+#mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
 
 
 def update_existing_order_of_contents(bookTitle,chapterList):
@@ -688,6 +688,48 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
 
 
 
+
+#TODO: Fuzzy search for if input is not link. If input is Title, send query, get results.
+
+#API:https://www.royalroad.com/fictions/search?globalFilters=false&title=test&orderBy=popularity
+#https://www.royalroad.com/fictions/search?globalFilters=false&title=test
+#Two versions. Popularity, and Relevance.
+#Relevance to get best possible match.
+#Popularity for when results have similar names.
+
+
+#div class="fiction-list"
+#div class= "row fiction-list-item"
+#h2 class="fiction-title"
+#a href format="/fiction/#####/title"
+
+
+#option takes two values 0 or 1. 0 for relevance. 1 for popularity.
+def query_royalroad(title, option):
+    if (title.isspace() or title==""):
+        return "Invalid Title"
+        
+    if (option ==0):
+        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}"
+    elif (option==1):
+        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}&orderBy=popularity"
+    else:
+        return ("Invalid Option")
+
+    
+    soup = bs4.BeautifulSoup(requests.get(querylink).text, 'html.parser')
+    resultTable=soup.find("div",{"class":"fiction-list"})
+    bookTable=resultTable.find("h2",{"class":"fiction-title"})
+    bookRows=bookTable.find_all("a")
+    firstResult=bookRows[0]['href']
+
+    resultLink=f"https://www.royalroad.com/fictions{firstResult}"
+    
+    return resultLink
+
+logging.warning(query_royalroad("Pokemon",1))
+    
+
 #TODO: Create a epub function that generates from links, and existing file retrievals if link isn't available
 
 #https://github.com/aerkalov/ebooklib/issues/194
@@ -711,7 +753,7 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
 #Aside from Royalroad, write scrape functions for Spacebattles, Fanfiction.net, NovelCool(Aggregators)
 
 #ToDO:Also scrape from raw websites, feed into google translate or AI translate api, then store.
-
+#Spacebattles: https://github.com/imgurbot12/pypub/blob/master/examples/spacebattles.py
 
 
 
