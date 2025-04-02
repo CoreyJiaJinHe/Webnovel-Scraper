@@ -3,7 +3,7 @@ import './App.css'
 //TODO: Build page. Build button to connect to backend server.py to retrieve file to download.
 
 import axios from "axios";
-const API_URL = "http://localhost:8080/api";
+const API_URL = "http://localhost:8000/api";
 const api = axios.create({ baseURL: API_URL });
 function App() {
 
@@ -19,22 +19,31 @@ function App() {
 
   async function getFiles(){
     try{
-      const response=await axios.post(`${API_URL}/getFiles`,{
+      const response=await axios.get(`${API_URL}/getFiles`,{
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/epub'
         }
-      })
+      }
+      )
       console.log(response)
       if (response.statusText!=="OK"){
         console.log("Error getting files")
       }
-      if (response.Response==="False"){
+      else if (response.Response==="False"){
         console.log("Error getting files")
       }
+      const file = await new Blob([response])
+      const url = window.URL.createObjectURL(file);
+      const link = document.createElement('a')
+      link.href=url;
+      link.setAttribute('download','FileName.epub')
 
-
-
-    }catch(error){
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+              
+      }
+    catch(error){
       console.log(error)
     }
 

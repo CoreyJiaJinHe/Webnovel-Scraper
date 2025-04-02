@@ -618,6 +618,7 @@ def get_Entry(bookID):
 #Retrieve latest book data from MongoDB
 def getLatest():
     result=savedBooks.find_one({"bookID":-1})
+    logging.warning(result)
     return result
     
 #mainInterface("https://www.royalroad.com/my/follows")
@@ -727,7 +728,7 @@ def query_royalroad(title, option):
     
     return resultLink
 
-logging.warning(query_royalroad("Pokemon",1))
+#logging.warning(query_royalroad("Pokemon",1))
     
 
 #TODO: Create a epub function that generates from links, and existing file retrievals if link isn't available
