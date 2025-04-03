@@ -34,6 +34,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    #expose_headers={'Content-Disposition'}
+    #expose_headers=["CustomName", "content-disposition"],  # Expose custom headers
 )
 
 
@@ -46,17 +48,27 @@ app.add_middleware(
 #https://stackoverflow.com/questions/63048825/how-to-upload-file-using-fastapi
 
 #https://fastapi.tiangolo.com/tutorial/first-steps/
+#https://stackoverflow.com/questions/71191662/how-do-i-download-a-file-from-fastapi-backend-using-javascript-fetch-api-in-the
+#https://stackoverflow.com/questions/73234675/how-to-download-a-file-after-posting-data-using-fastapi/73240097#73240097
+#https://stackoverflow.com/questions/73410132/how-to-download-a-file-using-reactjs-with-axios-in-the-frontend-and-fastapi-in-t
 
 @app.get("/api/getFiles/")
 async def getFiles():
     latestBook=scrape.getLatest()
-    logging.warning(latestBook)
-#    return latestBook["directory"]
-    return FileResponse(file_location=latestBook["directory"], filename=latestBook["bookName"],media_type="application/epub+zip")    
-    #latestBook=scrape.getLatest()
-    #return FileResponse(latestBook.directory)
+    #logging.warning(latestBook)
+    #logging.warning(latestBook["directory"])
+    fileLocation=latestBook["directory"]
+    fileName=latestBook["bookName"]
+    
+    
+    #Consider improving fileName to include Ch1- Latest chapter
+    logging.warning(fileName)
+    
+    #This now works
+    return FileResponse(path=fileLocation,filename=fileName)
 
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"message": "Welcome to FAST API."}
 
+logging.warning(getFiles())
