@@ -8,7 +8,7 @@ const api = axios.create({ baseURL: API_URL });
 function App() {
 
   const [doOnce, setDoOnce] = useState(false);
-
+  const [bookList, setBookList]=useState([]);
   useEffect(()=>{
     if (!doOnce){
       setDoOnce(true);
@@ -53,11 +53,65 @@ function App() {
     catch(error){
       console.log(error)
     }
+  }
+  async function getBook(id)
+  {
+    try{
+      const response=await axios.get(`${API_URL}/getBook`,{headers:{'bookID':{id}},responseType:'blob',withCredentials: true})
+      console.log(response)
+      if (response.statusText!=="OK"){
+        console.log("Error getting files")
+      }
+      else if (response.Response==="False"){
+        console.log("Error getting files")
+      }
+      const contentDisposition=response.headers['content-disposition'];
+      let fileName = contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
+      fileName=fileName.replaceAll("\"",'')
+      //console.log(fileName)
 
+      //For files
+      //Get response type as blob
+      //get the data from blob
+      //Create objecturl
+      //create element, set the element to have href, then add the element to page.
+      //console.log(response.headers['filename'])
+      
+      const file = await new Blob([response.data],{type:response.data.type})
+      const url = window.URL.createObjectURL(file);
+      const link = document.createElement('a')
+      link.href=url;
+      link.setAttribute('download',fileName)
 
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+              
+      }
+    catch(error){
+      console.log(error)
+    }
   }
 
+  async function populateTable(){
+      try{
+      const response = await axios.get(`${API_URL}/allBooks`)
+      if (response.statusText!=="OK"){
+        console.log("Error getting files")
+      }
+      else if (response.Response==="False"){
+        console.log("Error getting files")
+      }
 
+      const dataY=await response.data
+      console.log(dataY)
+
+    }
+    catch(error){
+      console.log(error)
+    }
+
+  }
 
   return (
     <>

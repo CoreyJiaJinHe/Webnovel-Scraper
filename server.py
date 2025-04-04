@@ -3,7 +3,7 @@
 # 
 from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi import FastAPI, File, UploadFile
 import logging
 
@@ -67,6 +67,16 @@ async def getFiles():
     #This now works
     return FileResponse(path=fileLocation,filename=fileName)
 
+@app.get("/api/getBook/")
+async def getBook(id):
+    book=scrape.get_Entry(id)
+
+@app.get("/api/allBooks/")
+async def getAllBooks():
+    allBooks=scrape.getAllBooks()
+    return JSONResponse(content=allBooks)
+    
+    
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"message": "Welcome to FAST API."}

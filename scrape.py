@@ -620,10 +620,15 @@ def getLatest():
     result=savedBooks.find_one({"bookID":-1})
     logging.warning(result)
     return result
-    
+
+def getAllBooks():
+    result=savedBooks.find({"bookID": {"$ne": -1}}).to_list(length=None)
+    result=[[result["bookID"],result["bookName"],result["lastScraped"],result["lastChapter"]] for result in result]
+    return result    
 #mainInterface("https://www.royalroad.com/my/follows")
 #mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
 
+logging.warning(getAllBooks())
 
 def update_existing_order_of_contents(bookTitle,chapterList):
     bookDirLocation=f"./books/raw/{bookTitle}"
