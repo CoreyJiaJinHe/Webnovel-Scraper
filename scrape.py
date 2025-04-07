@@ -623,7 +623,8 @@ def getLatest():
 
 def getAllBooks():
     result=savedBooks.find({"bookID": {"$ne": -1}}).to_list(length=None)
-    result=[[result["bookID"],result["bookName"],result["lastScraped"],result["lastChapter"]] for result in result]
+    now=datetime.datetime.now()
+    result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapter"]] for result in result]
     return result    
 #mainInterface("https://www.royalroad.com/my/follows")
 #mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")

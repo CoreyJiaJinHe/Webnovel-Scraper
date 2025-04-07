@@ -34,7 +34,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    #expose_headers={'Content-Disposition'}
+    expose_headers=['Content-Disposition'],
     #expose_headers=["CustomName", "content-disposition"],  # Expose custom headers
 )
 
@@ -53,7 +53,7 @@ app.add_middleware(
 #https://stackoverflow.com/questions/73410132/how-to-download-a-file-using-reactjs-with-axios-in-the-frontend-and-fastapi-in-t
 
 @app.get("/api/getFiles/")
-async def getFiles():
+def getFiles():
     latestBook=scrape.getLatest()
     #logging.warning(latestBook)
     #logging.warning(latestBook["directory"])
@@ -64,21 +64,38 @@ async def getFiles():
     #Consider improving fileName to include Ch1- Latest chapter
     logging.warning(fileName)
     
+    headers={"content-disposition": f"{fileName}"}
+    
     #This now works
-    return FileResponse(path=fileLocation,filename=fileName)
+    return FileResponse(path=fileLocation,filename=fileName,headers=headers)
 
 @app.get("/api/getBook/")
 async def getBook(id):
     book=scrape.get_Entry(id)
 
-@app.get("/api/allBooks/")
-async def getAllBooks():
-    allBooks=scrape.getAllBooks()
-    return JSONResponse(content=allBooks)
+    fileLocation=book["directory"]
+    fileName=book["bookName"]
     
+    
+    #Consider improving fileName to include Ch1- Latest chapter
+    logging.warning(fileName)
+    
+    headers={"content-disposition": f"{fileName}"}
+    
+    #This now works
+    return FileResponse(path=fileLocation,filename=fileName,headers=headers)
+
+@app.get("/api/allBooks/")
+def getAllBooks():
+    allBooks=scrape.getAllBooks()
+    logging.warning(allBooks)
+    return JSONResponse(content=allBooks)
+
+#THE ERROR WITH MAPPING STARTS HERE^. ITS NOT A DICTIONARY
+#FIXED BY DOING IT ON THE FRONT END
     
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"message": "Welcome to FAST API."}
 
-logging.warning(getFiles())
+#logging.warning(getFiles())

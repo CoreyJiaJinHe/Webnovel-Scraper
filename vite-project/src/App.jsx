@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import BookCard from './components/BookCard.jsx'
 //TODO: Build page. Build button to connect to backend server.py to retrieve file to download.
 
 import axios from "axios";
@@ -8,18 +9,23 @@ const api = axios.create({ baseURL: API_URL });
 function App() {
 
   const [doOnce, setDoOnce] = useState(false);
-  const [bookList, setBookList]=useState([]);
+  const [bookList, setBookList]=useState(['']);
+
   useEffect(()=>{
     if (!doOnce){
       setDoOnce(true);
-      getFiles();
-    }
+      populateTable();
+//        console.log(bookList)
+      }
+    })
 
-  })
+  useEffect(()=>{
+    //getBookCards()
+  },[bookList])
 
   async function getFiles(){
     try{
-      const response=await axios.get(`${API_URL}/getFiles`,{responseType:'blob',withCredentials: true})
+      const response=await axios.get(`${API_URL}/getFiles`,{responseType:'blob'}) //withCredentials: true
       console.log(response)
       if (response.statusText!=="OK"){
         console.log("Error getting files")
@@ -27,9 +33,23 @@ function App() {
       else if (response.Response==="False"){
         console.log("Error getting files")
       }
+      //console.log(response.headers)
       const contentDisposition=response.headers['content-disposition'];
-      let fileName = contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
-      fileName=fileName.replaceAll("\"",'')
+      //console.log(contentDisposition)
+      //let contentDispositionx=contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
+      //console.log(contentDispositionx)
+      const regex=/filename\*?=.*''(.+)/; //Regex to split string between metadata and bookTitle
+      const match = contentDisposition.match(regex);
+      //console.log(match);
+      const bookTitle=match[1];
+      //console.log(bookTitle)
+      let fileName=bookTitle.replace(/%20|_/g, " ");
+
+      fileName=fileName+".epub";
+      //let fileName = contentDisposition.split 
+      
+      
+      //fileName=fileName.replaceAll("\"",'')
       //console.log(fileName)
 
       //For files
@@ -54,6 +74,7 @@ function App() {
       console.log(error)
     }
   }
+
   async function getBook(id)
   {
     try{
@@ -104,13 +125,38 @@ function App() {
       }
 
       const dataY=await response.data
-      console.log(dataY)
-
+      //const dataX=JSON.parse(JSON.stringify(dataY))
+      setBookList(dataY)
+      //console.log(dataX)
     }
     catch(error){
       console.log(error)
     }
+  }
+  //dataX.map((book)=>
+  //  {
+  //    console.log(book)
+  //  })
+  const getBookCards=()=>{
+    console.log(bookList)
+    const list=bookList.map((book)=>{
+      let newDict={
+        bookName:book[1],
+        lastScraped:book[2],
+        latestChapter:book[3],
+        _id:book[0]
+      };
 
+      console.log(newDict);
+      console.log("Book value mapping");
+      return <BookCard key={book[0]} data={newDict} getBook={grabBook}/>;
+    })
+    
+    return <ul>{list}</ul>
+  }
+
+  function grabBook(id){
+    getBook(id)
   }
 
   return (
@@ -120,7 +166,12 @@ function App() {
         <p>Get your files below</p>
 
         <button onClick={getFiles}>Get File</button>
+        <div className="all-books"> 
+        {
+        getBookCards()
+        }
 
+        </div>
         </div>
     </>
   )
