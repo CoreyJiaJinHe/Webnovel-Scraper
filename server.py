@@ -62,7 +62,7 @@ def getFiles():
     
     
     #Consider improving fileName to include Ch1- Latest chapter
-    logging.warning(fileName)
+    #logging.warning(fileName)
     
     headers={"content-disposition": f"{fileName}"}
     
@@ -78,7 +78,7 @@ async def getBook(id):
     
     
     #Consider improving fileName to include Ch1- Latest chapter
-    logging.warning(fileName)
+    #logging.warning(fileName)
     
     headers={"content-disposition": f"{fileName}"}
     
@@ -88,7 +88,7 @@ async def getBook(id):
 @app.get("/api/allBooks/")
 def getAllBooks():
     allBooks=scrape.getAllBooks()
-    logging.warning(allBooks)
+    #logging.warning(allBooks)
     return JSONResponse(content=allBooks)
 
 #THE ERROR WITH MAPPING STARTS HERE^. ITS NOT A DICTIONARY

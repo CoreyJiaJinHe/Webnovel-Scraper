@@ -8,6 +8,7 @@ import datetime
 from novel_template import NovelTemplate
 import logging
 import time
+import asyncio
 import io
 from ebooklib import epub 
 from PIL import Image
@@ -257,7 +258,7 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
         
         new_epub.add_item(chapter)
         
-        time.sleep(0.5)
+        asyncio.sleep(0.5)
     new_epub.toc=tocList
     storeEpub(bookTitle,new_epub)
     
@@ -269,7 +270,7 @@ def save_images_in_chapter(img_urls,saveDirectory,imageCount):
         imageDir=f"{saveDirectory}image_{imageCount}.jpg"
         if not (check_directory_exists(imageDir)):
             response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
-            time.sleep(0.5)
+            asyncio.sleep(0.5)
             imageCount+=1
             if response.ok:
                 response=response.content
@@ -320,6 +321,8 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
                 currentImageCount+=1
             chapterContent=chapterContent.encode("utf-8")
         else:
+            
+            asyncio.sleep(0.5)
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
@@ -359,7 +362,6 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
         chapter.add_item(css)
         tocList.append(chapter)
         new_epub.add_item(chapter)
-        time.sleep(0.5)
     
     logging.warning("We reached produceEpub")
     img1=retrieve_cover_from_storage(bookTitle)
@@ -460,81 +462,6 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
         #update epub
         return False
     return True
-
-
-
-
-#Main call interface.
-def mainInterface(novelURL):
-    bookurl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/[0-9]+/",novelURL)
-    
-    if (bookurl is None):
-        return False
-    
-    
-    bookurl=bookurl.group()
-    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=fetchNovelData(bookurl)
-    
-    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
-        pass
-        #directory=getEpub(bookID)
-    else:
-        logging.warning("Doing else)")
-        save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
-        new_epub=epub.EpubBook()
-        new_epub.set_identifier(bookID)
-        new_epub.set_title(bookTitle)
-        new_epub.set_language('en')
-        new_epub.add_author(bookAuthor)
-        style=open("style.css","r").read()
-        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
-
-        new_epub.add_item(default_css)
-        produceEpub(new_epub,bookurl,bookTitle,default_css)
-
-        
-        
-        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
-        rooturl = rooturl.group()
-        first,last,total=get_first_last_chapter(bookTitle)
-        
-        bookID=int(remove_invalid_characters(bookID))
-        #logging.warning(bookID)
-        directory = create_epub_directory_url(bookTitle)
-        create_Entry(
-            bookID=bookID,
-            bookName=bookTitle,
-            bookAuthor=bookAuthor,
-            bookDescription=description,
-            websiteHost=rooturl,
-            firstChapter=first,
-            lastChapter=last,
-            totalChapters=total,
-            directory=directory
-        )
-        
-        create_latest(
-            bookID=int(bookID),
-            bookName=bookTitle,
-            bookAuthor=bookAuthor,
-            bookDescription=description,
-            websiteHost=rooturl,
-            firstChapter=first,
-            lastChapter=last,
-            totalChapters=total,
-            directory=directory
-        )
-    
-    return directory
-    
-    #pass
-    #check to see if epub already exists
-    #check if new chapter was published for given book
-    
-    #if yes, update epub.
-    #if no, return current epub.
-
-    #implement store order of chapters
 
 
 
@@ -730,12 +657,114 @@ def query_royalroad(title, option):
     bookRows=bookTable.find_all("a")
     firstResult=bookRows[0]['href']
 
-    resultLink=f"https://www.royalroad.com/fictions{firstResult}"
+    #formatting
+    resultLink=f"https://www.royalroad.com{firstResult}"
     
     return resultLink
 
 #logging.warning(query_royalroad("Pokemon",1))
+
+def is_valid_url(url):
+    regex = re.compile(
+        r'^(https?:\/\/)?'  # Optional http or https
+        r'([a-zA-Z0-9.-]+)'  # Domain name
+        r'(\.[a-zA-Z]{2,})'  # Top-level domain
+        r'(\/[^\s]*)?$'  # Optional path
+    )
+    return re.match(regex, url) is not None
+
+
+#Main call interface.
+async def mainInterface(novelURL):
     
+    
+    #Check if valid url first.
+    isUrl=is_valid_url(novelURL)
+    if (isUrl is False):
+        searchTerm=novelURL
+        novelURL=query_royalroad(searchTerm,0)
+        #shorten url
+        novelURL=re.search("https://www.royalroad.com/fiction/[0-9]+/",novelURL)
+        novelURL=novelURL.group()
+    else:
+        #Then check if it is something I can scrape. 
+        #If it is not a royalroad URL, then return false and stop.
+        royalroadUrl=re.search("https://www.royalroad.com/fiction/[0-9]+/",novelURL)
+        #logging.warning(royalroadUrl)
+        if (royalroadUrl is None):
+            return False
+        novelURL=royalroadUrl.group()
+    
+    bookurl=novelURL
+    logging.warning(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=fetchNovelData(bookurl)
+    #logging.warning(bookID, bookTitle, latestChapter)
+    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
+        pass
+        #directory=getEpub(bookID)
+    else:
+        logging.warning("Doing else")
+        save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
+        new_epub=epub.EpubBook()
+        new_epub.set_identifier(bookID)
+        new_epub.set_title(bookTitle)
+        new_epub.set_language('en')
+        new_epub.add_author(bookAuthor)
+        style=open("style.css","r").read()
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+
+        new_epub.add_item(default_css)
+        produceEpub(new_epub,bookurl,bookTitle,default_css)
+
+        
+        
+        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+        rooturl = rooturl.group()
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        bookID=int(remove_invalid_characters(bookID))
+        #logging.warning(bookID)
+        directory = create_epub_directory_url(bookTitle)
+        create_Entry(
+            bookID=bookID,
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+        
+        create_latest(
+            bookID=int(bookID),
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+    
+    return directory
+    
+    #pass
+    #check to see if epub already exists
+    #check if new chapter was published for given book
+    
+    #if yes, update epub.
+    #if no, return current epub.
+
+    #implement store order of chapters
+
+#asyncio.run(mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"))
+#asyncio.run(mainInterface("https://Test.com"))
+#asyncio.run(mainInterface("Final Core"))
+
+
 
 #TODO: Create a epub function that generates from links, and existing file retrievals if link isn't available
 
