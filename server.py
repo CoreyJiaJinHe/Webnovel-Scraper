@@ -1,6 +1,9 @@
 #TO START
 # fastapi dev server.py
-# 
+# npm run dev for react frontend
+#ngrok http --url=delicate-generally-gelding.ngrok-free.app 5173 for ngrok open domain
+
+
 from typing import Union
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -25,7 +28,8 @@ origins = [
     "http://localhost:8080",
     "http://localhost:5173",
     "http://127.0.0.1",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://delicate-generally-gelding.ngrok-free.app"
 ]
 
 app.add_middleware(

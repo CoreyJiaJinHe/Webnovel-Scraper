@@ -548,6 +548,10 @@ def getLatest():
     logging.warning(result)
     return result
 
+def get_Total_Books():
+    result=savedBooks.count_documents({})
+    return result-2
+
 def getAllBooks():
     result=savedBooks.find({"bookID": {"$ne": -1}}).to_list(length=None)
     now=datetime.datetime.now()
@@ -803,11 +807,14 @@ async def mainInterface(novelURL):
 #from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 
-async def foxaholic_get_chapter_list(url,cookie):
-    
-    
+link="https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/"
+cookie="cf_clearance=o1lWDApiP0vWoHkNtG6w_03gdxdJmrzmONhyQ.pf4J8-1744293339-1.2.1.1-VyAiGiLRCZRzMScNztMxua.AwFg65OUcPllbsune2IziU_4mXga0alCvahHD1c9vJ1Fk4De23cms0kzKNssTbU5vNpYdsqeKDCIEQjs34Fg9ZzhkSvEeVhdQK2i1Z.k6zquEiTTCatltt8ADDPz0ON8xU6022lrqMG9DFTmQzMUhY81ehgX7stbN91BSaQz92td3uC7i3UeNI8nRDMnm22KrDPV7M0OzjF50Ed3iylSqlvj8NK6rXQphAyCU_a9ukGlY80j_Cgw0u6e4ZLJz4fNj4xgFDEe0TVmBQGLKawz.M5DtKpzvsnsFJ3jXLKOLmD9os4Npbbk0VelQEwhMGnx3nvz382cgFAFUFlgU1f5LeTBbIrefSOG2Tbq3.1P2"
+
+def foxaholic_driver_selenium(url,cookie):
     driver = webdriver.Firefox()
     options={
         "Host": "www.foxaholic.com",
@@ -815,7 +822,7 @@ async def foxaholic_get_chapter_list(url,cookie):
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
         "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Referer": "https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/",
+        "Referer": "https://www.foxaholic.com/",
         #Foxaholic requires cookie. Will need to get new cookie each time.
         "Cookie": cookie
     }
@@ -835,48 +842,326 @@ async def foxaholic_get_chapter_list(url,cookie):
         request.headers['Cookie']=options["Cookie"]
     driver.request_interceptor=interception
     driver.get(url)
-    
-    return
-    
-    driver.find_elements(By)
-    
-    async with aiohttp.ClientSession(headers = {
-        "Host": "www.foxaholic.com",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Referer": "https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/",
-        #Foxaholic requires cookie. Will need to get new cookie each time.
-        "Cookie": "cf_clearance=SNaHcNrSUkA8AP0tbL7.PL6H_27QedJXi62Taf3wZ9Q-1744213439-1.2.1.1-U4L692Wcb9hCY2168bRBt_YfzYcA9AhUKjFxmeoCjm3uwKuLdD0VN29Wl6x7Gq5RcHrupkWvawaSFuoDbhOH_eQD2_vd012lS9vr6bBBNw4xUMwBzkp71hX70lrjnH0uRWuKztMC47_qSDay5RdklFss0G9zP3YJ3lhFgzjD7dUkbX0T4xJJ.wdFcVayxqDgBQPwSBTE5GTf_yCF4ZVxFT.Dk.LH3FfbYsE9EMYlcaDGGGCexTpVcFxvYGad81idSRMdzv9H0XibWmybhASDXnY17YYsy5INxG3.qrBqKXqykl4x6rLxeyUL.9SZq2LEhCfskht0F2IPoiMVaazgeKiHM17B1G0eo40DRIzzNcW3_6yGrjGLmM7MhXvu8D8p",
-        }) as session:
-        async with session.get(url) as response:
-            #logging.warning(response.status)
-            if response.status == 200:
-                logging.warning(response)
-                html = await response.text()
-                soup = bs4.BeautifulSoup(html, 'html.parser')
-                chapterTable = soup.find("ul", {"class": "main version-chap"})
-                rows= chapterTable.find_all("li", {"class":"free-chap"})
-                chapterListURL=list()
-                for row in rows[1:len(rows)]:
-                    chapterData={}
-                    chapterData["name"]=row.find("a").contents[0].strip()
-                    processChapterURL=row.find("a")["href"]
-                    
-                    chapterURL=processChapterURL
-                    chapterListURL.append(chapterURL)
-                logging.warning(chapterListURL)      
-                return chapterListURL
+    soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+    driver.close()
+    return soup
 
-link="https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/"
-cookie="cf_clearance=SNaHcNrSUkA8AP0tbL7.PL6H_27QedJXi62Taf3wZ9Q-1744213439-1.2.1.1-U4L692Wcb9hCY2168bRBt_YfzYcA9AhUKjFxmeoCjm3uwKuLdD0VN29Wl6x7Gq5RcHrupkWvawaSFuoDbhOH_eQD2_vd012lS9vr6bBBNw4xUMwBzkp71hX70lrjnH0uRWuKztMC47_qSDay5RdklFss0G9zP3YJ3lhFgzjD7dUkbX0T4xJJ.wdFcVayxqDgBQPwSBTE5GTf_yCF4ZVxFT.Dk.LH3FfbYsE9EMYlcaDGGGCexTpVcFxvYGad81idSRMdzv9H0XibWmybhASDXnY17YYsy5INxG3.qrBqKXqykl4x6rLxeyUL.9SZq2LEhCfskht0F2IPoiMVaazgeKiHM17B1G0eo40DRIzzNcW3_6yGrjGLmM7MhXvu8D8p"
-asyncio.run(foxaholic_get_chapter_list(link,cookie))
+
+async def foxaholic_get_chapter_list(url,cookie):
+    #https://www.codecademy.com/article/web-scrape-with-selenium-and-beautiful-soup
+    soup = foxaholic_driver_selenium(url,cookie)
+    
+    #logging.warning(soup)
+    chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
+    #logging.warning(chapterTable)
+    rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+    chapterListURL=list()
+    for row in rows[1:len(rows)]:
+        chapterData={}
+        chapterData["name"]=row.find("a").contents[0].strip()
+        processChapterURL=row.find("a")["href"]
+                    
+        chapterURL=processChapterURL
+        chapterListURL.append(chapterURL)
+    chapterListURL=list(reversed(chapterListURL))
+    
+    return chapterListURL
+
+
+async def foxaholic_scrape_chapter_page(url,cookie):
+    soup=foxaholic_driver_selenium(url,cookie)
+    
+    pageContent=soup.find_all("div",{"class":"reading-content"})[0]
+    chapterTitle=pageContent.find("h1").get_text()
+    chapterContent=pageContent.find_all("p")
+    
+    chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
+    chapterContent=re.sub('</p>,','</p>',str(chapterContent))
+    
+    if (chapterContent.startswith('[')):
+        chapterContent=chapterContent[1:]
+    if (chapterContent.endswith(']')):
+        chapterContent=chapterContent[:-1]
+    
+    return chapterContent
+
+
+def remove_non_english_characters(text):
+    result=re.search(r'([A-Za-z0-9]+( [A-Za-z0-9]+)+)',text)
+    return result.group() 
+
+
+def foxaholic_novel_data(novelURL,cookie):
+    soup=foxaholic_driver_selenium(novelURL,cookie)
+    
+    bookID=get_Total_Books()
+    bookID=bookID+1
+    bookData=soup.find("div",{"class":"post-content"})
+    novelData=bookData.find_all("div",{"class":"summary-content"})
+
+    bookTitle=novelData[1].get_text()
+    bookAuthor=novelData[2].get_text()
+    
+    bookTitle=remove_invalid_characters(bookTitle)
+    bookTitle=remove_non_english_characters(bookTitle)
+    
+    
+            
+    descriptionBox=soup.find("div",{"class":"description-summary"})
+    description=descriptionBox.find("div",{"class":"summary__content"}).get_text()
+
+    if (description.startswith("Description: ")):
+        description=description[13:]
+    logging.warning(description)
+    
+    location1=re.search("translator",description ,re.IGNORECASE)
+    if not location1:
+        location1=len(description)
+    else:
+        location1=location1.start()
+    location2=re.search("release schedule",description,re.IGNORECASE)
+    if not location2:
+        location2=len(description)
+    else:
+        location2=location2.start()
+    location3=re.search('editor',description,re.IGNORECASE)
+    if not location3:
+        location3=len(description)
+    else:
+        location3=location3.start()
+
+    location=min(location1,location2,location3)
+    description=description[:location].strip()
+
+    lastScraped=datetime.datetime.now()
+    chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
+    rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+    
+    latestChapter=rows[0]
+    latestChapterID=latestChapter.find("a")["href"].split("/")
+    latestChapterID=latestChapterID[len(latestChapterID)-2]
+    latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
+        
+    return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+
+
+#Obsolete. Foxaholic does not have a working search api.
+def foxaholic_query(title,cookie):
+    if (title.isspace() or title==""):
+        return "Invalid Title"
+    
+    querylink = f"https://www.foxaholic.com/?s={title}"
+
+    soup=foxaholic_driver_selenium(querylink,cookie)
+    
+    resultTable=soup.find("div",{"class":"tab-content-wrap"})
+    bookTable=resultTable.find("h4",{"class":"heading"})
+    bookRows=bookTable.find("a")
+    firstResult=bookRows['href']
+
+    #formatting
+    resultLink=f"https://www.royalroad.com{firstResult}"
+    
+    return resultLink
+
+def foxaholic_save_cover_image(title,novelURL,saveDirectory,cookie):
+    soup = foxaholic_driver_selenium(novelURL,cookie)
+    img_url = soup.find("div",{"class":"summary_image"}).find("img")
+    response =requests.get(img_url["src"],stream=True)
+    
+    if (saveDirectory.endswith("/")):
+        fileNameDir=f"{saveDirectory}{title}.jpg"
+    else:
+        fileNameDir=f"{saveDirectory}/{title}.jpg"
+    
+    if not response.ok:
+        pass
+    else:
+        if not (check_directory_exists(saveDirectory)):
+            make_directory(saveDirectory)
+        if not (check_directory_exists(fileNameDir)):
+            response=response.content
+            with open (fileNameDir,'wb') as f:
+                f.write(response)
+            f.close()
+
+
+
+
+def foxaholic_produce_Epub(new_epub,novelURL,bookTitle,css):
+    
+    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    chapterMetaData=list()
+    
+    #logging.warning(already_saved_chapters)
+    tocList=list()
+    
+    imageCount=0
+    
+    #logging.warning(fetch_Chapter_List(novelURL))
+    for url in fetch_Chapter_List(novelURL):
+        chapterID=extract_chapter_ID(url)
+        chapterTitle=fetch_Chapter_Title(url)
+        #logging.warning(url)
+        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
+            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+            chapterContent=get_chapter_contents_from_saved(dirLocation)
+            fileChapterTitle=extract_chapter_title(dirLocation)
+            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+            
+            currentImageCount=imageCount
+            for image in images:
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'jpeg')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode("utf-8")
+        else:
+            
+            asyncio.sleep(0.5)
+            fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+            #logging.warning(fileChapterTitle)
+            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+            chapterContent=fetch_Chapter(url)
+            
+            if chapterContent:
+                images=chapterContent.find_all('img')
+                images=[image['src'] for image in images]
+            else:
+                logging.warning("chapterContent is None")
+
+            imageDir=f"./books/raw/{bookTitle}/images/"
+            currentImageCount=imageCount
+            #logging.warning(images)
+            if (images):
+                imageCount=save_images_in_chapter(images,imageDir,imageCount)
+            for img,image in zip(chapterContent.find_all('img'),images):
+                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.jpg")
+                
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'jpeg')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode('ascii')
+            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+            
+        
+            
+        #logging.warning(fileChapterTitle)
+        chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+        chapter.set_content(chapterContent)
+        chapter.add_item(css)
+        tocList.append(chapter)
+        new_epub.add_item(chapter)
+    
+    logging.warning("We reached produceEpub")
+    img1=retrieve_cover_from_storage(bookTitle)
+    b=io.BytesIO()
+    img1.save(b,'jpeg')
+    b_image1=b.getvalue()
+    
+    image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.jpeg', media_type='image/jpeg', content=b_image1)
+    new_epub.add_item(image1_item)
+    
+    new_epub.toc=tocList
+    new_epub.spine=tocList
+    new_epub.add_item(epub.EpubNcx())
+    new_epub.add_item(epub.EpubNav())
+    
+    if (already_saved_chapters is False or not already_saved_chapters):
+        write_order_of_contents(bookTitle, chapterMetaData)
+    
+    logging.warning("Attempting to store epub")
+    storeEpub(bookTitle,new_epub)
+    
+
+def foxaholic_main_interface(novelURL,cookie):
+
+    #Check if valid url first.
+    isUrl=is_valid_url(novelURL)
+    if (isUrl is False):
+        return
+    bookurl=novelURL
+    #logging.warning(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=foxaholic_novel_data(bookurl)
+    #logging.warning(bookID, bookTitle, latestChapter)
+    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
+        pass
+        #directory=getEpub(bookID)
+    else:
+        logging.warning("Getting epub")
+        foxaholic_save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}",cookie)
+        
+        new_epub=epub.EpubBook()
+        new_epub.set_identifier(bookID)
+        new_epub.set_title(bookTitle)
+        new_epub.set_language('en')
+        new_epub.add_author(bookAuthor)
+        style=open("style.css","r").read()
+        
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+
+        new_epub.add_item(default_css)
+        produceEpub(new_epub,bookurl,bookTitle,default_css)
+
+        
+        
+        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+        rooturl = rooturl.group()
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        bookID=int(remove_invalid_characters(bookID))
+        #logging.warning(bookID)
+        directory = create_epub_directory_url(bookTitle)
+        create_Entry(
+            bookID=bookID,
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+        
+        create_latest(
+            bookID=int(bookID),
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+    
+    return directory
+
+
+
+#list=asyncio.run(foxaholic_get_chapter_list(link,cookie))
+#logging.warning(list)
 #asyncio.run(foxaholic_get_chapter_list("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"))
 
+#content=asyncio.run(foxaholic_scrape_chapter_page(list[0],cookie))
+#logging.warning(content)
 
+#store_chapter(content, 'test', 'test',0)
 
-
+#asyncio.run(foxaholic_main_interface(link,cookie))
 #There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
 #This is because authors tend to go between Ch then Vol Ch, and then back to Ch
 
@@ -953,5 +1238,34 @@ asyncio.run(foxaholic_get_chapter_list(link,cookie))
 #     else:
 #         return False
 
- 
 
+
+
+# async with aiohttp.ClientSession(headers = {
+#     "Host": "www.foxaholic.com",
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+#     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+#     "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+#     "Accept-Encoding": "gzip, deflate, br, zstd",
+#     "Referer": "https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/",
+#     #Foxaholic requires cookie. Will need to get new cookie each time.
+#     "Cookie": "cf_clearance=SNaHcNrSUkA8AP0tbL7.PL6H_27QedJXi62Taf3wZ9Q-1744213439-1.2.1.1-U4L692Wcb9hCY2168bRBt_YfzYcA9AhUKjFxmeoCjm3uwKuLdD0VN29Wl6x7Gq5RcHrupkWvawaSFuoDbhOH_eQD2_vd012lS9vr6bBBNw4xUMwBzkp71hX70lrjnH0uRWuKztMC47_qSDay5RdklFss0G9zP3YJ3lhFgzjD7dUkbX0T4xJJ.wdFcVayxqDgBQPwSBTE5GTf_yCF4ZVxFT.Dk.LH3FfbYsE9EMYlcaDGGGCexTpVcFxvYGad81idSRMdzv9H0XibWmybhASDXnY17YYsy5INxG3.qrBqKXqykl4x6rLxeyUL.9SZq2LEhCfskht0F2IPoiMVaazgeKiHM17B1G0eo40DRIzzNcW3_6yGrjGLmM7MhXvu8D8p",
+#     }) as session:
+#     async with session.get(url) as response:
+#         #logging.warning(response.status)
+#         if response.status == 200:
+#             logging.warning(response)
+#             html = await response.text()
+#             soup = bs4.BeautifulSoup(html, 'html.parser')
+#             chapterTable = soup.find("ul", {"class": "main version-chap"})
+#             rows= chapterTable.find_all("li", {"class":"free-chap"})
+#             chapterListURL=list()
+#             for row in rows[1:len(rows)]:
+#                 chapterData={}
+#                 chapterData["name"]=row.find("a").contents[0].strip()
+#                 processChapterURL=row.find("a")["href"]
+                
+#                 chapterURL=processChapterURL
+#                 chapterListURL.append(chapterURL)
+#             logging.warning(chapterListURL)      
+#             return chapterListURL
