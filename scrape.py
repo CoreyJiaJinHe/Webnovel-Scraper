@@ -186,7 +186,7 @@ def fetch_Chapter_Title(soup):
     return chapterTitle
 
 def remove_invalid_characters(inputString):
-    invalid_chars = '<>:"/\\|?*'
+    invalid_chars = '<>:;"/\\|?*'
     for char in invalid_chars:
         inputString=inputString.replace(char,'')
     inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
@@ -316,7 +316,7 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
                 epubImage.save(b,'jpeg')
                 b_image1=b.getvalue()
                 
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpeg', content=b_image1)
                 new_epub.add_item(image_item)
                 currentImageCount+=1
             chapterContent=chapterContent.encode("utf-8")
@@ -348,7 +348,7 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
                 epubImage.save(b,'jpeg')
                 b_image1=b.getvalue()
                 
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpeg', content=b_image1)
                 new_epub.add_item(image_item)
                 currentImageCount+=1
             chapterContent=chapterContent.encode('ascii')
@@ -369,7 +369,7 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
     img1.save(b,'jpeg')
     b_image1=b.getvalue()
     
-    image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.jpeg', media_type='image/jpeg', content=b_image1)
+    image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.jpg', media_type='image/jpeg', content=b_image1)
     new_epub.add_item(image1_item)
     
     new_epub.toc=tocList
@@ -385,8 +385,14 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
 
 def retrieve_cover_from_storage(bookTitle):
     dirLocation=f"./books/raw/{bookTitle}/cover_image.jpg"
-    return Image.open(dirLocation)
-
+    if os.path.exists(dirLocation):
+        try:
+            return Image.open(dirLocation)
+        except Exception as e:
+            logging.warning(f"Failed to open image: {e}")
+            return None
+    else:
+        return None
 
 def storeEpub(bookTitle,new_epub):
     dirLocation="./epubs/"+bookTitle
@@ -811,8 +817,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 
-link="https://www.foxaholic.com/novel/ankoku-kishi-monogatari-yuusha-wo-taosu-tameni-maou-ni-shoukansaremashita/"
-cookie="cf_clearance=o1lWDApiP0vWoHkNtG6w_03gdxdJmrzmONhyQ.pf4J8-1744293339-1.2.1.1-VyAiGiLRCZRzMScNztMxua.AwFg65OUcPllbsune2IziU_4mXga0alCvahHD1c9vJ1Fk4De23cms0kzKNssTbU5vNpYdsqeKDCIEQjs34Fg9ZzhkSvEeVhdQK2i1Z.k6zquEiTTCatltt8ADDPz0ON8xU6022lrqMG9DFTmQzMUhY81ehgX7stbN91BSaQz92td3uC7i3UeNI8nRDMnm22KrDPV7M0OzjF50Ed3iylSqlvj8NK6rXQphAyCU_a9ukGlY80j_Cgw0u6e4ZLJz4fNj4xgFDEe0TVmBQGLKawz.M5DtKpzvsnsFJ3jXLKOLmD9os4Npbbk0VelQEwhMGnx3nvz382cgFAFUFlgU1f5LeTBbIrefSOG2Tbq3.1P2"
+link="https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/"
+cookie="cf_clearance=GeUl6n6HQrvrwfWzommXDeBqu3HIBadlFUkk13to4VA-1744384029-1.2.1.1-R09s_cuMZBoO9IrmiQi_JCmmuqmFsJN0ol.TrJMr1UtNPdPpLrjIc57LqPXbPVgbB5L8GRJg_pQS1thN4JGLCGwZ9VoRfzwP5KTcg6gluGBmzFA4QMBL6ih1ys6YC.A.JmYBiodgJAoGa3wa8a_XAvRGOJMB3yfC5tB4njfzJgKOHMEsoMDGZgaSbCYW1PLEHXipN62DmOFgXpekx9dHD2wX4_yv1uhwDocjcJtFeSGiLvge9U_ikVXBPdJ.obbQk8x9AsrGCF7kHnrAgpNw8WvJr2eodvYMTN4Qpfj864olNJjttar3uHPPoOpNRlHIt8jBe8X9AtZHpMXWxD1FcMcr0LYxvCnsjaKhl3ACCT3HjsN6T6A9wIbe0CVNLlGd"
+
 
 def foxaholic_driver_selenium(url,cookie):
     driver = webdriver.Firefox()
@@ -847,7 +854,7 @@ def foxaholic_driver_selenium(url,cookie):
     return soup
 
 
-async def foxaholic_get_chapter_list(url,cookie):
+def foxaholic_get_chapter_list(url,cookie):
     #https://www.codecademy.com/article/web-scrape-with-selenium-and-beautiful-soup
     soup = foxaholic_driver_selenium(url,cookie)
     
@@ -864,15 +871,15 @@ async def foxaholic_get_chapter_list(url,cookie):
         chapterURL=processChapterURL
         chapterListURL.append(chapterURL)
     chapterListURL=list(reversed(chapterListURL))
-    
+    #logging.warning(chapterListURL)
     return chapterListURL
 
+#asyncio.run(foxaholic_get_chapter_list(link,cookie))
 
-async def foxaholic_scrape_chapter_page(url,cookie):
-    soup=foxaholic_driver_selenium(url,cookie)
-    
+
+
+def foxaholic_scrape_chapter_page(soup):
     pageContent=soup.find_all("div",{"class":"reading-content"})[0]
-    chapterTitle=pageContent.find("h1").get_text()
     chapterContent=pageContent.find_all("p")
     
     chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
@@ -883,7 +890,7 @@ async def foxaholic_scrape_chapter_page(url,cookie):
     if (chapterContent.endswith(']')):
         chapterContent=chapterContent[:-1]
     
-    return chapterContent
+    return bs4.BeautifulSoup(chapterContent,'html.parser')
 
 
 def remove_non_english_characters(text):
@@ -895,11 +902,11 @@ def foxaholic_novel_data(novelURL,cookie):
     soup=foxaholic_driver_selenium(novelURL,cookie)
     
     bookID=get_Total_Books()
-    bookID=bookID+1
+    bookID=str(bookID+1)
     bookData=soup.find("div",{"class":"post-content"})
-    novelData=bookData.find_all("div",{"class":"summary-content"})
+    novelData=bookData.find_all("div",{"class":"summary-content"}) or bookData.find_all("div",{"class":"summary_content"})
 
-    bookTitle=novelData[1].get_text()
+    bookTitle=soup.find("div",{"class":"post-title"}).get_text() or soup.find("div",{"class":"post_title"}).get_text()
     bookAuthor=novelData[2].get_text()
     
     bookTitle=remove_invalid_characters(bookTitle)
@@ -912,7 +919,6 @@ def foxaholic_novel_data(novelURL,cookie):
 
     if (description.startswith("Description: ")):
         description=description[13:]
-    logging.warning(description)
     
     location1=re.search("translator",description ,re.IGNORECASE)
     if not location1:
@@ -933,6 +939,7 @@ def foxaholic_novel_data(novelURL,cookie):
     location=min(location1,location2,location3)
     description=description[:location].strip()
 
+    logging.warning(description)
     lastScraped=datetime.datetime.now()
     chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
     rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
@@ -965,100 +972,125 @@ def foxaholic_query(title,cookie):
     return resultLink
 
 def foxaholic_save_cover_image(title,novelURL,saveDirectory,cookie):
-    soup = foxaholic_driver_selenium(novelURL,cookie)
+    driver = webdriver.Firefox()
+    options={
+        "Host": "www.foxaholic.com",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Referer": "https://www.foxaholic.com/",
+        #Foxaholic requires cookie. Will need to get new cookie each time.
+        "Cookie": cookie
+    }
+    def interception (request):
+        del request.headers['User-Agent']
+        del request.headers['Accept']
+        del request.headers['Accept-Language']
+        del request.headers['Accept-Encoding']
+        del request.headers['Referer']
+        del request.headers['Cookie']
+        
+        request.headers['User-Agent']=options["User-Agent"]
+        request.headers['Accept']=options["Accept"]
+        request.headers['Accept-Language']=options["Accept-Language"]
+        request.headers['Accept-Encoding']=options["Accept-Encoding"]
+        request.headers['Referer']=options["Referer"]
+        request.headers['Cookie']=options["Cookie"]
+    driver.request_interceptor=interception
+    driver.get(novelURL)
+    
+    
+    soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
     img_url = soup.find("div",{"class":"summary_image"}).find("img")
-    response =requests.get(img_url["src"],stream=True)
+    driver.get(img_url["src"])
+    image=driver.find_element(By.CSS_SELECTOR, 'img')
     
     if (saveDirectory.endswith("/")):
-        fileNameDir=f"{saveDirectory}{title}.jpg"
+        fileNameDir=f"{saveDirectory}{title}.png"
     else:
-        fileNameDir=f"{saveDirectory}/{title}.jpg"
-    
-    if not response.ok:
-        pass
-    else:
-        if not (check_directory_exists(saveDirectory)):
+        fileNameDir=f"{saveDirectory}/{title}.png"
+    if image:
+        if (check_directory_exists(saveDirectory)):
             make_directory(saveDirectory)
         if not (check_directory_exists(fileNameDir)):
-            response=response.content
             with open (fileNameDir,'wb') as f:
-                f.write(response)
+                f.write(image.screenshot_as_png)
             f.close()
+    driver.close()
 
 
+#foxaholic_save_cover_image("cover_image",link,f"./books/raw/Hikikomori VTuber Wants to Tell You Something",cookie)
 
+def foxaholic_fetch_Chapter_Title(soup):
+    chapterTitle=soup.find('div',{"class":"reading-content"})
+    chapterTitle=chapterTitle.find("h1")
 
-def foxaholic_produce_Epub(new_epub,novelURL,bookTitle,css):
+    if chapterTitle:
+        chapterTitle=chapterTitle.get_text()
+    else:
+        chapterTitle=soup.find('ol',{"class":"breadcrumb"})
+        chapterTitle=chapterTitle.find("li",{"class":"active"}).get_text()
+        if (" - " in chapterTitle):
+            chapterTitle=chapterTitle.split(" - ")[1]
+        elif (": " in chapterTitle):
+            chapterTitle.split(": ")[1]
+    chapterTitle=remove_invalid_characters(chapterTitle)
+    return chapterTitle
+
+def foxaholic_produce_Epub(new_epub,novelURL,bookTitle,css,cookie):
     
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
     
-    #logging.warning(already_saved_chapters)
     tocList=list()
     
     imageCount=0
     
-    #logging.warning(fetch_Chapter_List(novelURL))
-    for url in fetch_Chapter_List(novelURL):
-        chapterID=extract_chapter_ID(url)
-        chapterTitle=fetch_Chapter_Title(url)
-        #logging.warning(url)
-        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
-            #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
-            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
-            chapterContent=get_chapter_contents_from_saved(dirLocation)
-            fileChapterTitle=extract_chapter_title(dirLocation)
-            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
-            
-            currentImageCount=imageCount
-            for image in images:
-                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
-                epubImage=retrieve_stored_image(imageDir)
-                b=io.BytesIO()
-                epubImage.save(b,'jpeg')
-                b_image1=b.getvalue()
-                
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
-                new_epub.add_item(image_item)
-                currentImageCount+=1
-            chapterContent=chapterContent.encode("utf-8")
+    logging.warning(novelURL)
+    for url in foxaholic_get_chapter_list(novelURL,cookie):
+        soup = foxaholic_driver_selenium(url,cookie)
+        chapterID=url.split("/")
+        chapterID=chapterID[len(chapterID)-2]
+        chapterID=re.search(r'\d+',chapterID).group()
+        logging.warning (url)
+        chapterTitle=foxaholic_fetch_Chapter_Title(soup)
+        
+        time.sleep(0.5)
+        fileChapterTitle = f"{bookTitle} - {chapterID} - {chapterTitle}"
+        #logging.warning(fileChapterTitle)
+        chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+        chapterContent=foxaholic_scrape_chapter_page(soup)
+        
+        if chapterContent:
+            images=chapterContent.find_all('img')
+            images=[image['src'] for image in images]
         else:
-            
-            asyncio.sleep(0.5)
-            fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
-            #logging.warning(fileChapterTitle)
-            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-            chapterContent=fetch_Chapter(url)
-            
-            if chapterContent:
-                images=chapterContent.find_all('img')
-                images=[image['src'] for image in images]
-            else:
-                logging.warning("chapterContent is None")
+            logging.warning("chapterContent is None")
 
-            imageDir=f"./books/raw/{bookTitle}/images/"
-            currentImageCount=imageCount
-            #logging.warning(images)
-            if (images):
-                imageCount=save_images_in_chapter(images,imageDir,imageCount)
-            for img,image in zip(chapterContent.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.jpg")
-                
-                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.jpg"
-                epubImage=retrieve_stored_image(imageDir)
-                b=io.BytesIO()
-                epubImage.save(b,'jpeg')
-                b_image1=b.getvalue()
-                
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.jpg', media_type='image/jpg', content=b_image1)
-                new_epub.add_item(image_item)
-                currentImageCount+=1
-            chapterContent=chapterContent.encode('ascii')
-            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+        imageDir=f"./books/raw/{bookTitle}/images/"
+        currentImageCount=imageCount
+        #logging.warning(images)
+        if (images):
+            imageCount=save_images_in_chapter(images,imageDir,imageCount)
+        for img,image in zip(chapterContent.find_all('img'),images):
+            img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+            
+            imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+            epubImage=retrieve_stored_image(imageDir)
+            b=io.BytesIO()
+            epubImage.save(b,'jpeg')
+            b_image1=b.getvalue()
+            
+            image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+            new_epub.add_item(image_item)
+            currentImageCount+=1
+        chapterContent=chapterContent.encode('ascii')
+        store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
             
         
             
-        #logging.warning(fileChapterTitle)
+        logging.warning(fileChapterTitle)
         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
         chapter.set_content(chapterContent)
         chapter.add_item(css)
@@ -1067,12 +1099,17 @@ def foxaholic_produce_Epub(new_epub,novelURL,bookTitle,css):
     
     logging.warning("We reached produceEpub")
     img1=retrieve_cover_from_storage(bookTitle)
-    b=io.BytesIO()
-    img1.save(b,'jpeg')
-    b_image1=b.getvalue()
+    if img1:    
+        b=io.BytesIO()
+        try:
+            img1.save(b,'png')
+            b_image1=b.getvalue()
+            image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
+            new_epub.add_item(image1_item)
+        except Exception as e:
+            logging.warning(f"Failed to save image:{e}")
     
-    image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.jpeg', media_type='image/jpeg', content=b_image1)
-    new_epub.add_item(image1_item)
+    
     
     new_epub.toc=tocList
     new_epub.spine=tocList
@@ -1083,25 +1120,24 @@ def foxaholic_produce_Epub(new_epub,novelURL,bookTitle,css):
         write_order_of_contents(bookTitle, chapterMetaData)
     
     logging.warning("Attempting to store epub")
-    storeEpub(bookTitle,new_epub)
+    storeEpub(bookTitle,new_epub)#TypeError: Argument must be bytes or unicode, got 'int'
     
 
-def foxaholic_main_interface(novelURL,cookie):
+def foxaholic_main_interface(bookurl,cookie):
 
     #Check if valid url first.
-    isUrl=is_valid_url(novelURL)
+    isUrl=is_valid_url(bookurl)
     if (isUrl is False):
         return
-    bookurl=novelURL
     #logging.warning(bookurl)
-    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=foxaholic_novel_data(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=foxaholic_novel_data(bookurl,cookie)
     #logging.warning(bookID, bookTitle, latestChapter)
     if (check_latest_chapter(bookID,bookTitle,latestChapter)):
         pass
         #directory=getEpub(bookID)
     else:
         logging.warning("Getting epub")
-        foxaholic_save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}",cookie)
+        foxaholic_save_cover_image("cover_image",bookurl,f"./books/raw/{bookTitle}",cookie)
         
         new_epub=epub.EpubBook()
         new_epub.set_identifier(bookID)
@@ -1113,11 +1149,10 @@ def foxaholic_main_interface(novelURL,cookie):
         default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
 
         new_epub.add_item(default_css)
-        produceEpub(new_epub,bookurl,bookTitle,default_css)
-
+        foxaholic_produce_Epub(new_epub,bookurl,bookTitle,default_css,cookie)
         
         
-        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
         rooturl = rooturl.group()
         first,last,total=get_first_last_chapter(bookTitle)
         
@@ -1152,16 +1187,30 @@ def foxaholic_main_interface(novelURL,cookie):
 
 
 
-#list=asyncio.run(foxaholic_get_chapter_list(link,cookie))
-#logging.warning(list)
-#asyncio.run(foxaholic_get_chapter_list("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"))
 
-#content=asyncio.run(foxaholic_scrape_chapter_page(list[0],cookie))
-#logging.warning(content)
+logging.warning(foxaholic_main_interface(link,cookie))
 
-#store_chapter(content, 'test', 'test',0)
 
-#asyncio.run(foxaholic_main_interface(link,cookie))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #There needs to be a file to keep track of the order of the chapters within the books/raw/bookTitle folder.
 #This is because authors tend to go between Ch then Vol Ch, and then back to Ch
 
