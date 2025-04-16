@@ -59,7 +59,7 @@ async def getNovel(ctx):
             #This happens because i'm using asyncio.gather
             if (book is list):
                 book=str(book)
-            await os.stat(book)
+            #await os.stat(book)
             
             if os.path.getsize(book) > 8*1024*1024:
                 await ctx.send("File too large")

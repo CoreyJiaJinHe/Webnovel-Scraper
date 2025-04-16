@@ -259,7 +259,7 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
         
         new_epub.add_item(chapter)
         
-        asyncio.sleep(0.5)
+        time.sleep(0.5)
     new_epub.toc=tocList
     storeEpub(bookTitle,new_epub)
     
@@ -271,7 +271,7 @@ def save_images_in_chapter(img_urls,saveDirectory,imageCount):
         imageDir=f"{saveDirectory}image_{imageCount}.png"
         if not (check_directory_exists(imageDir)):
             response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
-            asyncio.sleep(0.5)
+            time.sleep(0.5)
             imageCount+=1
             if response.ok:
                 response=response.content
@@ -323,7 +323,7 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
             chapterContent=chapterContent.encode("utf-8")
         else:
             
-            asyncio.sleep(0.5)
+            time.sleep(0.5)
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
@@ -964,6 +964,10 @@ def foxaholic_Fetch_Novel_Data(novelURL,cookie):
     latestChapterID=latestChapterID[len(latestChapterID)-2]
     latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
     
+    
+    
+    
+    
     img_url = soup.find("div",{"class":"summary_image"}).find("img")
     
     if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
@@ -971,6 +975,13 @@ def foxaholic_Fetch_Novel_Data(novelURL,cookie):
     
     return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
+link="https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/"
+cookie="cf_clearance=tDB3S_2dQh6sQ7URRbdSkRKGS8zjoc10stiRlyofa2M-1744818018-1.2.1.1-d1.NLV4qr0.X_ZP_Xt4iOB6CLYalnwqb1Y6W0oe7TX837yadOGbRGxc6xvrvDrIWgoSua.imXIcpXRIsR7kABYVHQQ75luiXcYeWfc00J7DqklGhmJXZuAGevGV9dcemzXEhkdPn61SqFHGgioVcasRmFmMyM6x88QjZRXK6D8VAPalKy7YD_EGW2TgBJ6grzQiSGT9UjbD.sMgdmPZRrQC0n_ySIp80rvIgN1pMiu_7gf_cYZlrmaN4WghXPeGZSJaeOaDjTbwdfCVvYA3bkAC6OER1D8qAC8FMMGwq_kbxDDjlVumQBagWuDc7taK5GSykd2dLu7tE.ayygc7ATN4ZRsyFZ9Z.CmBrJEz0tc.C7NjIsuOJtX0ET7rHsESS"
+#logging.warning(asyncio.run(foxaholic_Fetch_Novel_Data(link,cookie)))
+
+
+
+#logging.warning(get_first_last_chapter("Hikikomori VTuber Wants to Tell You Something"))
 
 #Obsolete. Foxaholic does not have a working search api.
 def foxaholic_query(title,cookie):
@@ -1399,4 +1410,4 @@ async def novelbin_save_cover_image(title,img_url,saveDirectory):
 #asyncio.run(novelbin_save_cover_image('cover_image',link,f"./books/raw/test"))
 cookie="cf_clearance=NlJs0bngkId6uzNmAa_5P7aIl9NLJHbmsYlRQoJ3Y0s-1744745517-1.2.1.1-UzOUPHlUin548pVnivA2Fax1Vl6uZqLTCpCHsvAr1huj3y.FBDW0ONuE65caZwGR9ObtilS415VxAQanWZzgLT60KJ83WO9mNsBUsrR_912KlG1G8i5vBLfykKJMSd452Oh7fkx1_Hq9BSY3_vHB8umQqgRX7VhOozxsti2fAHL.8wDvHHJvGAS3fFtvKbcUAzOZp_IfdHphAsy3Zgz29pEzDH9UKzJgDcazR5G0_wrF98HniUf5paAjAEi0aVc0B2QyOHHuJtxWSIoVWW_r9R.0POerWMqm9uv9blPIdFT0fWfDmf8YTpRYu.DptIYLW8o88NkJgyrq_zapncRFaQHCNOBUme0HVS91MpbwlaY"
 link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
-logging.warning(asyncio.run(novelbin_get_chapter_list(link,cookie)))
+#logging.warning(asyncio.run(novelbin_get_chapter_list(link,cookie)))

@@ -152,27 +152,29 @@ function App() {
       return <BookCard key={book[0]} data={newDict} getBook={grabBook}/>;
     })
     
-    return <ul>{list}</ul>
+    return <ul class='grid grid-cols-4 gap-6 p-5'>{list}</ul>
   }
-
+  //justify-center items-center text-center
   function grabBook(id){
     getBook(id)
   }
-
   return (
     <>
-      <div>
-        <h1>Rudimentary File Hosting</h1>
+    <div class='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
+      <div class='flex flex-col gap-10 h-full mx-50 text-center '>
+        <h1 class='text-4xl mt-10'>Rudimentary File Hosting</h1>
         <p>Get your files below</p>
 
         <button onClick={getFiles}>Get File</button>
-        <div className="all-books"> 
+        
+
+      </div>
+      <div>
         {
         getBookCards()
         }
-
-        </div>
-        </div>
+      </div>
+    </div>
     </>
   )
 }

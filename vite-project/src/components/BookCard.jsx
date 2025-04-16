@@ -3,7 +3,7 @@ import axios from "axios";
 //import Swal from "sweetalert2";
 
 //This fixes INVALID_URL error with Axios
-const API_URL="http://localhost:8080/api";
+const API_URL="http://localhost:8000/api";
 const api= axios.create({baseURL: API_URL});
 
 async function downloadBook(id,getBook){
@@ -19,7 +19,7 @@ async function downloadBook(id,getBook){
 
 function bookCard({data:{_id, bookName,lastScraped,latestChapter},getBook}){
     return(
-        <div className="todo-card" class="mt-5 mb-5 border-solid border-black border-2 rounded-lg">
+        <div className="todo-card" class="grid flex max-w-96 mt-5 mb-5 border-solid border-black border-2 rounded-lg">
             <div className="st-4 p-2">
                 <h3>{bookName ? bookName:"Failed to get"}</h3>
                 <div>
