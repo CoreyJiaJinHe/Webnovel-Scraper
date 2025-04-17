@@ -172,7 +172,6 @@ def write_order_of_contents(bookTitle, chapterData):
         f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
     f.close()
 
-
 def fetch_Chapter_Title(soup):
     if not (isinstance(soup, bs4.BeautifulSoup)):
         soup=bs4.BeautifulSoup(requests.get(soup).text, 'html.parser')
@@ -180,7 +179,11 @@ def fetch_Chapter_Title(soup):
     return chapterTitle
 
 def remove_non_english_characters(text):
-    result=re.search(r'([A-Za-z0-9]+( [A-Za-z0-9]+)+)',text)
+    invalid_chars='【】'
+    for char in invalid_chars:
+        text=text.replace(char,'')
+    result = re.search(r'([A-Za-z0-9,!\'\-]+( [A-Za-z0-9,!\'\-]+)+)', text)
+    #logging.warning(result)
     if not result:
         return text
     return result.group() 
@@ -190,9 +193,12 @@ def remove_invalid_characters(inputString):
     for char in invalid_chars:
         inputString=inputString.replace(char,'')
     inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
-    inputString=inputString.strip()
     inputString=remove_non_english_characters(inputString)
-    return inputString
+    return inputString.strip()
+
+logging.warning(remove_invalid_characters("https://novelbin.me/novel-book/raising-orphans-not-assassins/vol-1-ch-4-daily-settlement-a-natural-born-powerhouse"))
+
+
 
 
 def check_if_chapter_exists(chapterID,savedChapters):
@@ -720,12 +726,17 @@ async def mainInterface(novelURL):
     else:
         #Then check if it is something I can scrape. 
         #If it is not a royalroad URL, then return false and stop.
-        royalroadUrl=re.search("https://www.royalroad.com/fiction/[0-9]+/",novelURL)
-        #logging.warning(royalroadUrl)
-        if (royalroadUrl is None):
+        if ("royalroad.com" in novelURL):
+            return royalroad_main_interface(novelURL)
+        elif ("foxaholic.com" in novelURL):
+            return foxaholic_main_interface(novelURL,foxaholic_cookie)
+        elif("novelbin.me" in novelURL or "novelbin.com" in novelURL):
+            return novelbin_main_interface(novelURL,novelbin_cookie)
+        else:
             return False
-        novelURL=royalroadUrl.group()
+            
     
+def royalroad_main_interface(novelURL):
     bookurl=novelURL
     logging.warning(bookurl)
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=RoyalRoad_Fetch_Novel_Data(bookurl)
@@ -976,7 +987,7 @@ def foxaholic_Fetch_Novel_Data(novelURL,cookie):
     return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
 link="https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/"
-cookie="cf_clearance=tDB3S_2dQh6sQ7URRbdSkRKGS8zjoc10stiRlyofa2M-1744818018-1.2.1.1-d1.NLV4qr0.X_ZP_Xt4iOB6CLYalnwqb1Y6W0oe7TX837yadOGbRGxc6xvrvDrIWgoSua.imXIcpXRIsR7kABYVHQQ75luiXcYeWfc00J7DqklGhmJXZuAGevGV9dcemzXEhkdPn61SqFHGgioVcasRmFmMyM6x88QjZRXK6D8VAPalKy7YD_EGW2TgBJ6grzQiSGT9UjbD.sMgdmPZRrQC0n_ySIp80rvIgN1pMiu_7gf_cYZlrmaN4WghXPeGZSJaeOaDjTbwdfCVvYA3bkAC6OER1D8qAC8FMMGwq_kbxDDjlVumQBagWuDc7taK5GSykd2dLu7tE.ayygc7ATN4ZRsyFZ9Z.CmBrJEz0tc.C7NjIsuOJtX0ET7rHsESS"
+foxaholic_cookie="cf_clearance=tDB3S_2dQh6sQ7URRbdSkRKGS8zjoc10stiRlyofa2M-1744818018-1.2.1.1-d1.NLV4qr0.X_ZP_Xt4iOB6CLYalnwqb1Y6W0oe7TX837yadOGbRGxc6xvrvDrIWgoSua.imXIcpXRIsR7kABYVHQQ75luiXcYeWfc00J7DqklGhmJXZuAGevGV9dcemzXEhkdPn61SqFHGgioVcasRmFmMyM6x88QjZRXK6D8VAPalKy7YD_EGW2TgBJ6grzQiSGT9UjbD.sMgdmPZRrQC0n_ySIp80rvIgN1pMiu_7gf_cYZlrmaN4WghXPeGZSJaeOaDjTbwdfCVvYA3bkAC6OER1D8qAC8FMMGwq_kbxDDjlVumQBagWuDc7taK5GSykd2dLu7tE.ayygc7ATN4ZRsyFZ9Z.CmBrJEz0tc.C7NjIsuOJtX0ET7rHsESS"
 #logging.warning(asyncio.run(foxaholic_Fetch_Novel_Data(link,cookie)))
 
 
@@ -1233,10 +1244,7 @@ def foxaholic_main_interface(bookurl,cookie):
         )
     
     return directory
-
-
-
-
+foxaholic_cookie="cf_clearance=TT0k9I_s8Y9S7vtQJTXVWrRhtGI9ZVsO0fiVqJpiSVA-1744916250-1.2.1.1-d94mrymRnq1272Fwhh6WTI_FeF5bcWCAUMOLDpZURuGIYpMES4yiDiE2NEbHedX7duniT_y7olXfzBlvGx_gR2pHKbbHSU8MTSOvVxiXo9.XFapFFUCdfl.70qKyJLvbjaoGvsH8bRKY4CuNO5iHSRbMXF0ysEGbW8vmZxEdyznD6_GnJ3OsPgRPIdM5mbQ7Mt.NqO1qqZhwYgOQDMz0fH9BgxhxC8HRNoGslrkktHIW6Rzc0KHlXXwSCbhYdKNyVeSCqWZ68YbPoKx0TdG0E78Bt3GkrmmD7yPLrkhYLHq10aTJPIXymWy216B1BKK2f3FoDa8Ss4AEaStqeRMQVHkn68arhc_PC6G4nu5Oajf94Vv5ILz5VqF2GK_.5ZDI"
 #logging.warning(foxaholic_main_interface(link,cookie))
 
 
@@ -1291,16 +1299,41 @@ link="https://www.novelcool.com/novel/If-You-Could-Hear-My-Heart.html"
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def novelbin_driver_selenium(url,cookie):
     driver = webdriver.Firefox()
     options={
-        #"Host": "www.foxaholic.com",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
         "Accept-Encoding": "gzip, deflate, br",
         #"Referer": "https://www.foxaholic.com/",
-        #Foxaholic requires cookie. Will need to get new cookie each time.
+        #Cloudflare requires cookie. Will need to get new cookie each time.
         "Cookie": cookie
     }
     def interception (request):
@@ -1325,7 +1358,7 @@ def novelbin_driver_selenium(url,cookie):
     return soup
 
 
-async def novelbin_get_chapter_list(url,cookie):
+def novelbin_get_chapter_list(url,cookie):
     #https://www.codecademy.com/article/web-scrape-with-selenium-and-beautiful-soup
     soup = novelbin_driver_selenium(f"{url}#tab-chapters-title",cookie)
     
@@ -1335,7 +1368,7 @@ async def novelbin_get_chapter_list(url,cookie):
     rows= chapterTable.find_all("li")
     
     chapterListURL=list()
-    for row in rows[1:len(rows)]:
+    for row in rows[:len(rows)]:
         processChapterURL=row.find("a")["href"]
         chapterURL=processChapterURL
         chapterListURL.append(chapterURL)
@@ -1345,12 +1378,14 @@ async def novelbin_get_chapter_list(url,cookie):
 def novelbin_fetch_novel_data(novelURL,cookie):
     soup=novelbin_driver_selenium(novelURL,cookie)
     
-    bookID=str(generate_new_ID(bookTitle))
-    logging.warning(bookID)
+    #There is a problem with the title, it is getting cut off by commas
     
     bookTitle=soup.find("h3",{"class":"title"}).get_text()
     bookTitle=remove_invalid_characters(bookTitle)
     logging.warning(bookTitle)
+    
+    bookID=str(generate_new_ID(bookTitle))
+    logging.warning(bookID)
     
     firstHalfBookData=soup.find("ul",{"class":"info info-meta"})
     novelData=firstHalfBookData.find_all("li")
@@ -1365,12 +1400,12 @@ def novelbin_fetch_novel_data(novelURL,cookie):
     
     lastScraped=datetime.datetime.now()
     
-    chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
-    rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+    chapterTable = soup.find("div", {"id": "list-chapter"})
+    rows= chapterTable.find_all("li")
     
-    latestChapter=rows[0]
+    latestChapter=rows[len(rows)-1]
     latestChapterID=latestChapter.find("a")["href"].split("/")
-    latestChapterID=latestChapterID[len(latestChapterID)-2]
+    latestChapterID=latestChapterID[len(latestChapterID)-1]
     latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
     
     img_url = soup.find("img",{"class":"lazy"})
@@ -1405,9 +1440,228 @@ async def novelbin_save_cover_image(title,img_url,saveDirectory):
                     with open (fileNameDir,'wb') as f:
                         f.write(response)
                     f.close()
+def novelbin_Fetch_Chapter_Title(soup):
+    chapterTitle=soup.find('span',{"class":"chr-text"})
+
+    if chapterTitle:
+        chapterTitle=chapterTitle.get_text()
+        if (chapterTitle.count("-")>=3):
+            chapterTitle=re.sub(r'\bVol\.\s*\d+\s*-\s*Ch\.\s*\d+\s*-\s*', '', chapterTitle)
+        else:
+            chapterTitle=chapterTitle.split("-")
+            chapterTitle=chapterTitle[len(chapterTitle)-1]
+        
+        if ":" in chapterTitle:
+            chapterTitle=chapterTitle.split(": ")
+            chapterTitle=chapterTitle[len(chapterTitle)-1]
+        else:
+            chapterTitle=re.sub(r'\bChapter\s+\d+\b', '', chapterTitle)
+        
+        chapterTitle=remove_invalid_characters(chapterTitle)
+        return chapterTitle
+    else:
+        return None
+
+def novelbin_scrape_chapter_page(soup):
+    pageContent=soup.find_all("div",{"id":"chr-content"})[0]
+    chapterContent=pageContent.find_all("p")
+    
+    chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
+    chapterContent=re.sub('</p>,','</p>',str(chapterContent))
+    
+    if (chapterContent.startswith('[')):
+        chapterContent=chapterContent[1:]
+    if (chapterContent.endswith(']')):
+        chapterContent=chapterContent[:-1]
+    
+    return bs4.BeautifulSoup(chapterContent,'html.parser')
+
+
+def novelbin_produce_epub(new_epub,novelURL,bookTitle,css,cookie):
+    
+    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    chapterMetaData=list()
+    
+    tocList=list()
+    
+    imageCount=0
+    
+    logging.warning(novelURL)
+    for url in novelbin_get_chapter_list(novelURL,cookie):
+        logging.warning (url)
+        chapterID=url.split("/")
+        chapterID=chapterID[len(chapterID)-1]
+        if "vol-" in chapterID:
+            chapterID = re.sub(r'vol-+\d', '', chapterID)
+        if "volume-" in chapterID:
+            chapterID = re.sub(r'volume-+\d', '', chapterID)
+        chapterID=re.search(r'\d+',chapterID).group()
+        logging.warning(chapterID)
+
+        if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+            chapterContent=get_chapter_contents_from_saved(dirLocation)
+            fileChapterTitle=extract_chapter_title(dirLocation)
+            #logging.warning(fileChapterTitle)
+            
+            chapterTitle=fileChapterTitle.split('-')
+            chapterTitle=chapterTitle[len(chapterTitle)-1]
+            
+            images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+            currentImageCount=imageCount
+            for image in images:
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'png')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode("utf-8")
+        
+        else:
+            time.sleep(0.5)
+            soup = novelbin_driver_selenium(url,cookie)
+            chapterTitle=novelbin_Fetch_Chapter_Title(soup)
+            fileChapterTitle = f"{bookTitle} - {chapterID} - {chapterTitle}"
+            #logging.warning(fileChapterTitle)
+            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+            chapterContent=novelbin_scrape_chapter_page(soup)
+            
+            if chapterContent:
+                images=chapterContent.find_all('img')
+                images=[image['src'] for image in images]
+            else:
+                logging.warning("chapterContent is None")
+
+            imageDir=f"./books/raw/{bookTitle}/images/"
+            currentImageCount=imageCount
+            #logging.warning(images)
+            if (images):
+                imageCount=save_images_in_chapter(images,imageDir,imageCount)
+            for img,image in zip(chapterContent.find_all('img'),images):
+                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                
+                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                epubImage=retrieve_stored_image(imageDir)
+                b=io.BytesIO()
+                epubImage.save(b,'png')
+                b_image1=b.getvalue()
+                
+                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                new_epub.add_item(image_item)
+                currentImageCount+=1
+            chapterContent=chapterContent.encode('ascii')
+            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+        
+        logging.warning(fileChapterTitle)
+        chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+        chapter.set_content(chapterContent)
+        chapter.add_item(css)
+        tocList.append(chapter)
+        new_epub.add_item(chapter)
+    
+    logging.warning("We reached produceEpub")
+    img1=retrieve_cover_from_storage(bookTitle)
+    if img1:    
+        b=io.BytesIO()
+        try:
+            img1.save(b,'png')
+            b_image1=b.getvalue()
+            image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
+            new_epub.add_item(image1_item)
+        except Exception as e:
+            logging.warning(f"Failed to save image:{e}")
+    
+    
+    
+    new_epub.toc=tocList
+    new_epub.spine=tocList
+    new_epub.add_item(epub.EpubNcx())
+    new_epub.add_item(epub.EpubNav())
+    
+    if (already_saved_chapters is False or not already_saved_chapters):
+        write_order_of_contents(bookTitle, chapterMetaData)
+    
+    logging.warning("Attempting to store epub")
+    storeEpub(bookTitle,new_epub)#TypeError: Argument must be bytes or unicode, got 'int'
+    
+
+def novelbin_main_interface(link,cookie):
+    #Check if valid url first.
+    isUrl=is_valid_url(link)
+    if (isUrl is False):
+        return
+    #logging.warning(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=novelbin_fetch_novel_data(link,cookie)
+    
+    
+    
+    #logging.warning(bookID, bookTitle, latestChapter)
+    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
+        pass
+    else:
+        logging.warning("Getting epub")
+        
+        new_epub=epub.EpubBook()
+        new_epub.set_identifier(bookID)
+        new_epub.set_title(bookTitle)
+        new_epub.set_language('en')
+        new_epub.add_author(bookAuthor)
+        style=open("style.css","r").read()
+        
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+
+        new_epub.add_item(default_css)
+        novelbin_produce_epub(new_epub,link,bookTitle,default_css,cookie)
+        
+        
+        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", link)
+        rooturl = rooturl.group()
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        logging.warning(bookID)
+        bookID=int(remove_invalid_characters(bookID))
+        #logging.warning(bookID)
+        directory = create_epub_directory_url(bookTitle)
+        create_Entry(
+            bookID=bookID,
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+        
+        create_latest(
+            bookID=int(bookID),
+            bookName=bookTitle,
+            bookAuthor=bookAuthor,
+            bookDescription=description,
+            websiteHost=rooturl,
+            firstChapter=first,
+            lastChapter=last,
+            totalChapters=total,
+            directory=directory
+        )
+    
+    return directory
+
+
+
+
+
+
 
 #link="https://novelbin.me/media/novel/genshin-impact-i-heavenly-principle-will-make-teyvat-supreme.jpg"
 #asyncio.run(novelbin_save_cover_image('cover_image',link,f"./books/raw/test"))
-cookie="cf_clearance=NlJs0bngkId6uzNmAa_5P7aIl9NLJHbmsYlRQoJ3Y0s-1744745517-1.2.1.1-UzOUPHlUin548pVnivA2Fax1Vl6uZqLTCpCHsvAr1huj3y.FBDW0ONuE65caZwGR9ObtilS415VxAQanWZzgLT60KJ83WO9mNsBUsrR_912KlG1G8i5vBLfykKJMSd452Oh7fkx1_Hq9BSY3_vHB8umQqgRX7VhOozxsti2fAHL.8wDvHHJvGAS3fFtvKbcUAzOZp_IfdHphAsy3Zgz29pEzDH9UKzJgDcazR5G0_wrF98HniUf5paAjAEi0aVc0B2QyOHHuJtxWSIoVWW_r9R.0POerWMqm9uv9blPIdFT0fWfDmf8YTpRYu.DptIYLW8o88NkJgyrq_zapncRFaQHCNOBUme0HVS91MpbwlaY"
+novelbin_cookie="cf_clearance=uV5dVAIEDMPgsA4aAHzYOojtcZLaDZud0OXYDA8.p0c-1744912119-1.2.1.1-SXDR6LWOaDbZ1WGCsFWuANVtmkzCCR_nlP6gzDP6Rk5GBavG0gGbzn2rb0LVhDjEP6bp6I2YzEmAKe1B4hPkTFAqvrBZQIkvahjz.vBPbQ9El6K5ItTLIOpodv..q.lXeFlVa4eqRxB_0fwQMW4z1pDOU3rsh6pCH42VmYfuGbYzygiA2Y0KT39254p88Z0XUr8pS8szqlcY2nbRZSuD.kakIq7dmgudb_o9tS1JCdg4Uf3Mnfp70zZDf5VlT8Z7iMeWwuO0aWI05d70kS8SGf6v.jtfBsbcREU74t34FShuZfM8mgym0fXmLTzRORmlA4jr42pdMWPZ4ixIPHzsIh01uaJi0xOJfR.4EFEfu_g"
 link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
+#logging.warning(novelbin_fetch_novel_data(link,cookie))
 #logging.warning(asyncio.run(novelbin_get_chapter_list(link,cookie)))
+#logging.warning(novelbin_main_interface(link,novelbin_cookie))

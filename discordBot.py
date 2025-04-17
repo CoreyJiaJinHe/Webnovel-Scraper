@@ -67,7 +67,7 @@ async def getNovel(ctx):
                 await ctx.send(PUBLIC_URL)
                 return
             
-            file=await discord.File(book)
+            file= discord.File(book)
             await ctx.send(file=file)
         
         
@@ -98,4 +98,4 @@ def checkChannel(ctx):
     serverID=channel.guild.id
     return mongodbBotChannels.check_already_allowed(serverID, channelID)
         
-bot.run(''+DISCORD_TOKEN+'')
+bot.run(''+DISCORD_TOKEN+'',log_handler=None)
