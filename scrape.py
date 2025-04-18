@@ -196,7 +196,7 @@ def remove_invalid_characters(inputString):
     inputString=remove_non_english_characters(inputString)
     return inputString.strip()
 
-logging.warning(remove_invalid_characters("https://novelbin.me/novel-book/raising-orphans-not-assassins/vol-1-ch-4-daily-settlement-a-natural-born-powerhouse"))
+#logging.warning(remove_invalid_characters("https://novelbin.me/novel-book/raising-orphans-not-assassins/vol-1-ch-4-daily-settlement-a-natural-born-powerhouse"))
 
 
 
@@ -714,7 +714,7 @@ def is_valid_url(url):
 #     'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0'
 
 #Main call interface.
-async def mainInterface(novelURL):
+def mainInterface(novelURL):
     #Check if valid url first.
     isUrl=is_valid_url(novelURL)
     if (isUrl is False):

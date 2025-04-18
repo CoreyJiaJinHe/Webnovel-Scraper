@@ -6,6 +6,7 @@ import logging
 import asyncio
 import threading 
 import scrape
+import queue
 
 load_dotenv()
 PUBLIC_KEY=os.getenv('PUBLIC_KEY')
@@ -18,6 +19,7 @@ intents.message_content=True
 
 
 bot = commands.Bot(command_prefix='!',intents=intents)
+
 @bot.command()
 async def test(ctx):
     if(checkChannel(ctx)):
@@ -26,11 +28,20 @@ async def test(ctx):
 
 import mongodbBotChannels
 
+
+bookQueue=queue.Queue()
+
 @bot.command(aliases=['epub','getnovel'])
 async def getNovel(ctx):
+    logging.warning(checkChannel(ctx))
     if(checkChannel(ctx)):
-        novelURL=ctx.message.content.split(' ')[1]
+        novelURL=ctx.message.content.split(' ')[1]    
+        global bookQueue
+        bookQueue.put([novelURL,ctx.channel.id])
         
+        logging.warning(f"Novel URL: {novelURL}")
+        await ctx.send("Request received. Trying to get now.")
+        await createThreads()
         
         ##THIS DOES and DOES NOT WORK.
         #This times out heartbeat but somehow manages to send the epub???
@@ -42,38 +53,57 @@ async def getNovel(ctx):
         
         #task = asyncio.create_task(await scrape.mainInterface(novelURL))
         #book=await task
+
+async def createThreads():
+    global bookQueue
+    if not (bookQueue.empty()):
+        logging.warning(f"Book Queue: {bookQueue.qsize()}")
+        url,channelID=bookQueue.get()
+        #asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
+        asyncio.to_thread(grabNovel(url,channelID))
         
-        book=await scrape.mainInterface(novelURL)
+        #asyncio.to_thread(await grabNovel(url,channelID))
+        #threading.Thread(target=asyncio.gather(await grabNovel(url,channelID))).start()
+#        threading.Thread(target=grabNovel, args=(url,channelID)).start()
+                        #t1=threading.Thread(target=grabNovel, args=(bookQueue[0][1],bookQueue[0][1]))
+                        #t1.start()
+#https://docs.python.org/3/library/asyncio-eventloop.html#
+#https://docs.python.org/3/library/asyncio-task.html#coroutine
+
+#asyncio.create_task(scrape.mainInterface(novelURL))
+#The blocking code is requests library. To change, I need to migrate to aiohttp. Other libraries could also be blocking.
+
+
+def grabNovel(novelURL,channelID):
+    book=scrape.mainInterface(novelURL)
+    
+    asyncio.run(sendChannelFile(channelID,book))
+    
+async def sendChannelFile(channelID,file):
+    channel = await bot.get_channel(channelID)
+    if(book==None or book==False):
+        await channel.send("Invalid URL")
+        return
+    else:
+        await channel.send("Novel Found. Generating epub")
+        #This happens because i'm using asyncio.gather
+        if (book is list):
+            book=str(book)
+        #await os.stat(book)
         
-        #https://docs.python.org/3/library/asyncio-eventloop.html#
-        #https://docs.python.org/3/library/asyncio-task.html#coroutine
-        
-        #asyncio.create_task(scrape.mainInterface(novelURL))
-        #The blocking code is requests library. To change, I need to migrate to aiohttp. Other libraries could also be blocking.
-        logging.warning(book)
-        if(book==None or book==False):
-            await ctx.send("Invalid URL")
+        if os.path.getsize(book) > 8*1024*1024:
+            await channel.send("File too large")
+            await channel.send("Please download the file from the link below")
+            await channel.send(PUBLIC_URL)
             return
-        else:
-            await ctx.send("Novel Found. Generating epub")
-            #This happens because i'm using asyncio.gather
-            if (book is list):
-                book=str(book)
-            #await os.stat(book)
-            
-            if os.path.getsize(book) > 8*1024*1024:
-                await ctx.send("File too large")
-                await ctx.send("Please download the file from the link below")
-                await ctx.send(PUBLIC_URL)
-                return
-            
-            file= discord.File(book)
-            await ctx.send(file=file)
         
+        file= discord.File(book)
+        await channel.send(file=file)
         
-    #await ctx.send(novelURL)
-    
-    
+    await channel.send(file=file)
+#Idea: Create a main interface command that will create threads to call scrape.py
+#Create a queue to process multiple epub requests in sequence
+#use global variables to share the file/directory link
 
 @bot.command(aliases=['addchannel'])
 async def addChannel(ctx):
@@ -97,5 +127,31 @@ def checkChannel(ctx):
     channelID=channel.id
     serverID=channel.guild.id
     return mongodbBotChannels.check_already_allowed(serverID, channelID)
-        
+     
+@bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
+    await bot.change_presence(activity=discord.Game(name="I am online"))
+    channel=await bot.fetch_channel(1358957302085849188) or await bot.get_channel(1358957302085849188)
+    await channel.send("I am online")   
+    print(f'We have sent a message as {bot.user} to {channel}')
+
+@bot.command(aliases=['clear','purge'])
+async def clear_messages(ctx, limit:int=1):
+    this_channel=ctx.channel.id
+    channel=bot.get_channel(int(this_channel))
+    if (0<limit<=100):
+        if (checkChannel(ctx)):  
+            deleted=await channel.purge(limit=limit) #,check=is_me
+            await channel.send(f'Deleted {len(deleted)} message(s)')
+        else:
+            await ctx.send("I am not authorized to delete other channel messages")
+            
 bot.run(''+DISCORD_TOKEN+'',log_handler=None)
+
+    
+# "serverID": 580433045501378600,
+# "serverName": "Chaotic Tavern ™",
+# "channelID": [
+# 1358957302085849000
+# ],
