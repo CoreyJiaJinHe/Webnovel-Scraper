@@ -1,5 +1,33 @@
 
 
+import aiohttp
+import asyncio
+import logging
+
+async def download_file(url, filename):
+    async with aiohttp.ClientSession(headers = {
+            'User-agent': 'Image Bot'}) as session:
+        async with session.get(url) as response:
+            logging.warning(response.status)
+            if response.status !=200:
+                logging.warning("Failed to connect")
+            logging.warning(response.content)
+            with open(filename, "wb") as f: 
+                chunk_size = 4096
+                async for data in response.content.iter_chunked(chunk_size):
+                    f.write(data)
+
+asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
+
+# response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
+# time.sleep(0.5)
+# imageCount+=1
+# if response.ok:
+#     response=response.content
+#     with open (imageDir,'wb') as f:
+#         f.write(response)
+#     f.close()
+
 
 # async with aiohttp.ClientSession(headers = {
 #     "Host": "www.foxaholic.com",

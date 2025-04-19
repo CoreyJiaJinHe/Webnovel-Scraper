@@ -35,7 +35,7 @@ bookQueue=queue.Queue()
 async def getNovel(ctx):
     logging.warning(checkChannel(ctx))
     if(checkChannel(ctx)):
-        novelURL=ctx.message.content.split(' ')[1]    
+        novelURL=ctx.message.content.split(' ')[1]
         global bookQueue
         bookQueue.put([novelURL,ctx.channel.id])
         
@@ -56,11 +56,16 @@ async def getNovel(ctx):
 
 async def createThreads():
     global bookQueue
-    if not (bookQueue.empty()):
+    if not bookQueue.empty():
         logging.warning(f"Book Queue: {bookQueue.qsize()}")
-        url,channelID=bookQueue.get()
-        #asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
-        asyncio.to_thread(grabNovel(url,channelID))
+        url, channelID = bookQueue.get()
+        await grabNovel(url, channelID)  # Await the grabNovel coroutine
+    # if not (bookQueue.empty() and asyncio.get_event_loop() is None):
+    #     logging.warning(f"Book Queue: {bookQueue.qsize()}")
+    #     url,channelID=bookQueue.get()
+    #     #asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
+        
+    #     asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
         
         #asyncio.to_thread(await grabNovel(url,channelID))
         #threading.Thread(target=asyncio.gather(await grabNovel(url,channelID))).start()
@@ -74,33 +79,31 @@ async def createThreads():
 #The blocking code is requests library. To change, I need to migrate to aiohttp. Other libraries could also be blocking.
 
 
-def grabNovel(novelURL,channelID):
-    book=scrape.mainInterface(novelURL)
-    
-    asyncio.run(sendChannelFile(channelID,book))
+async def grabNovel(novelURL, channelID):
+    book = await scrape.mainInterface(novelURL)  # Await the coroutine directly
+    await sendChannelFile(channelID, book)
     
 async def sendChannelFile(channelID,file):
-    channel = await bot.get_channel(channelID)
-    if(book==None or book==False):
+    channel = bot.get_channel(channelID)
+    if(file==None or file==False):
         await channel.send("Invalid URL")
         return
     else:
         await channel.send("Novel Found. Generating epub")
-        #This happens because i'm using asyncio.gather
-        if (book is list):
-            book=str(book)
+        
+        if isinstance(file, list):
+            file = ''.join(file)  # Join list elements into a single string
+            logging.warning(file)
         #await os.stat(book)
         
-        if os.path.getsize(book) > 8*1024*1024:
+        if os.path.getsize(file) > 8*1024*1024:
             await channel.send("File too large")
             await channel.send("Please download the file from the link below")
             await channel.send(PUBLIC_URL)
             return
         
-        file= discord.File(book)
-        await channel.send(file=file)
-        
-    await channel.send(file=file)
+        discord_file= discord.File(file)
+        await channel.send(file=discord_file)
 #Idea: Create a main interface command that will create threads to call scrape.py
 #Create a queue to process multiple epub requests in sequence
 #use global variables to share the file/directory link
@@ -133,7 +136,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
     await bot.change_presence(activity=discord.Game(name="I am online"))
     channel=await bot.fetch_channel(1358957302085849188) or await bot.get_channel(1358957302085849188)
-    await channel.send("I am online")   
+    #await channel.send("I am online")   
     print(f'We have sent a message as {bot.user} to {channel}')
 
 @bot.command(aliases=['clear','purge'])

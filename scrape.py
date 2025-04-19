@@ -55,77 +55,107 @@ def check_existing_book_Title(bookTitle):
         return False
     return True
 
-def RoyalRoad_Fetch_Novel_Data(novelURL):
-    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
-    x=re.search("/[0-9]+/",novelURL)
-    bookID=x.group()
-    
-    novelData=soup.find("div",{"class":"fic-title"})
-    novelData=novelData.get_text().strip().split("\n")
-    bookTitle=novelData[0]
-    bookAuthor=novelData[len(novelData)-1]
-    #logging.warning(novelData)
-    
-    bookTitle=remove_invalid_characters(bookTitle)
-            
-    description=soup.find("div",{"class":"description"}).get_text()
-    lastScraped=datetime.datetime.now()
-    
-    chapterTable=soup.find("table",{"id":"chapters"})
-    rows=chapterTable.find_all("tr")
-    
-    latestChapter=rows[len(rows)-1]
-    latestChapter=latestChapter.find("a")["href"].split("/")
-    latestChapterID=latestChapter[5]
-    
-    img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
-    saveDirectory=f"./books/raw/{bookTitle}/"
-    if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-        response =requests.get(img_url["src"],stream=True)
-        if not response.ok:
-            pass
-        else:
-            fileNameDir=f"{saveDirectory}cover_image.png"
-            if not (check_directory_exists(saveDirectory)):
-                make_directory(saveDirectory)
-            if not (check_directory_exists(fileNameDir)):
-                response=response.content
-                with open (fileNameDir,'wb') as f:
-                    f.write(response)
-                f.close()
+async def RoyalRoad_Fetch_Novel_Data(novelURL):
+    async with aiohttp.ClientSession(headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    }) as session:
+        async with session.get(novelURL) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = bs4.BeautifulSoup(html, 'html.parser')
+                x=re.search("/[0-9]+/",novelURL)
+                bookID=x.group()
+                
+                novelData=soup.find("div",{"class":"fic-title"})
+                novelData=novelData.get_text().strip().split("\n")
+                bookTitle=novelData[0]
+                bookAuthor=novelData[len(novelData)-1]
+                #logging.warning(novelData)
+                
+                bookTitle=remove_invalid_characters(bookTitle)
+                        
+                description=soup.find("div",{"class":"description"}).get_text()
+                lastScraped=datetime.datetime.now()
+                
+                chapterTable=soup.find("table",{"id":"chapters"})
+                rows=chapterTable.find_all("tr")
+                
+                latestChapter=rows[len(rows)-1]
+                latestChapter=latestChapter.find("a")["href"].split("/")
+                latestChapterID=latestChapter[5]
+                
+                img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
+                saveDirectory=f"./books/raw/{bookTitle}/"
+                if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                    async with aiohttp.ClientSession(headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                    }) as session:
+                        if not isinstance(img_url,str):
+                            img_url=img_url["src"]
+                        async with session.get(img_url) as response:
+                            if response.status == 200:
+                                fileNameDir=f"{saveDirectory}cover_image.png"
+                                if not (check_directory_exists(saveDirectory)):
+                                    make_directory(saveDirectory)
+                                if not (check_directory_exists(fileNameDir)):
+                                    response=await response.content.read()
+                                    with open (fileNameDir,'wb') as f:
+                                        f.write(response)
+                                    f.close()
+                #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
+                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
     #print(description)
-    return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
 
-def RoyalRoad_Fetch_Chapter_List(novelURL):
-    soup = bs4.BeautifulSoup(requests.get(novelURL).text, 'html.parser')
-    chapterTable=soup.find("table",{"id":"chapters"})
-    rows=chapterTable.find_all("tr")
-    
-    rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
-    rooturl=rooturl.group()
-    
-    chapterListURL=list()
-    for row in rows[1:len(rows)]:
-        chapterData={}
-        chapterData["name"]=row.find("a").contents[0].strip()
-        processChapterURL=row.find("a")["href"].split("/")
-        #Process into shortened link
-        chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
-        chapterListURL.append(chapterURL)
-        chapterData["url"]=chapterURL
+async def RoyalRoad_Fetch_Chapter_List(novelURL):
+    async with aiohttp.ClientSession(headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    }) as session:
+        async with session.get(novelURL) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = bs4.BeautifulSoup(html, 'html.parser')
+                chapterTable=soup.find("table",{"id":"chapters"})
+                rows=chapterTable.find_all("tr")
+                
+                rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
+                rooturl=rooturl.group()
+                
+                chapterListURL=list()
+                for row in rows[1:len(rows)]:
+                    chapterData={}
+                    chapterData["name"]=row.find("a").contents[0].strip()
+                    processChapterURL=row.find("a")["href"].split("/")
+                    #Process into shortened link
+                    chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
+                    chapterListURL.append(chapterURL)
+                    chapterData["url"]=chapterURL
     return chapterListURL
 
     
-def RoyalRoad_Fetch_Chapter(chapterURL):
-    response = requests.get(chapterURL)
-    if response.status_code != 200:
-        logging.warning(f"Failed to fetch chapter URL: {chapterURL}, Status Code: {response.status_code}")
-        return None
-    soup = bs4.BeautifulSoup(response.text, 'html.parser')
-    chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
-    if chapterContent is None:
-        logging.warning(f"Could not find chapter content for URL: {chapterURL}")
+async def RoyalRoad_Fetch_Chapter(chapterURL):
+    async with aiohttp.ClientSession(headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    }) as session:
+        async with session.get(chapterURL) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = bs4.BeautifulSoup(html, 'html.parser')
+                chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
+                if chapterContent is None:
+                    logging.warning(f"Could not find chapter content for URL: {chapterURL}")
+            else:
+                logging.warning(f"Failed to fetch chapter URL: {chapterURL}, Status Code: {response.status_code}")
+                return None
     return chapterContent#.encode('ascii')
     
     
@@ -172,11 +202,20 @@ def write_order_of_contents(bookTitle, chapterData):
         f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
     f.close()
 
-def fetch_Chapter_Title(soup):
-    if not (isinstance(soup, bs4.BeautifulSoup)):
-        soup=bs4.BeautifulSoup(requests.get(soup).text, 'html.parser')
-    chapterTitle=soup.find("h1").get_text()
-    return chapterTitle
+async def fetch_Chapter_Title(soup):
+    if not (isinstance(soup, bs4.BeautifulSoup)): #IF for some god forsaken reason its a url string instead of a soup object
+        async with aiohttp.ClientSession(headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        }) as session:
+            async with session.get(soup) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    chapterTitle=soup.find("h1").get_text()
+                    return chapterTitle
 
 def remove_non_english_characters(text):
     invalid_chars='【】'
@@ -270,20 +309,26 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
     storeEpub(bookTitle,new_epub)
     
 
-def save_images_in_chapter(img_urls,saveDirectory,imageCount):
+async def save_images_in_chapter(img_urls,saveDirectory,imageCount):
     if not (check_directory_exists(saveDirectory)):
         make_directory(saveDirectory)
-    for image in img_urls:
+    for image_url in img_urls:
+        logging.warning(image_url)
         imageDir=f"{saveDirectory}image_{imageCount}.png"
         if not (check_directory_exists(imageDir)):
-            response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
-            time.sleep(0.5)
-            imageCount+=1
-            if response.ok:
-                response=response.content
-                with open (imageDir,'wb') as f:
-                    f.write(response)
-                f.close()
+            async with aiohttp.ClientSession(headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                if not isinstance(image_url,str):
+                    image_url=image_url["src"]
+                async with session.get(image_url) as response:
+                    if response.status == 200:
+                        response=await response.content.read()
+                        with open (imageDir,'wb') as f:
+                            f.write(response)
+                        f.close()
+        await asyncio.sleep(0.5)
+            
+        imageCount+=1
     return imageCount
 
 def retrieve_stored_image(imageDir):
@@ -293,7 +338,7 @@ def retrieve_stored_image(imageDir):
         logging.warning(f"Image file not found: {imageDir}")
     return None
 
-def produceEpub(new_epub,novelURL,bookTitle,css):
+async def produceEpub(new_epub,novelURL,bookTitle,css):
     
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
@@ -302,12 +347,11 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
     tocList=list()
     
     imageCount=0
-    
     #logging.warning(RoyalRoad_Fetch_Chapter_List(novelURL))
-    for url in RoyalRoad_Fetch_Chapter_List(novelURL):
+    for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
         chapterID=extract_chapter_ID(url)
-        chapterTitle=fetch_Chapter_Title(url)
-        #logging.warning(url)
+        chapterTitle=await fetch_Chapter_Title(url)
+        logging.warning(url)
         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
             #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
@@ -328,12 +372,11 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
                 currentImageCount+=1
             chapterContent=chapterContent.encode("utf-8")
         else:
-            
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-            chapterContent=RoyalRoad_Fetch_Chapter(url)
+            chapterContent=await RoyalRoad_Fetch_Chapter(url)
             
             if chapterContent:
                 images=chapterContent.find_all('img')
@@ -345,7 +388,7 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
             currentImageCount=imageCount
             #logging.warning(images)
             if (images):
-                imageCount=save_images_in_chapter(images,imageDir,imageCount)
+                imageCount=await save_images_in_chapter(images,imageDir,imageCount)
             for img,image in zip(chapterContent.find_all('img'),images):
                 img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
                 
@@ -384,11 +427,14 @@ def produceEpub(new_epub,novelURL,bookTitle,css):
     new_epub.add_item(epub.EpubNcx())
     new_epub.add_item(epub.EpubNav())
     
+    logging.warning(new_epub)
+    
     if (already_saved_chapters is False or not already_saved_chapters):
         write_order_of_contents(bookTitle, chapterMetaData)
     
     logging.warning("Attempting to store epub")
-    storeEpub(bookTitle,new_epub)
+    storeEpub(bookTitle, new_epub)
+    #storeEpub(bookTitle,new_epub)
 
 def retrieve_cover_from_storage(bookTitle):
     dirLocation=f"./books/raw/{bookTitle}/cover_image.png" #or 
@@ -666,7 +712,7 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
 
 
 #option takes two values 0 or 1. 0 for relevance. 1 for popularity.
-def query_royalroad(title, option):
+async def query_royalroad(title, option):
     if (title.isspace() or title==""):
         return "Invalid Title"
         
@@ -677,17 +723,23 @@ def query_royalroad(title, option):
     else:
         return ("Invalid Option")
 
-    
-    soup = bs4.BeautifulSoup(requests.get(querylink).text, 'html.parser')
-    resultTable=soup.find("div",{"class":"fiction-list"})
-    bookTable=resultTable.find("h2",{"class":"fiction-title"})
-    bookRows=bookTable.find_all("a")
-    firstResult=bookRows[0]['href']
-
-    #formatting
-    resultLink=f"https://www.royalroad.com{firstResult}"
-    
-    return resultLink
+    async with aiohttp.ClientSession(headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    }) as session:
+        async with session.get(querylink) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = bs4.BeautifulSoup(html, 'html.parser')
+                resultTable=soup.find("div",{"class":"fiction-list"})
+                bookTable=resultTable.find("h2",{"class":"fiction-title"})
+                bookRows=bookTable.find_all("a")
+                firstResult=bookRows[0]['href']
+                #formatting
+                resultLink=f"https://www.royalroad.com{firstResult}"
+                return resultLink
 
 #logging.warning(query_royalroad("Pokemon",1))
 
@@ -727,7 +779,7 @@ def mainInterface(novelURL):
         #Then check if it is something I can scrape. 
         #If it is not a royalroad URL, then return false and stop.
         if ("royalroad.com" in novelURL):
-            return royalroad_main_interface(novelURL)
+            return asyncio.gather(royalroad_main_interface(novelURL))
         elif ("foxaholic.com" in novelURL):
             return foxaholic_main_interface(novelURL,foxaholic_cookie)
         elif("novelbin.me" in novelURL or "novelbin.com" in novelURL):
@@ -736,10 +788,10 @@ def mainInterface(novelURL):
             return False
             
     
-def royalroad_main_interface(novelURL):
+async def royalroad_main_interface(novelURL):
     bookurl=novelURL
     logging.warning(bookurl)
-    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=RoyalRoad_Fetch_Novel_Data(bookurl)
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await RoyalRoad_Fetch_Novel_Data(bookurl)
     #logging.warning(bookID, bookTitle, latestChapter)
     if (check_latest_chapter(bookID,bookTitle,latestChapter)):
         pass
@@ -756,7 +808,7 @@ def royalroad_main_interface(novelURL):
         default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
 
         new_epub.add_item(default_css)
-        produceEpub(new_epub,bookurl,bookTitle,default_css)
+        await produceEpub(new_epub,bookurl,bookTitle,default_css)
 
         
         
