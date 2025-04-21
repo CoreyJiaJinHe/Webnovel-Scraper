@@ -111,54 +111,33 @@ async def RoyalRoad_Fetch_Novel_Data(novelURL):
 
 
 async def RoyalRoad_Fetch_Chapter_List(novelURL):
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    }) as session:
-        async with session.get(novelURL) as response:
-            if response.status == 200:
-                html = await response.text()
-                soup = bs4.BeautifulSoup(html, 'html.parser')
-                chapterTable=soup.find("table",{"id":"chapters"})
-                rows=chapterTable.find_all("tr")
-                
-                rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
-                rooturl=rooturl.group()
-                
-                chapterListURL=list()
-                for row in rows[1:len(rows)]:
-                    chapterData={}
-                    chapterData["name"]=row.find("a").contents[0].strip()
-                    processChapterURL=row.find("a")["href"].split("/")
-                    #Process into shortened link
-                    chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
-                    chapterListURL.append(chapterURL)
-                    chapterData["url"]=chapterURL
+    soup=getSoup(novelURL)
+    chapterTable=soup.find("table",{"id":"chapters"})
+    rows=chapterTable.find_all("tr")
+    
+    rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
+    rooturl=rooturl.group()
+    
+    chapterListURL=list()
+    for row in rows[1:len(rows)]:
+        chapterData={}
+        chapterData["name"]=row.find("a").contents[0].strip()
+        processChapterURL=row.find("a")["href"].split("/")
+        #Process into shortened link
+        chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
+        chapterListURL.append(chapterURL)
+        chapterData["url"]=chapterURL
     return chapterListURL
 
     
-async def RoyalRoad_Fetch_Chapter(chapterURL):
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    }) as session:
-        async with session.get(chapterURL) as response:
-            if response.status == 200:
-                html = await response.text()
-                soup = bs4.BeautifulSoup(html, 'html.parser')
-                chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
-                if chapterContent is None:
-                    logging.warning(f"Could not find chapter content for URL: {chapterURL}")
-            else:
-                logging.warning(f"Failed to fetch chapter URL: {chapterURL}, Status Code: {response.status_code}")
-                return None
+async def RoyalRoad_Fetch_Chapter(soup):
+    chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
+    if chapterContent is None:
+        logging.warning(f"Did not receive soup")
+    else:
+        logging.warning(f"Failed to extract content from soup")
+        return None
     return chapterContent#.encode('ascii')
-    
-    
     
 #Get the chapter ID and title.
 def extract_chapter_ID(chapterURL):
@@ -203,19 +182,8 @@ def write_order_of_contents(bookTitle, chapterData):
     f.close()
 
 async def fetch_Chapter_Title(soup):
-    if not (isinstance(soup, bs4.BeautifulSoup)): #IF for some god forsaken reason its a url string instead of a soup object
-        async with aiohttp.ClientSession(headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        }) as session:
-            async with session.get(soup) as response:
-                if response.status == 200:
-                    html = await response.text()
-                    soup = bs4.BeautifulSoup(html, 'html.parser')
-                    chapterTitle=soup.find("h1").get_text()
-                    return chapterTitle
+    chapterTitle=soup.find("h1").get_text()
+    return chapterTitle
 
 def remove_non_english_characters(text):
     invalid_chars='【】'
@@ -262,51 +230,6 @@ def get_chapter_contents_from_saved(dirLocation):
     
     return f.read()
 
-def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
-    already_saved_chapters=get_existing_order_of_contents(bookTitle)
-    
-    tocList=list()
-    for url in already_saved_chapters:
-        url=url.split(";")
-        chapterID=url[0]
-        fileChapterTitle=extract_chapter_title(url[len(url)-1])
-        dirLocation=url[len(url)-1]
-        chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
-        
-        strippedTitle=fileChapterTitle.split('-')
-        strippedTitle=strippedTitle[len(strippedTitle)-1].strip()
-        
-        chapter=epub.EpubHtml(title=strippedTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
-        chapter.set_content(chapterContent)
-        
-        
-        tocList.append(chapter)
-        
-        new_epub.add_item(chapter)
-    
-    new_epub.toc=tocList
-    storeEpub(bookTitle,new_epub)
-    
-        
-def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
-    tocList=list()
-    for url in RoyalRoad_Fetch_Chapter_List(novelURL):
-        chapterID=extract_chapter_ID(url)
-        chapterTitle=fetch_Chapter_Title(url)
-        fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
-        chapterContent=RoyalRoad_Fetch_Chapter(url)
-        
-        
-        chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
-        chapter.set_content(chapterContent)
-        
-        tocList.append(chapter)
-        
-        new_epub.add_item(chapter)
-        
-        time.sleep(0.5)
-    new_epub.toc=tocList
-    storeEpub(bookTitle,new_epub)
     
 
 async def save_images_in_chapter(img_urls,saveDirectory,imageCount):
@@ -338,6 +261,20 @@ def retrieve_stored_image(imageDir):
         logging.warning(f"Image file not found: {imageDir}")
     return None
 
+async def getSoup(url):
+    async with aiohttp.ClientSession(headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        }) as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    return soup
+
+
 async def produceEpub(new_epub,novelURL,bookTitle,css):
     
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
@@ -349,8 +286,9 @@ async def produceEpub(new_epub,novelURL,bookTitle,css):
     imageCount=0
     #logging.warning(RoyalRoad_Fetch_Chapter_List(novelURL))
     for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
+        soup=getSoup(url)        
         chapterID=extract_chapter_ID(url)
-        chapterTitle=await fetch_Chapter_Title(url)
+        chapterTitle=await fetch_Chapter_Title(soup)
         logging.warning(url)
         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
             #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
@@ -376,7 +314,7 @@ async def produceEpub(new_epub,novelURL,bookTitle,css):
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-            chapterContent=await RoyalRoad_Fetch_Chapter(url)
+            chapterContent=RoyalRoad_Fetch_Chapter(soup)
             
             if chapterContent:
                 images=chapterContent.find_all('img')
@@ -551,8 +489,6 @@ def create_Entry(**kwargs):
     }
     #If missing keyword arguments, fill with template values.
     book_data = {**default_values, **kwargs}
-    logging.warning(f"book_data['bookID']: {book_data['bookID']}")
-    logging.warning(book_data["bookID"])
     book = {
         "bookID": book_data["bookID"],
         "bookName": book_data["bookName"],
@@ -568,8 +504,6 @@ def create_Entry(**kwargs):
     
     
     logging.warning(book)
-    logging.warning(check_existing_book_Title(book_data["bookName"]))
-    logging.warning(check_existing_book(book_data["bookID"]))
     if (check_existing_book(book_data["bookID"]) and check_existing_book_Title(book_data["bookName"])):
         result=savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
         logging.warning(f"Replaced book: {result}")
@@ -625,8 +559,7 @@ def get_Total_Books():
     return result-2
 
 def getAllBooks():
-    result=savedBooks.find({"bookID": {"$ne": -1}}).to_list(length=None)
-    now=datetime.datetime.now()
+    result = savedBooks.find({"bookID": {"$nin": [-1, 0]}}).to_list(length=None)
     result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapter"]] for result in result]
     return result
 
@@ -723,23 +656,14 @@ async def query_royalroad(title, option):
     else:
         return ("Invalid Option")
 
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    }) as session:
-        async with session.get(querylink) as response:
-            if response.status == 200:
-                html = await response.text()
-                soup = bs4.BeautifulSoup(html, 'html.parser')
-                resultTable=soup.find("div",{"class":"fiction-list"})
-                bookTable=resultTable.find("h2",{"class":"fiction-title"})
-                bookRows=bookTable.find_all("a")
-                firstResult=bookRows[0]['href']
-                #formatting
-                resultLink=f"https://www.royalroad.com{firstResult}"
-                return resultLink
+    soup=getSoup(querylink)
+    resultTable=soup.find("div",{"class":"fiction-list"})
+    bookTable=resultTable.find("h2",{"class":"fiction-title"})
+    bookRows=bookTable.find_all("a")
+    firstResult=bookRows[0]['href']
+    #formatting
+    resultLink=f"https://www.royalroad.com{firstResult}"
+    return resultLink
 
 #logging.warning(query_royalroad("Pokemon",1))
 
@@ -792,13 +716,11 @@ async def royalroad_main_interface(novelURL):
     bookurl=novelURL
     logging.warning(bookurl)
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await RoyalRoad_Fetch_Novel_Data(bookurl)
-    #logging.warning(bookID, bookTitle, latestChapter)
     if (check_latest_chapter(bookID,bookTitle,latestChapter)):
         pass
         #directory=getEpub(bookID)
     else:
-        logging.warning("Doing else")
-        #save_cover_image("cover_image",novelURL,f"./books/raw/{bookTitle}")
+        logging.warning("Generating new epub")
         new_epub=epub.EpubBook()
         new_epub.set_identifier(bookID)
         new_epub.set_title(bookTitle)

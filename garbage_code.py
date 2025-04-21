@@ -19,6 +19,55 @@ async def download_file(url, filename):
 
 asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
 
+
+
+
+def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
+    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    
+    tocList=list()
+    for url in already_saved_chapters:
+        url=url.split(";")
+        chapterID=url[0]
+        fileChapterTitle=extract_chapter_title(url[len(url)-1])
+        dirLocation=url[len(url)-1]
+        chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
+        
+        strippedTitle=fileChapterTitle.split('-')
+        strippedTitle=strippedTitle[len(strippedTitle)-1].strip()
+        
+        chapter=epub.EpubHtml(title=strippedTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+        chapter.set_content(chapterContent)
+        
+        
+        tocList.append(chapter)
+        
+        new_epub.add_item(chapter)
+    
+    new_epub.toc=tocList
+    storeEpub(bookTitle,new_epub)
+    
+        
+def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
+    tocList=list()
+    for url in RoyalRoad_Fetch_Chapter_List(novelURL):
+        chapterID=extract_chapter_ID(url)
+        chapterTitle=fetch_Chapter_Title(url)
+        fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+        chapterContent=RoyalRoad_Fetch_Chapter(url)
+        
+        
+        chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+        chapter.set_content(chapterContent)
+        
+        tocList.append(chapter)
+        
+        new_epub.add_item(chapter)
+        
+        time.sleep(0.5)
+    new_epub.toc=tocList
+    storeEpub(bookTitle,new_epub)
+
 # response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
 # time.sleep(0.5)
 # imageCount+=1
@@ -57,11 +106,6 @@ asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
 #                 chapterListURL.append(chapterURL)
 #             logging.warning(chapterListURL)      
 #             return chapterListURL
-
-
-
-
-
 
 
 
@@ -145,3 +189,45 @@ asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
 #     else:
 #         return False
 
+
+
+
+
+
+
+
+
+
+
+#Discord Bot code
+
+
+        ##THIS DOES and DOES NOT WORK.
+        #This times out heartbeat but somehow manages to send the epub???
+        #task1=asyncio.create_task(scrape.mainInterface(novelURL))
+        #thread = threading.Thread(target=scrape.mainInterface(novelURL))
+        #thread.start()
+        #thread.join()
+        
+        
+        #task = asyncio.create_task(await scrape.mainInterface(novelURL))
+        #book=await task
+
+
+
+ # if not (bookQueue.empty() and asyncio.get_event_loop() is None):
+    #     logging.warning(f"Book Queue: {bookQueue.qsize()}")
+    #     url,channelID=bookQueue.get()
+    #     #asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
+        
+    #     asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
+        
+        #asyncio.to_thread(await grabNovel(url,channelID))
+        #threading.Thread(target=asyncio.gather(await grabNovel(url,channelID))).start()
+#        threading.Thread(target=grabNovel, args=(url,channelID)).start()
+                        #t1=threading.Thread(target=grabNovel, args=(bookQueue[0][1],bookQueue[0][1]))
+                        #t1.start()
+#https://docs.python.org/3/library/asyncio-eventloop.html#
+#https://docs.python.org/3/library/asyncio-task.html#coroutine
+
+#asyncio.create_task(scrape.mainInterface(novelURL))

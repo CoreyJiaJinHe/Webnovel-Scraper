@@ -42,46 +42,21 @@ async def getNovel(ctx):
         logging.warning(f"Novel URL: {novelURL}")
         await ctx.send("Request received. Trying to get now.")
         await createThreads()
-        
-        ##THIS DOES and DOES NOT WORK.
-        #This times out heartbeat but somehow manages to send the epub???
-        #task1=asyncio.create_task(scrape.mainInterface(novelURL))
-        #thread = threading.Thread(target=scrape.mainInterface(novelURL))
-        #thread.start()
-        #thread.join()
-        
-        
-        #task = asyncio.create_task(await scrape.mainInterface(novelURL))
-        #book=await task
+    
+#implement concurrency limit. I dont want to be overloaded with requests.
 
+
+sem = asyncio.Semaphore(2) #Limit concurrent tasks
 async def createThreads():
     global bookQueue
     if not bookQueue.empty():
         logging.warning(f"Book Queue: {bookQueue.qsize()}")
-        url, channelID = bookQueue.get()
-        await grabNovel(url, channelID)  # Await the grabNovel coroutine
-    # if not (bookQueue.empty() and asyncio.get_event_loop() is None):
-    #     logging.warning(f"Book Queue: {bookQueue.qsize()}")
-    #     url,channelID=bookQueue.get()
-    #     #asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
-        
-    #     asyncio.gather(asyncio.to_thread(grabNovel(url,channelID)))
-        
-        #asyncio.to_thread(await grabNovel(url,channelID))
-        #threading.Thread(target=asyncio.gather(await grabNovel(url,channelID))).start()
-#        threading.Thread(target=grabNovel, args=(url,channelID)).start()
-                        #t1=threading.Thread(target=grabNovel, args=(bookQueue[0][1],bookQueue[0][1]))
-                        #t1.start()
-#https://docs.python.org/3/library/asyncio-eventloop.html#
-#https://docs.python.org/3/library/asyncio-task.html#coroutine
-
-#asyncio.create_task(scrape.mainInterface(novelURL))
+        async with sem:
+            url, channelID = bookQueue.get()
+            book = await scrape.mainInterface(url)  # Await the coroutine directly
+            await sendChannelFile(channelID, book)
 #The blocking code is requests library. To change, I need to migrate to aiohttp. Other libraries could also be blocking.
 
-
-async def grabNovel(novelURL, channelID):
-    book = await scrape.mainInterface(novelURL)  # Await the coroutine directly
-    await sendChannelFile(channelID, book)
     
 async def sendChannelFile(channelID,file):
     channel = bot.get_channel(channelID)
