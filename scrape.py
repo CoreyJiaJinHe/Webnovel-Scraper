@@ -111,7 +111,7 @@ async def RoyalRoad_Fetch_Novel_Data(novelURL):
 
 
 async def RoyalRoad_Fetch_Chapter_List(novelURL):
-    soup=getSoup(novelURL)
+    soup=await getSoup(novelURL)
     chapterTable=soup.find("table",{"id":"chapters"})
     rows=chapterTable.find_all("tr")
     
@@ -132,9 +132,9 @@ async def RoyalRoad_Fetch_Chapter_List(novelURL):
     
 async def RoyalRoad_Fetch_Chapter(soup):
     chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
-    if chapterContent is None:
+    if soup is None:
         logging.warning(f"Did not receive soup")
-    else:
+    elif chapterContent is None:
         logging.warning(f"Failed to extract content from soup")
         return None
     return chapterContent#.encode('ascii')
@@ -179,6 +179,18 @@ def write_order_of_contents(bookTitle, chapterData):
         chapterLink=dataLine[1]
         chapterTitle=dataLine[2]
         f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
+    f.close()
+def append_order_of_contents(bookTitle,chapterData):
+    logging.warning(chapterData)
+    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(fileLocation)):
+        f=open(fileLocation,"a")
+        f.write('\n')
+        for dataLine in chapterData:
+            chapterID=dataLine[0]
+            chapterLink=dataLine[1]
+            chapterTitle=dataLine[2]
+            f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
     f.close()
 
 async def fetch_Chapter_Title(soup):
@@ -276,27 +288,24 @@ async def getSoup(url):
 
 
 async def produceEpub(new_epub,novelURL,bookTitle,css):
-    
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
     
-    #logging.warning(already_saved_chapters)
     tocList=list()
     
     imageCount=0
     #logging.warning(RoyalRoad_Fetch_Chapter_List(novelURL))
     for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
-        soup=getSoup(url)        
         chapterID=extract_chapter_ID(url)
-        chapterTitle=await fetch_Chapter_Title(soup)
         logging.warning(url)
         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
             #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
             chapterContent=get_chapter_contents_from_saved(dirLocation)
             fileChapterTitle=extract_chapter_title(dirLocation)
+            chapterTitle=fileChapterTitle.split('-')
+            chapterTitle=chapterTitle[len(chapterTitle)-1]
             images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
-            
             currentImageCount=imageCount
             for image in images:
                 imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
@@ -311,40 +320,41 @@ async def produceEpub(new_epub,novelURL,bookTitle,css):
             chapterContent=chapterContent.encode("utf-8")
         else:
             await asyncio.sleep(0.5)
+            soup=await getSoup(url)
+            chapterTitle=await fetch_Chapter_Title(soup)
             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
             #logging.warning(fileChapterTitle)
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-            chapterContent=RoyalRoad_Fetch_Chapter(soup)
+            chapterContent=await RoyalRoad_Fetch_Chapter(soup)
             
             if chapterContent:
                 images=chapterContent.find_all('img')
                 images=[image['src'] for image in images]
+                imageDir=f"./books/raw/{bookTitle}/images/"
+                currentImageCount=imageCount
+                #logging.warning(images)
+                if (images):
+                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                    for img,image in zip(chapterContent.find_all('img'),images):
+                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                        
+                        imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                        epubImage=retrieve_stored_image(imageDir)
+                        b=io.BytesIO()
+                        epubImage.save(b,'png')
+                        b_image1=b.getvalue()
+                        
+                        image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                        new_epub.add_item(image_item)
+                        currentImageCount+=1
+                else:
+                    logging.warning("There are no images in this chapter")
             else:
                 logging.warning("chapterContent is None")
 
-            imageDir=f"./books/raw/{bookTitle}/images/"
-            currentImageCount=imageCount
-            #logging.warning(images)
-            if (images):
-                imageCount=await save_images_in_chapter(images,imageDir,imageCount)
-            for img,image in zip(chapterContent.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
-                
-                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-                epubImage=retrieve_stored_image(imageDir)
-                b=io.BytesIO()
-                epubImage.save(b,'png')
-                b_image1=b.getvalue()
-                
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                new_epub.add_item(image_item)
-                currentImageCount+=1
             chapterContent=chapterContent.encode('ascii')
             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
-            
-        
-            
-        #logging.warning(fileChapterTitle)
+
         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
         chapter.set_content(chapterContent)
         chapter.add_item(css)
@@ -365,14 +375,11 @@ async def produceEpub(new_epub,novelURL,bookTitle,css):
     new_epub.add_item(epub.EpubNcx())
     new_epub.add_item(epub.EpubNav())
     
+    write_order_of_contents(bookTitle, chapterMetaData)
+    logging.warning(bookTitle)
     logging.warning(new_epub)
-    
-    if (already_saved_chapters is False or not already_saved_chapters):
-        write_order_of_contents(bookTitle, chapterMetaData)
-    
     logging.warning("Attempting to store epub")
     storeEpub(bookTitle, new_epub)
-    #storeEpub(bookTitle,new_epub)
 
 def retrieve_cover_from_storage(bookTitle):
     dirLocation=f"./books/raw/{bookTitle}/cover_image.png" #or 
@@ -464,11 +471,14 @@ def get_Entry_Via_Title(bookTitle):
 def check_latest_chapter(bookID,bookTitle,latestChapter):
     bookData=get_Entry_Via_ID(bookID)
     if (bookData is None):
-        return False
+        bookData=get_Entry_Via_Title(bookTitle)
+        if (bookData is None):
+            return False
+    logging.warning(bookData["lastChapter"])
+    logging.warning(latestChapter)
     if (bookData["lastChapter"]==latestChapter):
         return True
     elif (bookData["lastChapter"]<=latestChapter):
-        #update epub
         return False
     return True
 
@@ -656,7 +666,7 @@ async def query_royalroad(title, option):
     else:
         return ("Invalid Option")
 
-    soup=getSoup(querylink)
+    soup=await getSoup(querylink)
     resultTable=soup.find("div",{"class":"fiction-list"})
     bookTable=resultTable.find("h2",{"class":"fiction-title"})
     bookRows=bookTable.find_all("a")
@@ -710,61 +720,100 @@ def mainInterface(novelURL):
             return novelbin_main_interface(novelURL,novelbin_cookie)
         else:
             return False
+
+
+
+async def updateEpub(novelURL,bookTitle):
+    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    chapterMetaData=list()
+    imageCount=0
+    logging.warning("Finding chapters not stored")
+    logging.warning(await RoyalRoad_Fetch_Chapter_List(novelURL))
+    for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
+        chapterID=extract_chapter_ID(url)
+        if not (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            soup=await getSoup(url)
+            chapterTitle=await fetch_Chapter_Title(soup)
+            logging.warning(url)
+            fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+            chapterContent=await RoyalRoad_Fetch_Chapter(soup)
+            if chapterContent:
+                images=chapterContent.find_all('img')
+                images=[image['src'] for image in images]
+                imageDir=f"./books/raw/{bookTitle}/images/"
+                currentImageCount=imageCount
+                #logging.warning(images)
+                if (images):
+                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                    for img,image in zip(chapterContent.find_all('img'),images):
+                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                else:
+                    logging.warning("Chapter has no images")
+            else:
+                logging.warning("chapterContent is None")
             
-    
+            
+
+            chapterContent=chapterContent.encode('ascii')
+            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+            await asyncio.sleep(0.5)
+    append_order_of_contents(bookTitle, chapterMetaData)
+
 async def royalroad_main_interface(novelURL):
     bookurl=novelURL
     logging.warning(bookurl)
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await RoyalRoad_Fetch_Novel_Data(bookurl)
-    if (check_latest_chapter(bookID,bookTitle,latestChapter)):
-        pass
-        #directory=getEpub(bookID)
-    else:
-        logging.warning("Generating new epub")
-        new_epub=epub.EpubBook()
-        new_epub.set_identifier(bookID)
-        new_epub.set_title(bookTitle)
-        new_epub.set_language('en')
-        new_epub.add_author(bookAuthor)
-        style=open("style.css","r").read()
-        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
-
-        new_epub.add_item(default_css)
-        await produceEpub(new_epub,bookurl,bookTitle,default_css)
-
-        
-        
-        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
-        rooturl = rooturl.group()
-        first,last,total=get_first_last_chapter(bookTitle)
-        
-        bookID=int(remove_invalid_characters(bookID))
-        #logging.warning(bookID)
-        directory = create_epub_directory_url(bookTitle)
-        create_Entry(
-            bookID=bookID,
-            bookName=bookTitle,
-            bookAuthor=bookAuthor,
-            bookDescription=description,
-            websiteHost=rooturl,
-            firstChapter=first,
-            lastChapter=last,
-            totalChapters=total,
-            directory=directory
-        )
-        
-        create_latest(
-            bookID=int(bookID),
-            bookName=bookTitle,
-            bookAuthor=bookAuthor,
-            bookDescription=description,
-            websiteHost=rooturl,
-            firstChapter=first,
-            lastChapter=last,
-            totalChapters=total,
-            directory=directory
-        )
     
+    #Instantiate new epub object
+    new_epub=epub.EpubBook()
+    new_epub.set_identifier(bookID)
+    new_epub.set_title(bookTitle)
+    new_epub.set_language('en')
+    new_epub.add_author(bookAuthor)
+    style=open("style.css","r").read()
+    default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+    new_epub.add_item(default_css)
+    
+    
+    if (check_existing_book(bookID) or check_existing_book_Title(bookTitle)):
+        if not (check_latest_chapter(bookID,bookTitle,latestChapter)):
+            await updateEpub(bookurl,bookTitle)
+
+    logging.warning("Generating new epub")
+    await produceEpub(new_epub,bookurl,bookTitle,default_css)
+
+    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", novelURL)
+    rooturl = rooturl.group()
+    first,last,total=get_first_last_chapter(bookTitle)
+    
+    bookID=int(remove_invalid_characters(bookID))
+    #logging.warning(bookID)
+    directory = create_epub_directory_url(bookTitle)
+    create_Entry(
+        bookID=bookID,
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+    
+    create_latest(
+        bookID=int(bookID),
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+        
     return directory
     
     #pass
@@ -775,6 +824,8 @@ async def royalroad_main_interface(novelURL):
     #if no, return current epub.
 
     #implement store order of chapters
+
+asyncio.run(royalroad_main_interface("https://www.royalroad.com/fiction/100326/into-the-unown-pokemon-fanfiction-oc"))
 
 #asyncio.run(mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"))
 #asyncio.run(mainInterface("https://Test.com"))
