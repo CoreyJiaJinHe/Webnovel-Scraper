@@ -29,6 +29,42 @@ savedBooks=mydb["Books"]
 # rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",url)
 # rooturl=rooturl.group()
 
+gHeaders={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+}
+
+foxaholic_link="https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/"
+foxaholic_cookie="cf_clearance=Yv3eBS15RqF0OJDkWUQMp4VMkavycicNn.BAmjp5k_s-1745433738-1.2.1.1-pPt.mnmv16I9aWAG4B9X7_OwjpcEEt2od52XyaQtQTJDPNW4jMeM06HB5mGDP56rAgEXJ2y67lrfURdoIbuGL.LbmmP2yX.4khv.lo6km20gy0wzkm3cO6Z_wxG1DF3gw299AS0oz5WQh4FDznvEuEKjehJm_USSVFde0lMFmHBUcRfRwEJ8J0kDw4fiSOMHswTJLiR8wjvuyXrkwwALcwQgUlFNecGMSbBfV3KlP.1MLnlbYcwq9AlD.lQah7IfrmkiqtpmWfG9A.ky.ZCmrjPRFbFClssCF5roPrbJxW43C0.kbPbzY7Q.0pYvTSgyqg3cNUhDIsObjzgNWbZnEs5ECzR_Xh6QtnCpmw0bFZguX.36QcaRApZFw1HruVnx"
+
+novelbin_cookie="cf_clearance=uV5dVAIEDMPgsA4aAHzYOojtcZLaDZud0OXYDA8.p0c-1744912119-1.2.1.1-SXDR6LWOaDbZ1WGCsFWuANVtmkzCCR_nlP6gzDP6Rk5GBavG0gGbzn2rb0LVhDjEP6bp6I2YzEmAKe1B4hPkTFAqvrBZQIkvahjz.vBPbQ9El6K5ItTLIOpodv..q.lXeFlVa4eqRxB_0fwQMW4z1pDOU3rsh6pCH42VmYfuGbYzygiA2Y0KT39254p88Z0XUr8pS8szqlcY2nbRZSuD.kakIq7dmgudb_o9tS1JCdg4Uf3Mnfp70zZDf5VlT8Z7iMeWwuO0aWI05d70kS8SGf6v.jtfBsbcREU74t34FShuZfM8mgym0fXmLTzRORmlA4jr42pdMWPZ4ixIPHzsIh01uaJi0xOJfR.4EFEfu_g"
+novelbin_link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
+
+global options
+options={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cookie": foxaholic_cookie
+    }
+
+def interception (request):
+        del request.headers['User-Agent']
+        del request.headers['Accept']
+        del request.headers['Accept-Language']
+        del request.headers['Accept-Encoding']
+        #del request.headers['Referer']
+        del request.headers['Cookie']
+        
+        request.headers['User-Agent']=options["User-Agent"]
+        request.headers['Accept']=options["Accept"]
+        request.headers['Accept-Language']=options["Accept-Language"]
+        request.headers['Accept-Encoding']=options["Accept-Encoding"]
+        #request.headers['Referer']=options["Referer"]
+        request.headers['Cookie']=options["Cookie"]
 
 
 def check_directory_exists(path):
@@ -56,12 +92,8 @@ def check_existing_book_Title(bookTitle):
     return True
 
 async def RoyalRoad_Fetch_Novel_Data(novelURL):
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    }) as session:
+    global gHeaders
+    async with aiohttp.ClientSession(headers = gHeaders) as session:
         async with session.get(novelURL) as response:
             if response.status == 200:
                 html = await response.text()
@@ -274,12 +306,7 @@ def retrieve_stored_image(imageDir):
     return None
 
 async def getSoup(url):
-    async with aiohttp.ClientSession(headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        }) as session:
+    async with aiohttp.ClientSession(headers = gHeaders) as session:
             async with session.get(url) as response:
                 if response.status == 200:
                     html = await response.text()
@@ -874,21 +901,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 
-def interception (request):
-        del request.headers['User-Agent']
-        del request.headers['Accept']
-        del request.headers['Accept-Language']
-        del request.headers['Accept-Encoding']
-        #del request.headers['Referer']
-        del request.headers['Cookie']
-        
-        request.headers['User-Agent']=options["User-Agent"]
-        request.headers['Accept']=options["Accept"]
-        request.headers['Accept-Language']=options["Accept-Language"]
-        request.headers['Accept-Encoding']=options["Accept-Encoding"]
-        #request.headers['Referer']=options["Referer"]
-        request.headers['Cookie']=options["Cookie"]
-        
 
 async def foxaholic_driver_selenium(url):
     driver = webdriver.Firefox()
@@ -1004,21 +1016,7 @@ async def foxaholic_Fetch_Novel_Data(novelURL):
     return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
 
-link="https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/"
-foxaholic_cookie="cf_clearance=Yv3eBS15RqF0OJDkWUQMp4VMkavycicNn.BAmjp5k_s-1745433738-1.2.1.1-pPt.mnmv16I9aWAG4B9X7_OwjpcEEt2od52XyaQtQTJDPNW4jMeM06HB5mGDP56rAgEXJ2y67lrfURdoIbuGL.LbmmP2yX.4khv.lo6km20gy0wzkm3cO6Z_wxG1DF3gw299AS0oz5WQh4FDznvEuEKjehJm_USSVFde0lMFmHBUcRfRwEJ8J0kDw4fiSOMHswTJLiR8wjvuyXrkwwALcwQgUlFNecGMSbBfV3KlP.1MLnlbYcwq9AlD.lQah7IfrmkiqtpmWfG9A.ky.ZCmrjPRFbFClssCF5roPrbJxW43C0.kbPbzY7Q.0pYvTSgyqg3cNUhDIsObjzgNWbZnEs5ECzR_Xh6QtnCpmw0bFZguX.36QcaRApZFw1HruVnx"
 
-
-global options
-options={
-        #"Host": "www.foxaholic.com",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-        "Accept-Encoding": "gzip, deflate, br",
-        #"Referer": "https://www.foxaholic.com/",
-        #Foxaholic requires cookie. Will need to get new cookie each time.
-        "Cookie": foxaholic_cookie
-    }
 #logging.warning(asyncio.run(foxaholic_Fetch_Novel_Data(link)))
 
 
@@ -1255,12 +1253,8 @@ foxaholic_cookie="cf_clearance=TT0k9I_s8Y9S7vtQJTXVWrRhtGI9ZVsO0fiVqJpiSVA-17449
 
 
 async def novelcool_get_chapter_list(novelURL):
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br, zstd",
-    }) as session:
+    async with aiohttp.ClientSession(headers = gHeaders
+    ) as session:
         async with session.get(novelURL) as response:
             if response.status == 200:
                 html = await response.text()
@@ -1276,7 +1270,7 @@ async def novelcool_get_chapter_list(novelURL):
                 return chapterListURL
 link="https://www.novelcool.com/novel/If-You-Could-Hear-My-Heart.html"
 
-# stuff=asyncio.run(novelcool_get_chapter_list(link))
+#stuff=asyncio.run(novelcool_get_chapter_list(link))
 # with open ('test.txt', 'w') as f:
 #     for line in stuff:
 #         f.write(f"{line}\n")
@@ -1381,12 +1375,8 @@ async def novelbin_fetch_novel_data(novelURL):
 
 
 async def novelbin_save_cover_image(title,img_url,saveDirectory):
-    async with aiohttp.ClientSession(headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-    }) as session:
+    async with aiohttp.ClientSession(headers = gHeaders
+    ) as session:
         if not isinstance(img_url,str):
             img_url=img_url["src"]
         async with session.get(img_url) as response:
@@ -1615,6 +1605,3 @@ async def novelbin_main_interface(bookurl):
     
     return directory
 
-
-novelbin_cookie="cf_clearance=uV5dVAIEDMPgsA4aAHzYOojtcZLaDZud0OXYDA8.p0c-1744912119-1.2.1.1-SXDR6LWOaDbZ1WGCsFWuANVtmkzCCR_nlP6gzDP6Rk5GBavG0gGbzn2rb0LVhDjEP6bp6I2YzEmAKe1B4hPkTFAqvrBZQIkvahjz.vBPbQ9El6K5ItTLIOpodv..q.lXeFlVa4eqRxB_0fwQMW4z1pDOU3rsh6pCH42VmYfuGbYzygiA2Y0KT39254p88Z0XUr8pS8szqlcY2nbRZSuD.kakIq7dmgudb_o9tS1JCdg4Uf3Mnfp70zZDf5VlT8Z7iMeWwuO0aWI05d70kS8SGf6v.jtfBsbcREU74t34FShuZfM8mgym0fXmLTzRORmlA4jr42pdMWPZ4ixIPHzsIh01uaJi0xOJfR.4EFEfu_g"
-link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
