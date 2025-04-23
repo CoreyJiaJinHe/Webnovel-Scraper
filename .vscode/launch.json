@@ -1,6 +1,14 @@
 {
     "version": "0.2.0",
     "configurations": [
+        {
+            "name": "Python Debugger: scrape.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scrape.py", // Path to scrape.py
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         // Configuration for running the React app (vite-project)
         {
             "name": "Run React App (vite-project)",
@@ -9,7 +17,6 @@
             "command": "npm run dev", // Adjust if your dev command is different
             "cwd": "${workspaceFolder}/vite-project", // Path to the React project folder
         },
-
         // Configuration for debugging server.py
         {
             "name": "FastAPI Debugger: server.py",
@@ -18,14 +25,15 @@
             "module": "uvicorn", // Use uvicorn to run the FastAPI app
             "args": [
                 "server:app", // Replace "server:app" with the correct path to your FastAPI app instance
-                "--host", "127.0.0.1", // Host to run the server
-                "--port", "8000",      // Port to run the server
-                "--reload"             // Enable auto-reload for development
+                "--host",
+                "127.0.0.1", // Host to run the server
+                "--port",
+                "8000", // Port to run the server
+                "--reload" // Enable auto-reload for development
             ],
             "console": "integratedTerminal",
             "justMyCode": true
         },
-
         // Configuration for debugging discordBot.py
         {
             "name": "Python Debugger: discordBot.py",

@@ -195,6 +195,24 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
 
 
 
+# #Obsolete. Foxaholic does not have a working search api.
+# def foxaholic_query(title,cookie):
+#     if (title.isspace() or title==""):
+#         return "Invalid Title"
+    
+#     querylink = f"https://www.foxaholic.com/?s={title}"
+
+#     soup=foxaholic_driver_selenium(querylink,cookie)
+    
+#     resultTable=soup.find("div",{"class":"tab-content-wrap"})
+#     bookTable=resultTable.find("h4",{"class":"heading"})
+#     bookRows=bookTable.find("a")
+#     firstResult=bookRows['href']
+
+#     #formatting
+#     resultLink=f"https://www.royalroad.com{firstResult}"
+    
+#     return resultLink
 
 
 
