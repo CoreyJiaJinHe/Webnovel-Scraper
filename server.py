@@ -91,7 +91,7 @@ async def getBook(id):
 
 @app.get("/api/allBooks/")
 def getAllBooks():
-    allBooks=scrape.getAllBooks()
+    allBooks=scrape.get_all_books()
     #logging.warning(allBooks)
     return JSONResponse(content=allBooks)
 

@@ -7,7 +7,6 @@ import os, errno
 import datetime
 from novel_template import NovelTemplate
 import logging
-import time
 import asyncio
 import io
 from ebooklib import epub 
@@ -21,7 +20,6 @@ MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
 mydb=myclient["Webnovels"]
 savedBooks=mydb["Books"]
-
 
 
 
@@ -1604,4 +1602,3 @@ async def novelbin_main_interface(bookurl):
     )
     
     return directory
-
