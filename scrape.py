@@ -376,7 +376,7 @@ async def produceEpub(new_epub,novelURL,bookTitle,css):
                     logging.warning("There are no images in this chapter")
             else:
                 logging.warning("chapterContent is None")
-
+            
             chapterContent=chapterContent.encode('ascii')
             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
 
@@ -1493,6 +1493,7 @@ async def novelbin_produce_epub(new_epub,novelURL,bookTitle,css):
                         img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
                         
                         imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                        
                         epubImage=retrieve_stored_image(imageDir)
                         b=io.BytesIO()
                         epubImage.save(b,'png')
