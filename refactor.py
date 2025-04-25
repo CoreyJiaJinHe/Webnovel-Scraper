@@ -842,9 +842,6 @@ class EpubProducer:
             cover_item = epub.EpubItem(uid="cover_image", file_name="images/cover_image.png", media_type="image/png", content=b_image)
             new_epub.add_item(cover_item)
 
-    
-    #Document is empty error. Might be improper encoding. 
-    # I know I fixed the images. I DID NOT FIX THE IMAGES
     def finalize_epub(self, new_epub, toc_list, book_title, chapter_metadata):
         #logging.warning(toc_list)
         new_epub.toc = toc_list
@@ -894,7 +891,34 @@ class EpubProducer:
                 store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
                 await asyncio.sleep(0.5)
         append_order_of_contents(bookTitle, chapterMetaData)
-        
+
+#Unfinished
+class FoxaholicEpubProducer(EpubProducer):
+    async def fetch_chapter_list(self, url):
+        scraper = FoxaholicScraper()
+        return await scraper.fetch_chapter_list(url)
+
+    async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
+        scraper = FoxaholicScraper()
+        soup = await scraper.get_soup(chapter_url)
+        chapter_title = await scraper.fetch_chapter_title(soup)
+        chapter_content = scraper.foxaholic_scrape_chapter_page(soup)
+
+        # Save chapter content
+        file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+        store_chapter(chapter_content.encode("utf-8"), book_title, chapter_title, chapter_id)
+
+        # Process images
+        images = chapter_content.find_all("img")
+        images = [img["src"] for img in images]
+        image_dir = f"./books/raw/{book_title}/images/"
+        if images:
+            image_count = await self.save_images_in_chapter(images, image_dir, image_count, new_epub)
+
+        return file_chapter_title, chapter_content, image_count
+
+
+
 class RoyalRoadEpubProducer(EpubProducer):
     async def fetch_chapter_list(self, url):
         scraper = RoyalRoadScraper()
@@ -905,7 +929,7 @@ class RoyalRoadEpubProducer(EpubProducer):
         soup = await scraper.get_soup(chapter_url)
         #logging.warning(soup)
         chapter_title = await scraper.fetch_chapter_title(soup)
-        logging.warning(chapter_title)
+        #logging.warning(chapter_title)
         chapter_content = await scraper.fetch_chapter_content(soup)
         # Save chapter content
         currentImageCount=image_count
