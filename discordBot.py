@@ -45,6 +45,13 @@ async def getNovel(ctx):
     
 #implement concurrency limit. I dont want to be overloaded with requests.
 
+cookie=None
+@bot.command(aliases=['cookie'])
+async def setCookie(ctx):
+    global cookie
+    cookie=ctx.message.content.split(' ')[1]
+    await ctx.send(f"Cookie set to {cookie}")
+
 
 sem = asyncio.Semaphore(2) #Limit concurrent tasks
 async def createThreads():
@@ -53,7 +60,8 @@ async def createThreads():
         logging.warning(f"Book Queue: {bookQueue.qsize()}")
         async with sem:
             url, channelID = bookQueue.get()
-            book = await scrape.mainInterface(url)  # Await the coroutine directly
+            global cookie
+            book = await scrape.mainInterface(url, cookie)  # Await the coroutine directly
             await sendChannelFile(channelID, book)
 #The blocking code is requests library. To change, I need to migrate to aiohttp. Other libraries could also be blocking.
 
@@ -111,7 +119,7 @@ async def on_ready():
     print(f'We have logged in as {bot.user}')
     await bot.change_presence(activity=discord.Game(name="I am online"))
     channel=await bot.fetch_channel(1358957302085849188) or await bot.get_channel(1358957302085849188)
-    #await channel.send("I am online")   
+    await channel.send("I am online")   
     print(f'We have sent a message as {bot.user} to {channel}')
 
 @bot.command(aliases=['clear','purge'])

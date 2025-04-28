@@ -426,11 +426,11 @@ def retrieve_cover_from_storage(bookTitle):
     
 
 def storeEpub(bookTitle,new_epub):
-    dirLocation="./epubs/"+bookTitle
+    dirLocation="./books/epubs/"+bookTitle
     if not check_directory_exists(dirLocation):
         make_directory(dirLocation)
     
-    dirLocation="./epubs/"+bookTitle+"/"+bookTitle+".epub"
+    dirLocation="./books/epubs/"+bookTitle+"/"+bookTitle+".epub"
     if (check_directory_exists(dirLocation)):
         os.remove(dirLocation)
     epub.write_epub(dirLocation,new_epub)
@@ -460,7 +460,7 @@ def store_chapter(content, bookTitle, chapterTitle, chapterID):
         f.write(content)
 
 def create_epub_directory_url(bookTitle):
-    dirLocation="./epubs/"+bookTitle+"/"+bookTitle+".epub"
+    dirLocation="./books/epubs/"+bookTitle+"/"+bookTitle+".epub"
     return dirLocation
 
 def get_first_last_chapter(bookTitle):
