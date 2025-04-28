@@ -1,8 +1,5 @@
 import bs4
-import requests
 import re
-from pathlib import Path
-from pymongo import MongoClient
 import os, errno
 import datetime
 from novel_template import NovelTemplate
@@ -12,6 +9,18 @@ import io
 from ebooklib import epub 
 from PIL import Image
 import aiohttp
+
+from mongodb import (
+    check_existing_book,
+    check_existing_book_Title,
+    get_Entry_Via_ID,
+    get_Entry_Via_Title,
+    getLatest,
+    get_Total_Books,
+    getAllBooks,
+    create_Entry,
+    create_latest
+)
 
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -77,19 +86,6 @@ def make_directory(path):
             raise
 
 
-    
-def append_order_of_contents(bookTitle,chapterData):
-    logging.warning(chapterData)
-    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (os.path.exists(fileLocation)):
-        f=open(fileLocation,"a")
-        f.write('\n')
-        for dataLine in chapterData:
-            chapterID=dataLine[0]
-            chapterLink=dataLine[1]
-            chapterTitle=dataLine[2]
-            f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
-    f.close()
 
 
 def remove_non_english_characters(text):
@@ -196,6 +192,19 @@ def update_existing_order_of_contents(bookTitle,chapterList):
     f.close()
     
     
+    
+def append_order_of_contents(bookTitle,chapterData):
+    logging.warning(chapterData)
+    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+    if (os.path.exists(fileLocation)):
+        f=open(fileLocation,"a")
+        f.write('\n')
+        for dataLine in chapterData:
+            chapterID=dataLine[0]
+            chapterLink=dataLine[1]
+            chapterTitle=dataLine[2]
+            f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
+    f.close()
 
 #Cut out and insert function
 #Take [range1:range2] from the chapterList and insert into position [insertRange1] of existingChapterList
@@ -245,27 +254,14 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
     
 
 
+def generate_new_ID(bookTitle):
+    #logging.warning(check_existing_book_Title(bookTitle))
+    if (check_existing_book_Title(bookTitle)):
+        bookData=get_Entry_Via_Title(bookTitle)
+        if bookData:
+            return bookData["bookID"]
+    return get_Total_Books()+1
 
-
-
-async def foxaholic_save_cover_image(title,img_url,saveDirectory):
-    driver = webdriver.Firefox()
-    driver.request_interceptor=interception
-    driver.get(img_url["src"])
-    image=driver.find_element(By.CSS_SELECTOR, 'img')
-    
-    if (saveDirectory.endswith("/")):
-        fileNameDir=f"{saveDirectory}{title}.png"
-    else:
-        fileNameDir=f"{saveDirectory}/{title}.png"
-    if image:
-        if not (check_directory_exists(saveDirectory)):
-            make_directory(saveDirectory)
-        if not (check_directory_exists(fileNameDir)):
-            with open (fileNameDir,'wb') as f:
-                f.write(image.screenshot_as_png)
-            f.close()
-    driver.close()
 
 
 
@@ -289,28 +285,6 @@ async def novelcool_get_chapter_list(novelURL):
                 logging.warning(chapterListURL)      
                 return chapterListURL
 link="https://www.novelcool.com/novel/If-You-Could-Hear-My-Heart.html"
-
-#stuff=asyncio.run(novelcool_get_chapter_list(link))
-# with open ('test.txt', 'w') as f:
-#     for line in stuff:
-#         f.write(f"{line}\n")
-# f.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -536,9 +510,30 @@ class FoxaholicScraper(Scraper):
         img_url = soup.find("div",{"class":"summary_image"}).find("img")
         
         if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-            await foxaholic_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
+            await self.foxaholic_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
         
         return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+    
+    async def foxaholic_save_cover_image(title,img_url,saveDirectory):
+        driver = webdriver.Firefox()
+        driver.request_interceptor=interception
+        driver.get(img_url["src"])
+        image=driver.find_element(By.CSS_SELECTOR, 'img')
+        
+        if (saveDirectory.endswith("/")):
+            fileNameDir=f"{saveDirectory}{title}.png"
+        else:
+            fileNameDir=f"{saveDirectory}/{title}.png"
+        if image:
+            if not (check_directory_exists(saveDirectory)):
+                make_directory(saveDirectory)
+            if not (check_directory_exists(fileNameDir)):
+                with open (fileNameDir,'wb') as f:
+                    f.write(image.screenshot_as_png)
+                f.close()
+        driver.close()
+
+
 
     async def fetch_chapter_list(self, url):
         # Foxaholic-specific logic
@@ -930,6 +925,9 @@ class FoxaholicEpubProducer(EpubProducer):
         scraper = FoxaholicScraper()
         return await scraper.fetch_chapter_list(url)
 
+
+
+
     async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
         scraper = FoxaholicScraper()
         soup = await scraper.get_soup(chapter_url)
@@ -1049,170 +1047,6 @@ class RoyalRoadEpubProducer(EpubProducer):
     async def extract_chapter_ID(self,chapter_url):
         return chapter_url.split("/")[-2]
 
-class Database:
-    _instance = None
-
-    @staticmethod
-    def get_instance():
-        if Database._instance is None:
-            MONGODB_URL = os.getenv('MONGODB_URI')
-            Database._instance = MongoClient(MONGODB_URL)["Webnovels"]
-        return Database._instance
-
-#savedBooks=Database.get_instance()
-
-
-#Retrieve book data from MongoDB
-def get_Entry_Via_ID(bookID):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookID":bookID})
-    return results
-#Retrieve latest book data from MongoDB
-def getLatest():
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    result=savedBooks.find_one({"bookID":-1})
-    logging.warning(result)
-    return result
-
-def get_Total_Books():
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    result=savedBooks.count_documents({})
-    return result-2
-
-def get_all_books():
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    result = savedBooks.find({"bookID": {"$nin": [-1, 0]}}).to_list(length=None)
-    result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapter"]] for result in result]
-    return result
-
-
-def generate_new_ID(bookTitle):
-    #logging.warning(check_existing_book_Title(bookTitle))
-    if (check_existing_book_Title(bookTitle)):
-        bookData=get_Entry_Via_Title(bookTitle)
-        if bookData:
-            return bookData["bookID"]
-    return get_Total_Books()+1
-
-
-def check_existing_book(bookID):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookID":bookID})
-    if (results==None):
-        return False
-    else:
-        return True
-def check_existing_book_Title(bookTitle):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookName":bookTitle})
-    if (results==None):
-        return False
-    return True
-
-
-#Return existing epub directory if the latest chapter is already stored.
-def getEpub(bookID):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookID":bookID})
-    directory=results["directory"]
-    return directory
-
-def get_Entry_Via_Title(bookTitle):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results = savedBooks.find_one({"bookID": {"$ne": -1}, "bookName": bookTitle})
-    if not results:
-        return None
-    return results
-
-def check_latest_chapter(bookID,bookTitle,latestChapter):
-    bookData=get_Entry_Via_ID(bookID)
-    if (bookData is None):
-        bookData=get_Entry_Via_Title(bookTitle)
-        if (bookData is None):
-            return False
-    logging.warning(bookData["lastChapter"])
-    logging.warning(latestChapter)
-    if (bookData["lastChapter"]==latestChapter):
-        return True
-    elif (bookData["lastChapter"]<=latestChapter):
-        return False
-    return True
-    
-
-
-#Requires 10 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
-
-default_values = {
-        "bookID": 0,
-        "bookName": "Template",
-        "bookAuthor": "Template",
-        "bookDescription": "Template",
-        "websiteHost": "Template",
-        "firstChapter": -1,
-        "lastChapter": -1,
-        "totalChapters":-1,
-        "directory": "Template"
-    }
-def create_Entry(**kwargs):
-    global default_values
-    #If missing keyword arguments, fill with template values.
-    book_data = {**default_values, **kwargs}
-    book = {
-        "bookID": book_data["bookID"],
-        "bookName": book_data["bookName"],
-        "bookAuthor":book_data["bookAuthor"],
-        "bookDescription": book_data["bookDescription"],
-        "websiteHost": book_data["websiteHost"],
-        "firstChapter": book_data["firstChapter"],
-        "lastChapter": book_data["lastChapter"],
-        "lastScraped": datetime.datetime.now(),
-        "totalChapters": book_data["totalChapters"],
-        "directory": book_data["directory"]
-    }
-    
-    
-    logging.warning(book)
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    if (check_existing_book(book_data["bookID"]) and check_existing_book_Title(book_data["bookName"])):
-        result=savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
-        logging.warning(f"Replaced book: {result}")
-    else:
-        result = savedBooks.insert_one(book)
-        logging.warning(f"Inserted book: {result}")
-
-def create_latest(**kwargs):
-        global default_values
-        #If missing keyword arguments, fill with template values.
-        book_data = {**default_values, **kwargs}
-        
-        book = {
-            "bookID": -1,
-            "bookName": book_data["bookName"],
-            "bookAuthor":book_data["bookAuthor"],
-            "bookDescription": book_data["bookDescription"],
-            "websiteHost": book_data["websiteHost"],
-            "firstChapter": book_data["firstChapter"],
-            "lastChapter": book_data["lastChapter"],
-            "lastScraped": datetime.datetime.now(),
-            "totalChapters": book_data["totalChapters"],
-            "directory": book_data["directory"]
-        }
-        db=Database.get_instance()
-        savedBooks=db["Books"]
-        if (check_existing_book(-1)):
-            savedBooks.replace_one({"bookID": -1}, book)
-        else:
-            savedBooks.insert_one(book)
-
 
 def create_epub_directory_url(bookTitle):
     dirLocation="./books/epubs/"+bookTitle+"/"+bookTitle+".epub"
@@ -1305,101 +1139,3 @@ async def main_interface(url):
 link="https://novelbin.com/b/raising-orphans-not-assassins"
 link="https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"
 asyncio.run(main_interface(link))
-
-        
-
-# async def produceEpub(new_epub,novelURL,bookTitle,css):
-#     already_saved_chapters=get_existing_order_of_contents(bookTitle)
-#     chapterMetaData=list()
-    
-#     tocList=list()
-    
-#     imageCount=0
-#     #logging.warning(RoyalRoad_Fetch_Chapter_List(novelURL))
-#     for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
-#         chapterID=extract_chapter_ID(url)
-#         logging.warning(url)
-#         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
-#             #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
-#             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
-#             chapterContent=get_chapter_contents_from_saved(dirLocation)
-#             fileChapterTitle=extract_chapter_title(dirLocation)
-#             chapterTitle=fileChapterTitle.split('-')
-#             chapterTitle=chapterTitle[len(chapterTitle)-1]
-#             images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
-#             currentImageCount=imageCount
-#             for image in images:
-#                 imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-#                 epubImage=retrieve_stored_image(imageDir)
-#                 b=io.BytesIO()
-#                 epubImage.save(b,'png')
-#                 b_image1=b.getvalue()
-                
-#                 image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-#                 new_epub.add_item(image_item)
-#                 currentImageCount+=1
-#             chapterContent=chapterContent.encode("utf-8")
-#         else:
-#             await asyncio.sleep(0.5)
-#             soup=await getSoup(url)
-#             chapterTitle=await fetch_Chapter_Title(soup)
-#             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
-#             #logging.warning(fileChapterTitle)
-#             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-#             chapterContent=await RoyalRoad_Fetch_Chapter(soup)
-            
-#             if chapterContent:
-#                 images=chapterContent.find_all('img')
-#                 images=[image['src'] for image in images]
-#                 imageDir=f"./books/raw/{bookTitle}/images/"
-#                 currentImageCount=imageCount
-#                 #logging.warning(images)
-#                 if (images):
-#                     imageCount=await save_images_in_chapter(images,imageDir,imageCount)
-#                     for img,image in zip(chapterContent.find_all('img'),images):
-#                         img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
-                        
-#                         imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-#                         epubImage=retrieve_stored_image(imageDir)
-#                         b=io.BytesIO()
-#                         epubImage.save(b,'png')
-#                         b_image1=b.getvalue()
-                        
-#                         image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-#                         new_epub.add_item(image_item)
-#                         currentImageCount+=1
-#                 else:
-#                     logging.warning("There are no images in this chapter")
-#             else:
-#                 logging.warning("chapterContent is None")
-
-#             chapterContent=chapterContent.encode('ascii')
-#             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
-
-#         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
-#         chapter.set_content(chapterContent)
-#         chapter.add_item(css)
-#         tocList.append(chapter)
-#         new_epub.add_item(chapter)
-    
-#     logging.warning("We reached retrieve_cover_from_storage")
-#     img1=retrieve_cover_from_storage(bookTitle)
-#     if img1:    
-#         b=io.BytesIO()
-#         try:
-#             img1.save(b,'png')
-#             b_image1=b.getvalue()
-#             image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
-#             new_epub.add_item(image1_item)
-#         except Exception as e:
-#             logging.warning(f"Failed to save image:{e}")
-    
-#     new_epub.toc=tocList
-#     new_epub.spine=tocList
-#     new_epub.add_item(epub.EpubNcx())
-#     new_epub.add_item(epub.EpubNav())
-    
-#     write_order_of_contents(bookTitle, chapterMetaData)
-    
-#     logging.warning("Attempting to store epub")
-#     storeEpub(bookTitle, new_epub)

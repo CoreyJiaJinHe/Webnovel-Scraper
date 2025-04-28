@@ -158,6 +158,7 @@ function App() {
   function grabBook(id){
     getBook(id)
   }
+  //Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
   return (
     <>
     <div class='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>

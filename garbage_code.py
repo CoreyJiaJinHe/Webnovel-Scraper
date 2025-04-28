@@ -216,6 +216,103 @@ def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
 
 
 
+# async def produceEpub(new_epub,novelURL,bookTitle,css):
+#     already_saved_chapters=get_existing_order_of_contents(bookTitle)
+#     chapterMetaData=list()
+    
+#     tocList=list()
+    
+#     imageCount=0
+#     for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
+#         logging.warning(url)
+#         chapterID=extract_chapter_ID(url)
+#         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
+#             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+#             chapterContent=get_chapter_contents_from_saved(dirLocation)
+#             fileChapterTitle=extract_chapter_title(dirLocation)
+            
+#             chapterTitle=fileChapterTitle.split('-')
+#             chapterTitle=chapterTitle[len(chapterTitle)-1]
+            
+#             images=re.findall(r'<img\s+[^>]*src="([^"]+)"[^>]*>',chapterContent)
+#             currentImageCount=imageCount
+#             for image in images:
+#                 imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+#                 epubImage=retrieve_stored_image(imageDir)
+#                 b=io.BytesIO()
+#                 epubImage.save(b,'png')
+#                 b_image1=b.getvalue()
+                
+#                 image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+#                 new_epub.add_item(image_item)
+#                 currentImageCount+=1
+#             chapterContent=chapterContent.encode("utf-8")
+#         else:
+#             await asyncio.sleep(0.5)
+#             soup=await getSoup(url)
+#             chapterTitle=await fetch_Chapter_Title(soup)
+#             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+#             #logging.warning(fileChapterTitle)
+#             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+#             chapterContent=await RoyalRoad_Fetch_Chapter(soup)
+            
+#             if chapterContent:
+#                 images=chapterContent.find_all('img')
+#                 images=[image['src'] for image in images]
+#                 imageDir=f"./books/raw/{bookTitle}/images/"
+#                 currentImageCount=imageCount
+#                 #logging.warning(images)
+#                 if (images):
+#                     imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+#                     for img,image in zip(chapterContent.find_all('img'),images):
+#                         img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                        
+#                         imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+#                         epubImage=retrieve_stored_image(imageDir)
+#                         b=io.BytesIO()
+#                         epubImage.save(b,'png')
+#                         b_image1=b.getvalue()
+                        
+#                         image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+#                         new_epub.add_item(image_item)
+#                         currentImageCount+=1
+#                 else:
+#                     logging.warning("There are no images in this chapter")
+#             else:
+#                 logging.warning("chapterContent is None")
+
+#             chapterContent=chapterContent.encode('ascii')
+#             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+
+#         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+#         chapter.set_content(chapterContent)
+#         chapter.add_item(css)
+#         tocList.append(chapter)
+#         new_epub.add_item(chapter)
+    
+#     logging.warning("We reached retrieve_cover_from_storage")
+#     img1=retrieve_cover_from_storage(bookTitle)
+#     if img1:    
+#         b=io.BytesIO()
+#         try:
+#             img1.save(b,'png')
+#             b_image1=b.getvalue()
+#             image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
+#             new_epub.add_item(image1_item)
+#         except Exception as e:
+#             logging.warning(f"Failed to save image:{e}")
+    
+#     new_epub.toc=tocList
+#     new_epub.spine=tocList
+#     new_epub.add_item(epub.EpubNcx())
+#     new_epub.add_item(epub.EpubNav())
+    
+#     write_order_of_contents(bookTitle, chapterMetaData)
+    
+#     logging.warning("Attempting to store epub")
+#     storeEpub(bookTitle, new_epub)
+
+
 
 #Discord Bot code
 

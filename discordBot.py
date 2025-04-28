@@ -26,7 +26,7 @@ async def test(ctx):
         await ctx.send("You tested successfully")
         
 
-import mongodbBotChannels
+import mongodb
 
 
 bookQueue=queue.Queue()
@@ -98,7 +98,7 @@ async def addChannel(ctx):
     channelID=channel.id
     serverID=channel.guild.id
     serverName=channel.guild.name
-    await ctx.send(mongodbBotChannels.insert_server_data(serverID,serverName, channelID,channelName))
+    await ctx.send(mongodb.insert_server_data(serverID,serverName, channelID,channelName))
     
 
 @bot.command(aliases=['removechannel'])
@@ -106,13 +106,13 @@ async def removeChannel(ctx):
     channel = ctx.channel
     channelID=channel.id
     serverID=channel.guild.id
-    await ctx.send(mongodbBotChannels.remove_existing_channel(serverID, channelID))
+    await ctx.send(mongodb.remove_existing_channel(serverID, channelID))
     
 def checkChannel(ctx):
     channel = ctx.channel
     channelID=channel.id
     serverID=channel.guild.id
-    return mongodbBotChannels.check_already_allowed(serverID, channelID)
+    return mongodb.check_already_allowed(serverID, channelID)
      
 @bot.event
 async def on_ready():
