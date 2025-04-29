@@ -41,7 +41,6 @@ foxaholic_cookie="cf_clearance=Yv3eBS15RqF0OJDkWUQMp4VMkavycicNn.BAmjp5k_s-17454
 novelbin_cookie="cf_clearance=uV5dVAIEDMPgsA4aAHzYOojtcZLaDZud0OXYDA8.p0c-1744912119-1.2.1.1-SXDR6LWOaDbZ1WGCsFWuANVtmkzCCR_nlP6gzDP6Rk5GBavG0gGbzn2rb0LVhDjEP6bp6I2YzEmAKe1B4hPkTFAqvrBZQIkvahjz.vBPbQ9El6K5ItTLIOpodv..q.lXeFlVa4eqRxB_0fwQMW4z1pDOU3rsh6pCH42VmYfuGbYzygiA2Y0KT39254p88Z0XUr8pS8szqlcY2nbRZSuD.kakIq7dmgudb_o9tS1JCdg4Uf3Mnfp70zZDf5VlT8Z7iMeWwuO0aWI05d70kS8SGf6v.jtfBsbcREU74t34FShuZfM8mgym0fXmLTzRORmlA4jr42pdMWPZ4ixIPHzsIh01uaJi0xOJfR.4EFEfu_g"
 novelbin_link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
 
-global options
 options={
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -50,8 +49,8 @@ options={
         "Cookie": foxaholic_cookie
     }
 
-global cookie
 cookie=""
+
 def setCookie(newCookie):
     global cookie
     cookie=newCookie
@@ -1138,4 +1137,4 @@ async def main_interface(url):
         
 link="https://novelbin.com/b/raising-orphans-not-assassins"
 link="https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"
-asyncio.run(main_interface(link))
+#asyncio.run(main_interface(link))
