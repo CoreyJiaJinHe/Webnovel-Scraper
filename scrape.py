@@ -1625,7 +1625,7 @@ async def spacebattles_fetch_page_soup(url):
                 html = await response.text()
                 soup = bs4.BeautifulSoup(html, 'html.parser')
                 return soup
-#logging.warning(asyncio.run(spacebattles_fetch_page_soup("https://forums.spacebattles.com/threads/quahinium-industries-shipworks-kancolle-si.1103320/reader/")))
+
 
 async def spacebattles_retrieve_novel_data(url):
     soup=await spacebattles_fetch_page_soup(url)
@@ -1683,7 +1683,7 @@ async def spacebattles_retrieve_novel_data(url):
         return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 async def spacebattles_get_pages(url):
     soup=await spacebattles_fetch_page_soup(url)
-    last=0    
+    last=0
     pagelist=soup.find("ul",{"class":"pageNav-main"})
     for anchor in pagelist.find_all("a"):
         pagenum=anchor.get_text()

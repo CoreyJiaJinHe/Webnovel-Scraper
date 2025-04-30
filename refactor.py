@@ -17,7 +17,7 @@ from mongodb import (
     get_Entry_Via_Title,
     getLatest,
     get_Total_Books,
-    getAllBooks,
+    get_all_books,
     create_Entry,
     create_latest
 )
@@ -27,6 +27,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
+
+from scrape import test_save_chapter_content
 
 gHeaders={
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
@@ -304,6 +306,8 @@ class ScraperFactory:
             return FoxaholicScraper()
         elif "novelbin.me" in url or "novelbin.com" in url:
             return NovelBinScraper()
+        elif "spacebattles.com" in url:
+            return SpaceBattlesScraper()
         else:
             raise ValueError("Unsupported website")
         
@@ -318,16 +322,33 @@ class Scraper:
     async def fetch_chapter_title(self,soup):
         raise NotImplementedError
     async def get_soup(self,url):
-        raise NotImplementedError
-
-class RoyalRoadScraper(Scraper):
-    async def get_soup(self,url):
+        global gHeaders
         async with aiohttp.ClientSession(headers = gHeaders) as session:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        html = await response.text()
-                        soup = bs4.BeautifulSoup(html, 'html.parser')
-                        return soup
+            async with session.get(url) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    return soup
+
+class SpaceBattlesScraper(Scraper):
+    async def fetch_novel_data(self,url):
+        raise NotImplementedError
+    async def fetch_chapter_list(self,url):
+        raise NotImplementedError
+    async def fetch_chapter_content(self,soup):
+        raise NotImplementedError
+    async def fetch_chapter_title(self,soup):
+        raise NotImplementedError
+    
+class RoyalRoadScraper(Scraper):
+    # async def get_soup(self,url):
+    #     async with aiohttp.ClientSession(headers = gHeaders) as session:
+    #             async with session.get(url) as response:
+    #                 if response.status == 200:
+    #                     html = await response.text()
+    #                     soup = bs4.BeautifulSoup(html, 'html.parser')
+    #                     return soup
+    
     async def fetch_novel_data(self, url):
         # RoyalRoad-specific logic
         return await self.RoyalRoad_Fetch_Novel_Data(url)
@@ -880,12 +901,12 @@ class EpubProducer:
                 chapter_title, chapter_content, image_count = await self.process_new_chapter(
                     chapter_url, book_title, chapter_id, image_count, new_epub
                 )
+                chapterInsert=f'<h1>{chapter_title}</h1>'
+                chapter_content=chapterInsert+str(chapter_content)
             file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
             chapter_metadata.append([chapter_id, chapter_url, f"./books/raw/{book_title}/{file_chapter_title}.html"])
-            #logging.warning(chapter_content)
-            chapterInsert=f'<h1>{chapter_title}</h1>'
-            chapter_content=chapterInsert+str(chapter_content)
-            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)
+            
+            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, bs4.BeautifulSoup(chapter_content,'html.parser'), css)
             toc_list.append(chapter)
             new_epub.add_item(chapter)
 
@@ -948,7 +969,7 @@ class FoxaholicEpubProducer(EpubProducer):
         
         encoded_chapter_content=chapter_content.encode('ascii')
         
-        store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
+        store_chapter(encoded_chapter_content.decode('utf-8'), book_title, chapter_title, chapter_id)
 
         return chapter_title, chapter_content, image_count
     
@@ -1136,5 +1157,5 @@ async def main_interface(url):
         logging.error(f"Error: {e}")
         
 link="https://novelbin.com/b/raising-orphans-not-assassins"
-link="https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"
-#asyncio.run(main_interface(link))
+#link="https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"
+asyncio.run(main_interface(link))
