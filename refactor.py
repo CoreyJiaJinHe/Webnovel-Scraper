@@ -901,12 +901,11 @@ class EpubProducer:
                 chapter_title, chapter_content, image_count = await self.process_new_chapter(
                     chapter_url, book_title, chapter_id, image_count, new_epub
                 )
-                chapterInsert=f'<h1>{chapter_title}</h1>'
-                chapter_content=chapterInsert+str(chapter_content)
+                
             file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
             chapter_metadata.append([chapter_id, chapter_url, f"./books/raw/{book_title}/{file_chapter_title}.html"])
             
-            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, bs4.BeautifulSoup(chapter_content,'html.parser'), css)
+            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)
             toc_list.append(chapter)
             new_epub.add_item(chapter)
 
@@ -985,12 +984,25 @@ class NovelBinEpubProducer(EpubProducer):
         scraper = NovelBinScraper()
         return await scraper.fetch_chapter_list(url)
     
+    async def generate_chapter_title(self, chapter_id):
+        chapter_id=int(chapter_id)
+        
+        volume_number=int(chapter_id//10000)
+        chapter_number=int(chapter_id%10000)
+        
+        return f"V{volume_number}Ch{chapter_number}"
+        
+    
     async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
         scraper = NovelBinScraper()
         soup = await scraper.get_soup(chapter_url)
         chapter_title = await scraper.fetch_chapter_title(soup)
+        chapter_title=await self.generate_chapter_title(chapter_id)+" "+chapter_title
+        
         chapter_content = scraper.novelbin_scrape_chapter_page(soup)
-
+        chapterInsert=f'<h1>{chapter_title}</h1>'
+        chapter_content=chapterInsert+str(chapter_content)
+        chapter_content=bs4.BeautifulSoup(chapter_content,'html.parser')
         # Save chapter content
         currentImageCount=image_count
         # Process images
@@ -1005,10 +1017,10 @@ class NovelBinEpubProducer(EpubProducer):
                 currentImageCount+=1
         
         encoded_chapter_content=chapter_content.encode('ascii')
-        
         store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
 
         return chapter_title, chapter_content, image_count
+    
     
     
     #This grabs the numbers in the URL to treat as the ChapterID.
