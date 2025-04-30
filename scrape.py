@@ -205,7 +205,7 @@ def write_order_of_contents(bookTitle, chapterData):
     
     for dataLine in chapterData:
         #logging.warning(dataLine)
-        chapterID=dataLine[0]
+        chapterID=str(dataLine[0])
         chapterLink=dataLine[1]
         chapterTitle=dataLine[2]
         f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
@@ -1681,9 +1681,226 @@ async def spacebattles_retrieve_novel_data(url):
             logging.warning("There is no image")
         #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
         return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+async def spacebattles_get_pages(url):
+    soup=await spacebattles_fetch_page_soup(url)
+    last=0    
+    pagelist=soup.find("ul",{"class":"pageNav-main"})
+    for anchor in pagelist.find_all("a"):
+        pagenum=anchor.get_text()
+        #logging.warning(pagenum)
+        if pagenum.isdigit():
+            last = max(last,int(pagenum))
+    return last
+    
+#asyncio.run(spacebattles_get_pages("https://forums.spacebattles.com/threads/quahinium-ind5235ustries-shipworks-k525ancolle-si.1103320/reader/"))
+    
+    
+async def spacebattles_remove_garbage_from_chapter(chapterContent):
+    if not isinstance(chapterContent, bs4.element.Tag):
+        logging.warning("chapterContent is not a BeautifulSoup Tag object.")
+        return chapterContent  # Return as-is if it's not a valid object
+
+    tags_to_remove = ["blockquote","button"]
+    for tag in tags_to_remove:
+        for element in chapterContent.find_all(tag):
+            element.extract()
+    div_classes_to_remove=["js-selectToQuoteEnd"]
+    for div_class in div_classes_to_remove:
+        for element in chapterContent.find_all("div",{"class":div_class}):
+            element.extract()
+    
+    img_classes_to_remove=["smilie"]
+    for img_class in img_classes_to_remove:
+        for element in chapterContent.find_all("img",{"class":img_class}):
+            element.extract()
+    
+    emoji_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags=re.UNICODE)
+    
+    chapterContent=re.sub(emoji_pattern,'',str(chapterContent))
+    chapterContent=bs4.BeautifulSoup(chapterContent,'html.parser')
+    
+    
+            
+    return chapterContent
+
+async def spacebattles_save_page_content(chapterContent,bookTitle,fileTitle):
+    #bookTitle=fileTitle.split(" - ")[0]
+    bookDirLocation = "./books/raw/" + bookTitle+"/"
+    if not check_directory_exists(bookDirLocation):
+        make_directory(bookDirLocation)
+
+    # Check if the chapter already exists
+    dirLocation = f"./books/raw/{bookTitle}/{fileTitle}.html"
+    if check_directory_exists(dirLocation):
+        return
+
+    # Write the chapter content to the file with UTF-8 encoding
+    chapterDirLocation = "./books/raw/" + bookTitle + "/"
+    completeName = os.path.join(chapterDirLocation, f"{fileTitle}.html")
+    if (isinstance(chapterContent,list)):
+        with open (completeName,"w", encoding="utf-8") as f:
+            for article in chapterContent:
+                article=article.encode('ascii')
+                if (not isinstance(article,str)):
+                    f.write(article.decode('utf-8'))
+    else:
+        with open (completeName,"w", encoding="utf-8") as f:
+            chapterContent=chapterContent.encode('ascii')
+            f.write(chapterContent.decode('utf-8'))
+    f.close()
+
+async def test_save_chapter_content(chapterContent):
+    if (isinstance(chapterContent,list)):
+        with open ('test.html','a', encoding="utf-8") as f:
+                for article in chapterContent:
+                    article=article.encode('ascii')
+                    if (not isinstance(article,str)):
+                        f.write(article.decode('utf-8'))
+    else:
+        with open ('test.html','a', encoding="utf-8") as f:
+            chapterContent=chapterContent.encode('ascii')
+            f.write(chapterContent.decode('utf-8'))
+    f.close()
+    
+async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
+    chapterMetaData=list()
+    tocList=list()
+    imageCount=0
+    logging.warning(await spacebattles_get_pages(novelURL))
+    for pageNum in range(1, await spacebattles_get_pages(novelURL)):
+        await asyncio.sleep(1)
+        page_url = f"{novelURL}page-{pageNum}/"
+        soup=await spacebattles_fetch_page_soup(page_url)
+        articles=soup.find_all("article",{"class":"message"})
+        #await test_save_chapter_content(articles)
+        #logging.warning(articles)
+        pageContent=""
+        if (articles):
+            for article in articles:
+                #logging.warning(article)
+                threadmarkTitle=article.find("span",{"class":"threadmarkLabel"})
+                title=threadmarkTitle.get_text()
+                
+                chapterContent=article.find("div",{"class":"message-userContent"})
+                #logging.warning(chapterContent)
+                sanitizedChapterContent=await spacebattles_remove_garbage_from_chapter(chapterContent)
+                pageContent+=str(sanitizedChapterContent)
+                
+                #logging.warning(title)
+                #logging.warning(sanitizedChapterContent)
+                images=sanitizedChapterContent.find_all('img')
+                images=[image['src'] for image in images]
+                imageDir=f"./books/raw/{bookTitle}/images/"
+                currentImageCount=imageCount
+                #logging.warning(images)
+                if (images):
+                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                    for img,image in zip(sanitizedChapterContent.find_all('img'),images):
+                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                        
+                        imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                        epubImage=retrieve_stored_image(imageDir)
+                        b=io.BytesIO()
+                        epubImage.save(b,'png')
+                        b_image1=b.getvalue()
+                        
+                        image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                        new_epub.add_item(image_item)
+                        currentImageCount+=1
+                chapter=epub.EpubHtml(title=title, file_name=f"{bookTitle} - {pageNum} - {title}.xhtml", lang='en')
+                sanitizedChapterContent=sanitizedChapterContent.encode('ascii')
+                chapter.set_content(sanitizedChapterContent)
+                chapter.add_item(css)
+                tocList.append(chapter)
+                new_epub.add_item(chapter)
+                logging.warning(title)
+        fileTitle=bookTitle+" - "+str(pageNum)
+        #logging.warning(pageContent)
+        #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
+        pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
+        await spacebattles_save_page_content(pageContent,bookTitle,fileTitle)
+        chapterMetaData.append([pageNum,page_url,f"./books/raw/{bookTitle}/{fileTitle}.html"])
+    
+    # logging.warning("We reached retrieve_cover_from_storage")
+    img1=retrieve_cover_from_storage(bookTitle)
+    if img1:    
+        b=io.BytesIO()
+        try:
+            img1.save(b,'png')
+            b_image1=b.getvalue()
+            image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
+            new_epub.add_item(image1_item)
+        except Exception as e:
+            logging.warning(f"Failed to save image:{e}")
+    
+    new_epub.toc=tocList
+    new_epub.spine=tocList
+    new_epub.add_item(epub.EpubNcx())
+    new_epub.add_item(epub.EpubNav())
+    
+    write_order_of_contents(bookTitle, chapterMetaData)
+    
+    # logging.warning("Attempting to store epub")
+    storeEpub(bookTitle, new_epub)
 
 
+async def test_interface(bookurl):
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await spacebattles_retrieve_novel_data(bookurl)
+    
+    #Instantiate new epub object
+    new_epub=epub.EpubBook()
+    new_epub.set_identifier(bookID)
+    new_epub.set_title(bookTitle)
+    new_epub.set_language('en')
+    new_epub.add_author(bookAuthor)
+    style=open("style.css","r").read()
+    default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+    new_epub.add_item(default_css)
+    
+    logging.warning("Generating new epub")
+    await spacebattles_produce_epub(new_epub,bookurl,bookTitle,default_css)
+
+    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
+    rooturl = rooturl.group()
+    first,last,total=get_first_last_chapter(bookTitle)
+    
+    bookID=int(remove_invalid_characters(bookID))
+    #logging.warning(bookID)
+    directory = create_epub_directory_url(bookTitle)
+    create_Entry(
+        bookID=bookID,
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+    
+    create_latest(
+        bookID=int(bookID),
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+        
+    return directory
+
+#asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
 url="https://forums.spacebattles.com/threads/quahinium-ind5235ustries-shipworks-k525ancolle-si.1103320/reader/"
 link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"
 #logging.warning(bookID)
-logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
+#logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
+logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
