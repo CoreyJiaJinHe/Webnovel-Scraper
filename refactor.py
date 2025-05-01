@@ -332,13 +332,80 @@ class Scraper:
 
 class SpaceBattlesScraper(Scraper):
     async def fetch_novel_data(self,url):
-        raise NotImplementedError
+        soup=await self.get_soup(url)
+        if soup:
+            x=re.findall(r'(\d+)',url)
+            bookID=x[len(x)-1]
+            
+            bookTitle=soup.find("div",{"class":"p-title"}).get_text()
+            bookTitle=remove_invalid_characters(bookTitle)
+            
+            #the assumption is that there is always a bookTitle
+            bookAuthor=soup.find("div",{"class":"p-description"})
+            bookAuthor=bookAuthor.find("a").get_text()
+            
+            description=soup.find("div",{"class":"threadmarkListingHeader-extraInfo"})
+            description=description.find("div",{"class":"bbWrapper"}).get_text()
+            description=description.encode('utf-8').decode('utf-8')
+            description = description.replace('\n', ' ')  # Replaces newline characters with a space
+            description = description.replace('  ', ' ')  # Reduces double spacing to a single space
+            description = description.strip()  # Removes leading and trailing whitespace
+            lastScraped=datetime.datetime.now()
+            
+            chapterTable=soup.find("div",{"class":"structItemContainer"})
+            rows=chapterTable.find_all("li")
+            
+            latestChapter=rows[len(rows)-1]
+            latestChapter=latestChapter.get_text()
+            match=re.search(r'\b\d+(?:-\d+)?\b',latestChapter)
+            latestChapterID=match.group()
+            
+            try:
+                img_url = soup.find("span",{"class":"avatar avatar--l"})
+                img_url=img_url.find("img")
+                if (img_url):
+                    saveDirectory=f"./books/raw/{bookTitle}/"
+                    if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                        async with aiohttp.ClientSession(headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                        }) as session:
+                            if not isinstance(img_url,str):
+                                img_url=img_url["src"]
+                            async with session.get(f"https://forums.spacebattles.com/{img_url}") as response:
+                                if response.status == 200:
+                                    fileNameDir=f"{saveDirectory}cover_image.png"
+                                    if not (check_directory_exists(saveDirectory)):
+                                        make_directory(saveDirectory)
+                                    if not (check_directory_exists(fileNameDir)):
+                                        response=await response.content.read()
+                                        with open (fileNameDir,'wb') as f:
+                                            f.write(response)
+                                        f.close()
+            except Exception as e:
+                logging.warning("There is no image")
+            #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
+            return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+    
     async def fetch_chapter_list(self,url):
-        raise NotImplementedError
+        soup=await self.get_soup(url)
+        last=0
+        pagelist=soup.find("ul",{"class":"pageNav-main"})
+        for anchor in pagelist.find_all("a"):
+            pagenum=anchor.get_text()
+            #logging.warning(pagenum)
+            if pagenum.isdigit():
+                last = max(last,int(pagenum))
+        return last
+
     async def fetch_chapter_content(self,soup):
         raise NotImplementedError
     async def fetch_chapter_title(self,soup):
         raise NotImplementedError
+    
+    
+    
+    
+    
     
 class RoyalRoadScraper(Scraper):
     # async def get_soup(self,url):
@@ -939,6 +1006,156 @@ class EpubProducer:
             image_count += 1
         return image_count
 
+
+class SpaceBattlesEpubProducer(EpubProducer):
+    async def spacebattles_fetch_chapter_list(self,url):
+        scraper=SpaceBattlesScraper()
+        return await scraper.fetch_chapter_list(url)
+    
+    
+    
+    async def spacebattles_remove_garbage_from_chapter(self,chapterContent):
+        if not isinstance(chapterContent, bs4.element.Tag):
+            logging.warning("chapterContent is not a BeautifulSoup Tag object.")
+            return chapterContent  # Return as-is if it's not a valid object
+
+        tags_to_remove = ["blockquote","button"]
+        for tag in tags_to_remove:
+            for element in chapterContent.find_all(tag):
+                element.extract()
+        div_classes_to_remove=["js-selectToQuoteEnd"]
+        for div_class in div_classes_to_remove:
+            for element in chapterContent.find_all("div",{"class":div_class}):
+                element.extract()
+        
+        img_classes_to_remove=["smilie"]
+        for img_class in img_classes_to_remove:
+            for element in chapterContent.find_all("img",{"class":img_class}):
+                element.extract()
+        
+        emoji_pattern = re.compile("["
+            u"\U0001F600-\U0001F64F"  # emoticons
+            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                            "]+", flags=re.UNICODE)
+        
+        chapterContent=re.sub(emoji_pattern,'',str(chapterContent))
+        chapterContent=bs4.BeautifulSoup(chapterContent,'html.parser')
+        
+        
+                
+        return chapterContent
+
+    async def spacebattles_save_page_content(self,chapterContent,bookTitle,fileTitle):
+        #bookTitle=fileTitle.split(" - ")[0]
+        bookDirLocation = "./books/raw/" + bookTitle+"/"
+        if not check_directory_exists(bookDirLocation):
+            make_directory(bookDirLocation)
+
+        # Check if the chapter already exists
+        dirLocation = f"./books/raw/{bookTitle}/{fileTitle}.html"
+        if check_directory_exists(dirLocation):
+            return
+
+        # Write the chapter content to the file with UTF-8 encoding
+        chapterDirLocation = "./books/raw/" + bookTitle + "/"
+        completeName = os.path.join(chapterDirLocation, f"{fileTitle}.html")
+        if (isinstance(chapterContent,list)):
+            with open (completeName,"w", encoding="utf-8") as f:
+                for article in chapterContent:
+                    article=article.encode('ascii')
+                    if (not isinstance(article,str)):
+                        f.write(article.decode('utf-8'))
+        else:
+            with open (completeName,"w", encoding="utf-8") as f:
+                chapterContent=chapterContent.encode('ascii')
+                f.write(chapterContent.decode('utf-8'))
+        f.close()
+
+    #MODIFY TO USE PROCESS CHAPTER
+    async def spacebattles_produce_epub(self,new_epub,novelURL,bookTitle,css):
+        scraper=SpaceBattlesScraper()
+        chapterMetaData=list()
+        tocList=list()
+        imageCount=0
+        for pageNum in range(1, await scraper.spacebattles_fetch_chapter_list(novelURL)):
+            await asyncio.sleep(1)
+            page_url = f"{novelURL}page-{pageNum}/"
+            soup=await scraper.get_soup(page_url)
+            articles=soup.find_all("article",{"class":"message"})
+            #await test_save_chapter_content(articles)
+            #logging.warning(articles)
+            pageContent=""
+            if (articles):
+                for article in articles:
+                    #logging.warning(article)
+                    threadmarkTitle=article.find("span",{"class":"threadmarkLabel"})
+                    title=threadmarkTitle.get_text()
+                    
+                    chapterContent=article.find("div",{"class":"message-userContent"})
+                    #logging.warning(chapterContent)
+                    sanitizedChapterContent=await self.spacebattles_remove_garbage_from_chapter(chapterContent)
+                    pageContent+=str(sanitizedChapterContent)
+                    
+                    #logging.warning(title)
+                    #logging.warning(sanitizedChapterContent)
+                    images=sanitizedChapterContent.find_all('img')
+                    images=[image['src'] for image in images]
+                    imageDir=f"./books/raw/{bookTitle}/images/"
+                    currentImageCount=imageCount
+                    #logging.warning(images)
+                    if (images):
+                        imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                        for img,image in zip(sanitizedChapterContent.find_all('img'),images):
+                            img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                            
+                            imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                            epubImage=retrieve_stored_image(imageDir)
+                            b=io.BytesIO()
+                            epubImage.save(b,'png')
+                            b_image1=b.getvalue()
+                            
+                            image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                            new_epub.add_item(image_item)
+                            currentImageCount+=1
+                    chapter=epub.EpubHtml(title=title, file_name=f"{bookTitle} - {pageNum} - {title}.xhtml", lang='en')
+                    sanitizedChapterContent=sanitizedChapterContent.encode('ascii')
+                    chapter.set_content(sanitizedChapterContent)
+                    chapter.add_item(css)
+                    tocList.append(chapter)
+                    new_epub.add_item(chapter)
+                    logging.warning(title)
+            fileTitle=bookTitle+" - "+str(pageNum)
+            #logging.warning(pageContent)
+            #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
+            pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
+            await spacebattles_save_page_content(pageContent,bookTitle,fileTitle)
+            chapterMetaData.append([pageNum,page_url,f"./books/raw/{bookTitle}/{fileTitle}.html"])
+        
+        # logging.warning("We reached retrieve_cover_from_storage")
+        img1=retrieve_cover_from_storage(bookTitle)
+        if img1:    
+            b=io.BytesIO()
+            try:
+                img1.save(b,'png')
+                b_image1=b.getvalue()
+                image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
+                new_epub.add_item(image1_item)
+            except Exception as e:
+                logging.warning(f"Failed to save image:{e}")
+        
+        new_epub.toc=tocList
+        new_epub.spine=tocList
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+        
+        write_order_of_contents(bookTitle, chapterMetaData)
+        
+        # logging.warning("Attempting to store epub")
+        storeEpub(bookTitle, new_epub)
+
+    
 class FoxaholicEpubProducer(EpubProducer):
     async def fetch_chapter_list(self, url):
         scraper = FoxaholicScraper()
