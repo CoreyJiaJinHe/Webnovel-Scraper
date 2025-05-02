@@ -1768,6 +1768,7 @@ async def test_save_chapter_content(chapterContent):
     f.close()
     
 async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
+    already_saved_chapters = get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
     tocList=list()
     imageCount=0
@@ -1775,56 +1776,75 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
     for pageNum in range(1, await spacebattles_get_pages(novelURL)):
         await asyncio.sleep(1)
         page_url = f"{novelURL}page-{pageNum}/"
-        soup=await spacebattles_fetch_page_soup(page_url)
-        articles=soup.find_all("article",{"class":"message"})
-        #await test_save_chapter_content(articles)
-        #logging.warning(articles)
-        pageContent=""
-        if (articles):
-            for article in articles:
-                #logging.warning(article)
-                threadmarkTitle=article.find("span",{"class":"threadmarkLabel"})
-                title=threadmarkTitle.get_text()
-                
-                chapterContent=article.find("div",{"class":"message-userContent"})
-                #logging.warning(chapterContent)
-                sanitizedChapterContent=await spacebattles_remove_garbage_from_chapter(chapterContent)
-                pageContent+=str(sanitizedChapterContent)
-                
-                #logging.warning(title)
-                #logging.warning(sanitizedChapterContent)
-                images=sanitizedChapterContent.find_all('img')
-                images=[image['src'] for image in images]
-                imageDir=f"./books/raw/{bookTitle}/images/"
-                currentImageCount=imageCount
-                #logging.warning(images)
-                if (images):
-                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
-                    for img,image in zip(sanitizedChapterContent.find_all('img'),images):
-                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
-                        
-                        imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-                        epubImage=retrieve_stored_image(imageDir)
-                        b=io.BytesIO()
-                        epubImage.save(b,'png')
-                        b_image1=b.getvalue()
-                        
-                        image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                        new_epub.add_item(image_item)
-                        currentImageCount+=1
-                chapter=epub.EpubHtml(title=title, file_name=f"{bookTitle} - {pageNum} - {title}.xhtml", lang='en')
-                sanitizedChapterContent=sanitizedChapterContent.encode('ascii')
-                chapter.set_content(sanitizedChapterContent)
-                chapter.add_item(css)
-                tocList.append(chapter)
-                new_epub.add_item(chapter)
-                logging.warning(title)
-        fileTitle=bookTitle+" - "+str(pageNum)
-        #logging.warning(pageContent)
-        #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
-        pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
-        await spacebattles_save_page_content(pageContent,bookTitle,fileTitle)
-        chapterMetaData.append([pageNum,page_url,f"./books/raw/{bookTitle}/{fileTitle}.html"])
+        if check_if_chapter_exists(page_url, already_saved_chapters):
+            #Unfinished. Can't think of how to do this.
+            #Order of chapters is saved by pages, there is a limit of 10 threadmarks per page, and threadmarks are saved as individual chapters
+            #The idea is to have a for loop that retrieves 10 chapters, and saves it to the new epub.
+            #But if there isn't 10 chapters for said page, then it will break.
+            #Not only that, but the chapter directory aren't saved either.
+            #So existing code will not work. I will either have to create a new process or change the way the chapters are saved.
+            
+            chapter_id, dir_location = get_chapter_from_saved(chapter_id, already_saved_chapters)
+            chapter_content = get_chapter_contents_from_saved(dir_location)
+            chapter_title = self.extract_chapter_title(dir_location)
+            chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
+            images=chapter_content_soup.find_all('img')
+            images=[image['src'] for image in images]
+            image_dir = f"./books/raw/{book_title}/"
+            if images:
+                image_count=await self.retrieve_images_in_chapter(images, image_dir,image_count,new_epub)
+            
+        else:
+            soup=await spacebattles_fetch_page_soup(page_url)
+            articles=soup.find_all("article",{"class":"message"})
+            #await test_save_chapter_content(articles)
+            #logging.warning(articles)
+            pageContent=""
+            if (articles):
+                for article in articles:
+                    #logging.warning(article)
+                    threadmarkTitle=article.find("span",{"class":"threadmarkLabel"})
+                    title=threadmarkTitle.get_text()
+                    
+                    chapterContent=article.find("div",{"class":"message-userContent"})
+                    #logging.warning(chapterContent)
+                    sanitizedChapterContent=await spacebattles_remove_garbage_from_chapter(chapterContent)
+                    pageContent+=str(sanitizedChapterContent)
+                    
+                    #logging.warning(title)
+                    #logging.warning(sanitizedChapterContent)
+                    images=sanitizedChapterContent.find_all('img')
+                    images=[image['src'] for image in images]
+                    imageDir=f"./books/raw/{bookTitle}/images/"
+                    currentImageCount=imageCount
+                    #logging.warning(images)
+                    if (images):
+                        imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                        for img,image in zip(sanitizedChapterContent.find_all('img'),images):
+                            img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                            
+                            imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                            epubImage=retrieve_stored_image(imageDir)
+                            b=io.BytesIO()
+                            epubImage.save(b,'png')
+                            b_image1=b.getvalue()
+                            
+                            image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                            new_epub.add_item(image_item)
+                            currentImageCount+=1
+                    chapter=epub.EpubHtml(title=title, file_name=f"{bookTitle} - {pageNum} - {title}.xhtml", lang='en')
+                    sanitizedChapterContent=sanitizedChapterContent.encode('ascii')
+                    chapter.set_content(sanitizedChapterContent)
+                    chapter.add_item(css)
+                    tocList.append(chapter)
+                    new_epub.add_item(chapter)
+                    logging.warning(title)
+            fileTitle=bookTitle+" - "+str(pageNum)
+            #logging.warning(pageContent)
+            #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
+            pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
+            await spacebattles_save_page_content(pageContent,bookTitle,fileTitle)
+            chapterMetaData.append([pageNum,page_url,f"./books/raw/{bookTitle}/{fileTitle}.html"])
     
     # logging.warning("We reached retrieve_cover_from_storage")
     img1=retrieve_cover_from_storage(bookTitle)
