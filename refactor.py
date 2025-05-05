@@ -434,6 +434,13 @@ class RoyalRoadScraper(Scraper):
         bookTitle=remove_invalid_characters(bookTitle)
                 
         description=soup.find("div",{"class":"description"}).get_text()
+        
+        if ("\n" in description):
+            description=description.replace("\n","")
+        if ("  " in description):
+            description=description.replace("  "," ")
+            
+        
         lastScraped=datetime.datetime.now()
         
         chapterTable=soup.find("table",{"id":"chapters"})
@@ -553,18 +560,23 @@ class FoxaholicScraper(Scraper):
 
         bookTitle=soup.find("div",{"class":"post-title"}).get_text() or soup.find("div",{"class":"post_title"}).get_text()
         bookAuthor=novelData[2].get_text()
-        logging.warning(bookTitle)
+        #logging.warning(bookTitle)
         bookTitle=remove_invalid_characters(bookTitle)
         
         bookID=str(generate_new_ID(bookTitle))
-        logging.warning(bookID)
+        #logging.warning(bookID)
                 
         descriptionBox=soup.find("div",{"class":"description-summary"})
         description=descriptionBox.find("div",{"class":"summary__content"}).get_text()
-
+        
         if (description.startswith("Description: ")):
             description=description[13:]
-        
+        if ("\n" in description):
+            description=description.replace("\n","")
+        if ("  " in description):
+            description=description.replace("  "," ")
+            
+            
         location1=re.search("translator",description ,re.IGNORECASE)
         if not location1:
             location1=len(description)
@@ -714,12 +726,25 @@ class NovelBinScraper(Scraper):
         novelData=firstHalfBookData.find_all("li")
         bookAuthor=novelData[0].get_text()
         
+        if ("\n" in bookAuthor):
+            bookAuthor=bookAuthor.replace("\n","")
+        if ("  " in bookAuthor):
+            bookAuthor=bookAuthor.replace("  "," ")
+            
+        if ("Author:" in bookAuthor):
+            bookAuthor=bookAuthor.replace("Author:","")
+            
         descriptionBox=soup.find("div",{"id":"tab-description"})
         description=descriptionBox.find("div",{"class":"desc-text"}).get_text()
 
         if (description.startswith("Description: ")):
             description=description[13:]
         description=description.strip()
+        if ("\n" in description):
+            description=description.replace("\n","")
+        if ("  " in description):
+            description=description.replace("  "," ")
+        
         logging.warning(description)
         
         lastScraped=datetime.datetime.now()
@@ -1324,8 +1349,6 @@ def get_first_last_chapter(bookTitle):
 
 async def main_interface(url):
     try:
-        scraper=ScraperFactory.get_scraper(url)
-        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter= await scraper.fetch_novel_data(url)
         epub_producer = None
         if "royalroad.com" in url:
             epub_producer = RoyalRoadEpubProducer()
@@ -1333,8 +1356,22 @@ async def main_interface(url):
             epub_producer = FoxaholicEpubProducer()
         elif "novelbin.com" in url or "novelbin.me" in url:
             epub_producer= NovelBinEpubProducer()
+        elif "spacebattles.com" in url:
+            epub_producer=SpaceBattlesEpubProducer()
+            if re.search(r'/reader/page-\d+/$',bookurl):
+                bookurl=re.sub(r'/reader/page-\d+/$','/reader/',bookurl)
+            elif not (bookurl.endswith('/reader/')):
+                if (bookurl.endswith('/')):
+                    bookurl+='reader/'
+                else:
+                    bookurl+='/reader/'
         else:
             raise ValueError("Unsupported website")
+        
+        scraper=ScraperFactory.get_scraper(url)
+        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter= await scraper.fetch_novel_data(url)
+        
+        
         
         new_epub=epub.EpubBook()
         new_epub.set_identifier(bookID)
@@ -1349,8 +1386,10 @@ async def main_interface(url):
                 #pass
         
         await epub_producer.produce_epub(url, bookTitle,default_css,new_epub)
-        rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", url)
-        rooturl = rooturl.group()
+        rooturl=""
+        match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", url)
+        if match:
+            rooturl=match.group(1)
         first,last,total=get_first_last_chapter(bookTitle)
         
         bookID=int(remove_invalid_characters(bookID))

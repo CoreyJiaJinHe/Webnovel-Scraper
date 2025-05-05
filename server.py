@@ -10,15 +10,16 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi import FastAPI, File, UploadFile
 import logging
 
-import scrape
+#import scrape
+import mongodb
 
-from pymongo import MongoClient
+#from pymongo import MongoClient
 import os
 
-MONGODB_URL=os.getenv('MONGODB_URI')
-myclient=MongoClient(MONGODB_URL)
-mydb=myclient["Webnovels"]
-savedBooks=mydb["Books"]
+# MONGODB_URL=os.getenv('MONGODB_URI')
+# myclient=MongoClient(MONGODB_URL)
+# mydb=myclient["Webnovels"]
+# savedBooks=mydb["Books"]
 port = os.getenv("PORT") or 8080
 
 app=FastAPI()
@@ -58,7 +59,7 @@ app.add_middleware(
 
 @app.get("/api/getFiles/")
 def getFiles():
-    latestBook=scrape.getLatest()
+    latestBook=mongodb.getLatest()
     #logging.warning(latestBook)
     #logging.warning(latestBook["directory"])
     fileLocation=latestBook["directory"]
@@ -75,7 +76,7 @@ def getFiles():
 
 @app.get("/api/getBook/")
 async def getBook(id):
-    book=scrape.get_Entry(id)
+    book=mongodb.getEpub(id)
 
     fileLocation=book["directory"]
     fileName=book["bookName"]
@@ -91,7 +92,7 @@ async def getBook(id):
 
 @app.get("/api/allBooks/")
 def getAllBooks():
-    allBooks=scrape.get_all_books()
+    allBooks=mongodb.get_organized_books()
     #logging.warning(allBooks)
     return JSONResponse(content=allBooks)
 

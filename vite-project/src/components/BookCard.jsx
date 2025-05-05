@@ -23,7 +23,8 @@ function bookCard({data:{_id, bookName,lastScraped,latestChapter},getBook}){
             <div className="st-4 p-2">
                 <h3>{bookName ? bookName:"Failed to get"}</h3>
                 <div>
-                    <p>Latest scraped chapter:{latestChapter ? latestChapter:"?" }</p>
+                    <p>Latest scraped chapter: {latestChapter ? latestChapter:"?" }</p>
+                    <p>Last scraped: {lastScraped? lastScraped:"?"}</p>
                 </div>
                 <button onClick={()=>downloadBook(_id,getBook)}>Download</button>
 

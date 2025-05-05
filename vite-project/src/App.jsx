@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import BookCard from './components/BookCard.jsx'
+//import BookCardSection from './components/BookCardSection.jsx';
 //TODO: Build page. Build button to connect to backend server.py to retrieve file to download.
 
 import axios from "axios";
@@ -23,7 +24,8 @@ function App() {
     //getBookCards()
   },[bookList])
 
-  async function getFiles(){
+  async function getFiles()
+  {
     try{
       const response=await axios.get(`${API_URL}/getFiles`,{responseType:'blob'}) //withCredentials: true
       console.log(response)
@@ -115,7 +117,7 @@ function App() {
   }
 
   async function populateTable(){
-      try{
+    try{
       const response = await axios.get(`${API_URL}/allBooks`)
       if (response.statusText!=="OK"){
         console.log("Error getting files")
@@ -126,6 +128,7 @@ function App() {
 
       const dataY=await response.data
       //const dataX=JSON.parse(JSON.stringify(dataY))
+      //console.log(dataY)
       setBookList(dataY)
       //console.log(dataX)
     }
@@ -133,28 +136,42 @@ function App() {
       console.log(error)
     }
   }
-  //dataX.map((book)=>
-  //  {
-  //    console.log(book)
-  //  })
-  const getBookCards=()=>{
-    console.log(bookList)
-    const list=bookList.map((book)=>{
-      let newDict={
-        bookName:book[1],
-        lastScraped:book[2],
-        latestChapter:book[3],
-        _id:book[0]
-      };
 
-      console.log(newDict);
-      console.log("Book value mapping");
-      return <BookCard key={book[0]} data={newDict} getBook={grabBook}/>;
-    })
-    
-    return <ul class='grid grid-cols-4 gap-6 p-5'>{list}</ul>
-  }
-  //justify-center items-center text-center
+
+  const renderBookSections = () => {
+    // Iterate over the bookList, where each entry is [websiteHost, booksArray]
+    console.log(bookList)
+    return bookList.map((entry, index) => {
+      const websiteHost = entry[0]; // The website host
+      const booksArray = entry[1]; // Array of books for this host
+      if (!Array.isArray(booksArray)) {
+        console.warn(`Invalid booksArray for websiteHost: ${websiteHost}`);
+        return null; // Skip rendering this section
+      }
+      return (
+        <div key={index} className="book-section mb-8">
+          {/* Section Header */}
+          <h2 className="text-2xl font-bold mb-4">{websiteHost}</h2>
+          {/* Grid of BookCards */}
+          <div className="grid grid-cols-4 gap-6">
+            {booksArray.map((book) => (
+              <BookCard
+                key={book[0]} // Assuming book[0] is the bookID
+                data={{
+                  _id: book[0], // bookID
+                  bookName: book[1], // bookName
+                  lastScraped: book[2], // lastScraped date
+                  latestChapter: book[3], // latestChapter
+                }}
+                getBook={grabBook}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    });
+  };
+  
   function grabBook(id){
     getBook(id)
   }
@@ -172,7 +189,7 @@ function App() {
       </div>
       <div>
         {
-        getBookCards()
+        renderBookSections()
         }
       </div>
     </div>

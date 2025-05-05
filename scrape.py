@@ -822,9 +822,10 @@ async def royalroad_main_interface(bookurl):
 
     logging.warning("Generating new epub")
     await produceEpub(new_epub,bookurl,bookTitle,default_css)
-
-    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
-    rooturl = rooturl.group()
+    rooturl=""
+    match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", bookurl)
+    if match:
+        rooturl=match.group(1)
     first,last,total=get_first_last_chapter(bookTitle)
     
     bookID=int(remove_invalid_characters(bookID))
@@ -1200,8 +1201,10 @@ async def foxaholic_main_interface(bookurl):
     await foxaholic_produce_Epub(new_epub,bookurl,bookTitle,default_css)
         
         
-    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
-    rooturl = rooturl.group()
+    rooturl=""
+    match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", bookurl)
+    if match:
+        rooturl=match.group(1)
     first,last,total=get_first_last_chapter(bookTitle)
     
     logging.warning(bookID)
@@ -1576,8 +1579,11 @@ async def novelbin_main_interface(bookurl):
     await novelbin_produce_epub(new_epub,bookurl,bookTitle,default_css)
     
     
-    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
-    rooturl = rooturl.group()
+    rooturl=""
+    match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", bookurl)
+    if match:
+        rooturl=match.group(1)
+    
     first,last,total=get_first_last_chapter(bookTitle)
     
     logging.warning(bookID)
@@ -1786,14 +1792,22 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
             
             chapter_id, dir_location = get_chapter_from_saved(chapter_id, already_saved_chapters)
             chapter_content = get_chapter_contents_from_saved(dir_location)
-            chapter_title = self.extract_chapter_title(dir_location)
+            chapter_title = extract_chapter_title(dir_location)
             chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
             images=chapter_content_soup.find_all('img')
             images=[image['src'] for image in images]
-            image_dir = f"./books/raw/{book_title}/"
             if images:
-                image_count=await self.retrieve_images_in_chapter(images, image_dir,image_count,new_epub)
-            
+                #image_count=await retrieve_stored_image(images, image_dir,image_count,new_epub)
+                for image in images:
+                    imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                    epubImage=retrieve_stored_image(imageDir)
+                    b=io.BytesIO()
+                    epubImage.save(b,'png')
+                    b_image1=b.getvalue()
+                    
+                    image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                    new_epub.add_item(image_item)
+                    currentImageCount+=1
         else:
             soup=await spacebattles_fetch_page_soup(page_url)
             articles=soup.find_all("article",{"class":"message"})
@@ -1870,6 +1884,15 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
 
 
 async def test_interface(bookurl):
+    if re.search(r'/reader/page-\d+/$',bookurl):
+        bookurl=re.sub(r'/reader/page-\d+/$','/reader/',bookurl)
+    elif not (bookurl.endswith('/reader/')):
+        if (bookurl.endswith('/')):
+            bookurl+='reader/'
+        else:
+            bookurl+='/reader/'
+    
+    
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await spacebattles_retrieve_novel_data(bookurl)
     
     #Instantiate new epub object
@@ -1885,8 +1908,12 @@ async def test_interface(bookurl):
     logging.warning("Generating new epub")
     await spacebattles_produce_epub(new_epub,bookurl,bookTitle,default_css)
 
-    rooturl = re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/", bookurl)
-    rooturl = rooturl.group()
+
+    rooturl=""
+    match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", bookurl)
+    if match:
+        rooturl=match.group(1)
+
     first,last,total=get_first_last_chapter(bookTitle)
     
     bookID=int(remove_invalid_characters(bookID))

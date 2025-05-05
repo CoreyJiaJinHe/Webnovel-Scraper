@@ -3,6 +3,7 @@
 import aiohttp
 import asyncio
 import logging
+import re
 
 async def download_file(url, filename):
     async with aiohttp.ClientSession(headers = {
@@ -17,56 +18,71 @@ async def download_file(url, filename):
                 async for data in response.content.iter_chunked(chunk_size):
                     f.write(data)
 
-asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
+#asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
+
+
+def test():
+    urls=["https://www.royalroad.com/fiction/82591/magic-murder-cube-marine",
+    "https://novelbin.me/novel-book/raising-orphans-not-assassins",
+    "https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/",
+    "https://forums.spacebattles.com/threads/quahinium-industries-shipworks-kancolle-si.1103320/",
+    "https://novelbin.com/b/"
+    ]
+    root_domains=[]
+    for url in urls:
+        match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", url)
+        if match:
+            root_domains.append(match.group(1))
+    logging.warning(root_domains)
+test()
 
 
 
-
-def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
-    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+# def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
+#     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     
-    tocList=list()
-    for url in already_saved_chapters:
-        url=url.split(";")
-        chapterID=url[0]
-        fileChapterTitle=extract_chapter_title(url[len(url)-1])
-        dirLocation=url[len(url)-1]
-        chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
+#     tocList=list()
+#     for url in already_saved_chapters:
+#         url=url.split(";")
+#         chapterID=url[0]
+#         fileChapterTitle=extract_chapter_title(url[len(url)-1])
+#         dirLocation=url[len(url)-1]
+#         chapterContent=get_chapter_contents_from_saved(dirLocation).encode("utf-8")
         
-        strippedTitle=fileChapterTitle.split('-')
-        strippedTitle=strippedTitle[len(strippedTitle)-1].strip()
+#         strippedTitle=fileChapterTitle.split('-')
+#         strippedTitle=strippedTitle[len(strippedTitle)-1].strip()
         
-        chapter=epub.EpubHtml(title=strippedTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
-        chapter.set_content(chapterContent)
+#         chapter=epub.EpubHtml(title=strippedTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+#         chapter.set_content(chapterContent)
         
         
-        tocList.append(chapter)
+#         tocList.append(chapter)
         
-        new_epub.add_item(chapter)
+#         new_epub.add_item(chapter)
     
-    new_epub.toc=tocList
-    storeEpub(bookTitle,new_epub)
+#     new_epub.toc=tocList
+#     storeEpub(bookTitle,new_epub)
     
         
-def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
-    tocList=list()
-    for url in RoyalRoad_Fetch_Chapter_List(novelURL):
-        chapterID=extract_chapter_ID(url)
-        chapterTitle=fetch_Chapter_Title(url)
-        fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
-        chapterContent=RoyalRoad_Fetch_Chapter(url)
+# def generate_Epub_Based_On_Online_Order(new_epub,novelURL,bookTitle):
+#     tocList=list()
+#     for url in RoyalRoad_Fetch_Chapter_List(novelURL):
+#         chapterID=extract_chapter_ID(url)
+#         chapterTitle=fetch_Chapter_Title(url)
+#         fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+#         chapterContent=RoyalRoad_Fetch_Chapter(url)
         
         
-        chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
-        chapter.set_content(chapterContent)
+#         chapter=epub.EpubHtml(title=chapterTitle,file_name=fileChapterTitle+'.xhtml',lang='en')
+#         chapter.set_content(chapterContent)
         
-        tocList.append(chapter)
+#         tocList.append(chapter)
         
-        new_epub.add_item(chapter)
+#         new_epub.add_item(chapter)
         
-        time.sleep(0.5)
-    new_epub.toc=tocList
-    storeEpub(bookTitle,new_epub)
+#         time.sleep(0.5)
+#     new_epub.toc=tocList
+#     storeEpub(bookTitle,new_epub)
 
 # response=requests.get(image,stream=True, headers = {'User-agent': 'Image Bot'})
 # time.sleep(0.5)
