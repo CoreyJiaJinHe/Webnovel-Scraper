@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import BookCard from './components/BookCard.jsx'
-//import BookCardSection from './components/BookCardSection.jsx';
-//TODO: Build page. Build button to connect to backend server.py to retrieve file to download.
+//DONE TODO: Build page. Build button to connect to backend server.py to retrieve file to download.
 
 import axios from "axios";
 const API_URL = "http://localhost:8000/api";
@@ -91,14 +90,9 @@ function App() {
       const contentDisposition=response.headers['content-disposition'];
       let fileName = contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
       fileName=fileName.replaceAll("\"",'')
-      //console.log(fileName)
 
-      //For files
-      //Get response type as blob
-      //get the data from blob
-      //Create objecturl
-      //create element, set the element to have href, then add the element to page.
-      //console.log(response.headers['filename'])
+      //For files. Get response type as blob > Get Data from Blob > Create Object Url > 
+      //Create Element, Give Element HREF, Add Element to Page
       
       const file = await new Blob([response.data],{type:response.data.type})
       const url = window.URL.createObjectURL(file);
@@ -175,7 +169,7 @@ function App() {
   function grabBook(id){
     getBook(id)
   }
-  //Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
+  //DONE: Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
   return (
     <>
     <div class='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
@@ -187,7 +181,7 @@ function App() {
         
 
       </div>
-      <div>
+      <div class='mt-20'>
         {
         renderBookSections()
         }

@@ -268,7 +268,7 @@ def check_if_chapter_exists(chapterID,savedChapters):
 def get_chapter_from_saved(chapterID,savedChapters):
     for chapter in savedChapters:
         chapter=chapter.split(";")
-        if chapterID == chapter[0]:
+        if chapterID == int(chapter[0]):
             return chapter[0],chapter[2].replace("\n","")
         
     return -1,-1
@@ -1790,24 +1790,40 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
             #Not only that, but the chapter directory aren't saved either.
             #So existing code will not work. I will either have to create a new process or change the way the chapters are saved.
             
-            chapter_id, dir_location = get_chapter_from_saved(chapter_id, already_saved_chapters)
-            chapter_content = get_chapter_contents_from_saved(dir_location)
-            chapter_title = extract_chapter_title(dir_location)
-            chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
-            images=chapter_content_soup.find_all('img')
-            images=[image['src'] for image in images]
-            if images:
-                #image_count=await retrieve_stored_image(images, image_dir,image_count,new_epub)
-                for image in images:
-                    imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-                    epubImage=retrieve_stored_image(imageDir)
-                    b=io.BytesIO()
-                    epubImage.save(b,'png')
-                    b_image1=b.getvalue()
-                    
-                    image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                    new_epub.add_item(image_item)
-                    currentImageCount+=1
+            
+            #Idea. Since I'm already saving all the page content as one file.
+            #I can theoretically insert a custom tag of my own to use as the split point for chapters.
+            #this custom tag iwll need to hold the chapter_title as it isn't saved in my current code.
+            
+            chapter_id, dir_location = get_chapter_from_saved(pageNum, already_saved_chapters)
+            page_content = get_chapter_contents_from_saved(dir_location)
+            page_soup=bs4.BeautifulSoup(page_content,'html.parser')
+            all_chapters=page_soup.find_all('div',{'id':'chapter-start'})
+            for chapter_soup in all_chapters:
+                chapter_title=chapter_soup.find('title')
+                chapter_title=chapter_title.get_text()
+                images=chapter_soup.find_all('img')
+                images=[image['src'] for image in images]
+                if images:
+                    for image in images:
+                        imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                        epubImage=retrieve_stored_image(imageDir)
+                        b=io.BytesIO()
+                        epubImage.save(b,'png')
+                        b_image1=b.getvalue()
+                        
+                        image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                        new_epub.add_item(image_item)
+                        currentImageCount+=1
+                chapter=epub.EpubHtml(title=chapter_title, file_name=f"{bookTitle} - {pageNum} - {chapter_title}.xhtml", lang='en')
+                chapter_content=chapter_soup.encode('ascii')
+                chapter.set_content(chapter_content)
+                chapter.add_item(css)
+                tocList.append(chapter)
+                new_epub.add_item(chapter)
+                logging.warning("Retrieved:"+str(chapter_title))
+            fileTitle=bookTitle+" - "+str(pageNum)
+            chapterMetaData.append([pageNum,page_url,f"./books/raw/{bookTitle}/{fileTitle}.html"])
         else:
             soup=await spacebattles_fetch_page_soup(page_url)
             articles=soup.find_all("article",{"class":"message"})
@@ -1823,7 +1839,8 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
                     chapterContent=article.find("div",{"class":"message-userContent"})
                     #logging.warning(chapterContent)
                     sanitizedChapterContent=await spacebattles_remove_garbage_from_chapter(chapterContent)
-                    pageContent+=str(sanitizedChapterContent)
+                    stringSanitizedChapterContent=str(sanitizedChapterContent)
+                    pageContent+=f"<div id='chapter-start'><title>{title}</title>{stringSanitizedChapterContent}</div>"
                     
                     #logging.warning(title)
                     #logging.warning(sanitizedChapterContent)
@@ -1852,7 +1869,7 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
                     chapter.add_item(css)
                     tocList.append(chapter)
                     new_epub.add_item(chapter)
-                    logging.warning(title)
+                    logging.warning("Saved"+str(title))
             fileTitle=bookTitle+" - "+str(pageNum)
             #logging.warning(pageContent)
             #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
@@ -1945,9 +1962,9 @@ async def test_interface(bookurl):
         
     return directory
 
-#asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
 url="https://forums.spacebattles.com/threads/quahinium-ind5235ustries-shipworks-k525ancolle-si.1103320/reader/"
 link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"
+asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
 #logging.warning(bookID)
 #logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
-logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
+#logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
