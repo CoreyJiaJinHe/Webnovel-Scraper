@@ -1839,8 +1839,6 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
                     chapterContent=article.find("div",{"class":"message-userContent"})
                     #logging.warning(chapterContent)
                     sanitizedChapterContent=await spacebattles_remove_garbage_from_chapter(chapterContent)
-                    stringSanitizedChapterContent=str(sanitizedChapterContent)
-                    pageContent+=f"<div id='chapter-start'><title>{title}</title>{stringSanitizedChapterContent}</div>"
                     
                     #logging.warning(title)
                     #logging.warning(sanitizedChapterContent)
@@ -1864,12 +1862,20 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
                             new_epub.add_item(image_item)
                             currentImageCount+=1
                     chapter=epub.EpubHtml(title=title, file_name=f"{bookTitle} - {pageNum} - {title}.xhtml", lang='en')
+                    stringSanitizedChapterContent=str(sanitizedChapterContent)
+                    pageContent+=f"<div id='chapter-start'><title>{title}</title>{stringSanitizedChapterContent}</div>"
+                    
+                    
+                    
                     sanitizedChapterContent=sanitizedChapterContent.encode('ascii')
                     chapter.set_content(sanitizedChapterContent)
                     chapter.add_item(css)
                     tocList.append(chapter)
                     new_epub.add_item(chapter)
                     logging.warning("Saved"+str(title))
+                    
+                    
+                    
             fileTitle=bookTitle+" - "+str(pageNum)
             #logging.warning(pageContent)
             #await test_save_chapter_content(bs4.BeautifulSoup(pageContent,'html.parser'))
@@ -1964,7 +1970,7 @@ async def test_interface(bookurl):
 
 url="https://forums.spacebattles.com/threads/quahinium-ind5235ustries-shipworks-k525ancolle-si.1103320/reader/"
 link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"
-asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
+#asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
 #logging.warning(bookID)
 #logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
 #logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
