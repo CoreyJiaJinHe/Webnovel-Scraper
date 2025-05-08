@@ -10,9 +10,25 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
+logLocation=os.getenv("logs")
+
+def write_to_logs(log):
+    todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
+    log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
+    fileLocation=f"{logLocation}/{todayDate}"
+    if (check_directory_exists(fileLocation)):
+        f=open(fileLocation,"a")
+        f.write(log)
+    else:
+        f=open(fileLocation,'w')
+        f.write(log)
+
+
+
 from mongodb import (
     check_existing_book,
     check_existing_book_Title,
+    check_latest_chapter,
     get_Entry_Via_ID,
     get_Entry_Via_Title,
     getLatest,
@@ -56,22 +72,21 @@ cookie=""
 def setCookie(newCookie):
     global cookie
     cookie=newCookie
-    
 
 def interception (request):
-        del request.headers['User-Agent']
-        del request.headers['Accept']
-        del request.headers['Accept-Language']
-        del request.headers['Accept-Encoding']
-        #del request.headers['Referer']
-        del request.headers['Cookie']
-        
-        request.headers['User-Agent']=options["User-Agent"]
-        request.headers['Accept']=options["Accept"]
-        request.headers['Accept-Language']=options["Accept-Language"]
-        request.headers['Accept-Encoding']=options["Accept-Encoding"]
-        #request.headers['Referer']=options["Referer"]
-        request.headers['Cookie']=options["Cookie"]
+    del request.headers['User-Agent']
+    del request.headers['Accept']
+    del request.headers['Accept-Language']
+    del request.headers['Accept-Encoding']
+    #del request.headers['Referer']
+    del request.headers['Cookie']
+    
+    request.headers['User-Agent']=options["User-Agent"]
+    request.headers['Accept']=options["Accept"]
+    request.headers['Accept-Language']=options["Accept-Language"]
+    request.headers['Accept-Encoding']=options["Accept-Encoding"]
+    #request.headers['Referer']=options["Referer"]
+    request.headers['Cookie']=options["Cookie"]
 
 
 def check_directory_exists(path):
@@ -84,8 +99,9 @@ def make_directory(path):
         os.makedirs(path)
     except OSError as e:
         if e.errno!=errno.EEXIST:
-            raise
-
+            errorText=f"Failed to make directory. Function make_directory. Error: {e}"
+            write_to_logs(errorText)
+            return
 
 
 
@@ -117,65 +133,76 @@ def check_if_chapter_exists(chapterID,savedChapters):
 
 
 def retrieve_stored_image(imageDir):
-    if os.path.exists(imageDir):
-        return Image.open(imageDir)
-    else:
-        logging.warning(f"Image file not found: {imageDir}")
+    try:
+        if os.path.exists(imageDir):
+            return Image.open(imageDir)
+        else:
+            #logging.warning(f"Image file not found: {imageDir}")
+            errorText=f"Image file not found: {imageDir}"
+            write_to_logs(errorText)
+    except Exception as e:
+        errorText=f"Failed to retrieve image. Function retrieve_stored_image. Error: {e}"
+        write_to_logs(errorText)
     return None
 
 
 def retrieve_cover_from_storage(bookTitle):
-    dirLocation=f"./books/raw/{bookTitle}/cover_image.png" #or 
+    dirLocation=f"./books/raw/{bookTitle}/cover_image.png"
     if os.path.exists(dirLocation):
         try:
             return Image.open(dirLocation)
         except Exception as e:
-            logging.warning(f"Failed to open image: {e}")
+            errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+            write_to_logs(errorText)
             return None
-    else:
-        dirLocation=f"./books/raw/{bookTitle}/cover_image.png"
-        try:
-            return Image.open(dirLocation)
-        except Exception as e:
-            logging.warning(f"Failed to open image: {e}")
-            return None
-    
+    errorText=f"Cover image does not exist. Function retrieve_cover_from_storage. Error: {e}"
+    write_to_logs(errorText)
+    return None
 
 def storeEpub(bookTitle,new_epub):
-    dirLocation="./books/epubs/"+bookTitle
-    if not check_directory_exists(dirLocation):
-        make_directory(dirLocation)
+    try:
+        dirLocation="./books/epubs/"+bookTitle
+        if not check_directory_exists(dirLocation):
+            make_directory(dirLocation)
+        
+        dirLocation="./books/epubs/"+bookTitle+"/"+bookTitle+".epub"
+        if (check_directory_exists(dirLocation)):
+            os.remove(dirLocation)
+        epub.write_epub(dirLocation,new_epub)
+    except Exception as e:
+        errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+        write_to_logs(errorText)
     
-    dirLocation="./books/epubs/"+bookTitle+"/"+bookTitle+".epub"
-    if (check_directory_exists(dirLocation)):
-        os.remove(dirLocation)
-    epub.write_epub(dirLocation,new_epub)
 
 def store_chapter(content, bookTitle, chapterTitle, chapterID):
-    # Remove invalid characters from file name
-    bookTitle = remove_invalid_characters(bookTitle)
-    chapterTitle = remove_invalid_characters(chapterTitle)
-    logging.warning(content)
-    # Check if the folder for the book exists
-    bookDirLocation = "./books/raw/" + bookTitle
-    if not check_directory_exists(bookDirLocation):
-        make_directory(bookDirLocation)
+    try:
+        # Remove invalid characters from file name
+        bookTitle = remove_invalid_characters(bookTitle)
+        chapterTitle = remove_invalid_characters(chapterTitle)
+        #logging.warning(content)
+        # Check if the folder for the book exists
+        bookDirLocation = "./books/raw/" + bookTitle
+        if not check_directory_exists(bookDirLocation):
+            make_directory(bookDirLocation)
 
-    # Check if the chapter already exists
-    title = f"{bookTitle} - {chapterID} - {chapterTitle}"
-    dirLocation = f"./books/raw/{bookTitle}/{title}.html"
-    logging.warning(dirLocation)
+        # Check if the chapter already exists
+        title = f"{bookTitle} - {chapterID} - {chapterTitle}"
+        dirLocation = f"./books/raw/{bookTitle}/{title}.html"
+        #logging.warning(dirLocation)
 
-    if check_directory_exists(dirLocation):
-        return
+        if check_directory_exists(dirLocation):
+            return
 
-    # Write the chapter content to the file with UTF-8 encoding
-    chapterDirLocation = "./books/raw/" + bookTitle + "/"
-    completeName = os.path.join(chapterDirLocation, f"{title}.html")
-    with open(completeName, "w", encoding="utf-8") as f:
-        if not isinstance(content, str):
-            content = content.decode("utf-8")  # Decode bytes to string if necessary
-        f.write(content)
+        # Write the chapter content to the file with UTF-8 encoding
+        chapterDirLocation = "./books/raw/" + bookTitle + "/"
+        completeName = os.path.join(chapterDirLocation, f"{title}.html")
+        with open(completeName, "w", encoding="utf-8") as f:
+            if not isinstance(content, str):
+                content = content.decode("utf-8")  # Decode bytes to string if necessary
+            f.write(content)
+    except Exception as e:
+        errorText=f"Storing chapter failed. Function store_chapter Error: {e}"
+        write_to_logs(errorText)
 
 
 

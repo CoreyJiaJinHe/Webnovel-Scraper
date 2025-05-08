@@ -22,6 +22,10 @@ mydb=myclient["Webnovels"]
 savedBooks=mydb["Books"]
 
 
+logLocation=os.getenv("logs")
+
+
+
 
 # url="https://www.royalroad.com/fiction/55927/"
 # rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",url)
@@ -91,52 +95,62 @@ def check_existing_book_Title(bookTitle):
 
 async def RoyalRoad_Fetch_Novel_Data(novelURL):
     global gHeaders
-    async with aiohttp.ClientSession(headers = gHeaders) as session:
-        async with session.get(novelURL) as response:
-            if response.status == 200:
-                html = await response.text()
-                soup = bs4.BeautifulSoup(html, 'html.parser')
-                x=re.search("/[0-9]+/",novelURL)
-                bookID=x.group()
-                
-                novelData=soup.find("div",{"class":"fic-title"})
-                novelData=novelData.get_text().strip().split("\n")
-                bookTitle=novelData[0]
-                bookAuthor=novelData[len(novelData)-1]
-                #logging.warning(novelData)
-                
-                bookTitle=remove_invalid_characters(bookTitle)
-                        
-                description=soup.find("div",{"class":"description"}).get_text()
-                lastScraped=datetime.datetime.now()
-                
-                chapterTable=soup.find("table",{"id":"chapters"})
-                rows=chapterTable.find_all("tr")
-                
-                latestChapter=rows[len(rows)-1]
-                latestChapter=latestChapter.find("a")["href"].split("/")
-                latestChapterID=latestChapter[5]
-                
-                img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
-                saveDirectory=f"./books/raw/{bookTitle}/"
-                if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-                    async with aiohttp.ClientSession(headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-                    }) as session:
-                        if not isinstance(img_url,str):
-                            img_url=img_url["src"]
-                        async with session.get(img_url) as response:
-                            if response.status == 200:
-                                fileNameDir=f"{saveDirectory}cover_image.png"
-                                if not (check_directory_exists(saveDirectory)):
-                                    make_directory(saveDirectory)
-                                if not (check_directory_exists(fileNameDir)):
-                                    response=await response.content.read()
-                                    with open (fileNameDir,'wb') as f:
-                                        f.write(response)
-                                    f.close()
-                #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
-                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+    try:
+        async with aiohttp.ClientSession(headers = gHeaders) as session:
+            async with session.get(novelURL) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    x=re.search("/[0-9]+/",novelURL)
+                    bookID=x.group()
+                    
+                    novelData=soup.find("div",{"class":"fic-title"})
+                    novelData=novelData.get_text().strip().split("\n")
+                    bookTitle=novelData[0]
+                    bookAuthor=novelData[len(novelData)-1]
+                    #logging.warning(novelData)
+                    
+                    bookTitle=remove_invalid_characters(bookTitle)
+                            
+                    description=soup.find("div",{"class":"description"}).get_text()
+                    lastScraped=datetime.datetime.now()
+                    
+                    chapterTable=soup.find("table",{"id":"chapters"})
+                    rows=chapterTable.find_all("tr")
+                    
+                    latestChapter=rows[len(rows)-1]
+                    latestChapter=latestChapter.find("a")["href"].split("/")
+                    latestChapterID=latestChapter[5]
+                    
+                    img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
+                    saveDirectory=f"./books/raw/{bookTitle}/"
+                    if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                        async with aiohttp.ClientSession(headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                        }) as session:
+                            if not isinstance(img_url,str):
+                                img_url=img_url["src"]
+                            async with session.get(img_url) as response:
+                                if response.status == 200:
+                                    fileNameDir=f"{saveDirectory}cover_image.png"
+                                    if not (check_directory_exists(saveDirectory)):
+                                        make_directory(saveDirectory)
+                                    if not (check_directory_exists(fileNameDir)):
+                                        response=await response.content.read()
+                                        with open (fileNameDir,'wb') as f:
+                                            f.write(response)
+                                        f.close()
+                                else:
+                                    errorText=f"Failed to retrieve cover image from royalroad. Response status: {response.status}"
+                                    write_to_logs(errorText)
+                    #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
+                    return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+                else:
+                    errorText=f"Failed to retrieve novel data from royalroad. Response status: {response.status}"
+                    write_to_logs(errorText)
+    except Exception as e:
+        errorText=f"Failed to fetch novel data from royalroad using a suitable link.+\n{e}"
+        write_to_logs(errorText)
     #print(description)
 
 
@@ -318,7 +332,7 @@ async def getSoup(url):
                     return soup
 
 
-async def produceEpub(new_epub,novelURL,bookTitle,css):
+async def royalroad_produceEpub(new_epub,novelURL,bookTitle,css):
     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     chapterMetaData=list()
     
@@ -733,8 +747,21 @@ def is_valid_url(url):
 #     'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0'
 cookie=""
 
+async def instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css):
+    try:
+        new_epub=epub.EpubBook()
+        new_epub.set_identifier(bookID)
+        new_epub.set_title(bookTitle)
+        new_epub.set_language('en')
+        new_epub.add_author(bookAuthor)
+        new_epub.add_item(default_css)
+        return new_epub
+    except Exception as e:
+        errorText=f"Failed to create new_epub object. Error: {e}"
+        write_to_logs(errorText)
+        return
 #Main call interface.
-def mainInterface(novelURL, cookie):
+async def mainInterface(novelURL, cookie):
     #Check if valid url first.
     isUrl=is_valid_url(novelURL)
     if (cookie):
@@ -742,21 +769,93 @@ def mainInterface(novelURL, cookie):
     
     if (isUrl is False):
         searchTerm=novelURL
-        novelURL=query_royalroad(searchTerm,0)
-        #shorten url
-        novelURL=re.search("https://www.royalroad.com/fiction/[0-9]+/",novelURL)
-        novelURL=novelURL.group()
+        try:
+            novelURL=query_royalroad(searchTerm,0)
+            #shorten url
+            novelURL=re.search("https://www.royalroad.com/fiction/[0-9]+/",novelURL)
+            novelURL=novelURL.group()
+        except Exception as e:
+            errorText=f"Failed to search royalroad for a suitable link.+\n{e}"
+            write_to_logs(errorText)
+            return
     else:
-        #Then check if it is something I can scrape. 
-        #If it is not a royalroad URL, then return false and stop.
-        if ("royalroad.com" in novelURL):
-            return asyncio.gather(royalroad_main_interface(novelURL))
-        elif ("foxaholic.com" in novelURL):
-            return asyncio.gather(foxaholic_main_interface(novelURL))
-        elif("novelbin.me" in novelURL or "novelbin.com" in novelURL):
-            return asyncio.gather(novelbin_main_interface(novelURL))
-        else:
-            return False
+        style=open("style.css","r").read()
+        default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+        try:
+            #Then check if it is something I can scrape. 
+            #If it is not a royalroad URL, then return false and stop.
+            if ("royalroad.com" in novelURL):
+                bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await RoyalRoad_Fetch_Novel_Data(novelURL)
+                
+                new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
+                await royalroad_produceEpub(new_epub,novelURL,bookTitle,default_css)
+                #return asyncio.gather(royalroad_main_interface(novelURL))
+            elif ("foxaholic.com" in novelURL):
+                bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await foxaholic_Fetch_Novel_Data(novelURL)
+                
+                new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
+                await foxaholic_produce_Epub(new_epub,novelURL,bookTitle,default_css)
+                #return asyncio.gather(foxaholic_main_interface(novelURL))
+            elif("novelbin.me" in novelURL or "novelbin.com" in novelURL):
+                bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await novelbin_fetch_novel_data(novelURL)
+
+                new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
+                await novelbin_produce_epub(new_epub,novelURL,bookTitle,default_css)
+                #return asyncio.gather(novelbin_main_interface(novelURL))
+            elif("spacebattles.com"in novelURL):
+                if re.search(r'/reader/page-\d+/$',novelURL):
+                    novelURL=re.sub(r'/reader/page-\d+/$','/reader/',novelURL)
+                elif not (novelURL.endswith('/reader/')):
+                    if (novelURL.endswith('/')):
+                        novelURL+='reader/'
+                    else:
+                        novelURL+='/reader/'
+                bookID,bookTitle,bookAuthor,description,lastScraped,latestChapter=await spacebattles_retrieve_novel_data(novelURL)
+        
+                new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
+                await spacebattles_produce_epub(new_epub,novelURL,bookTitle,default_css)
+            else:
+                errorText=f"Invalid URL. It does not match Royalroad, Foxaholic, Novelbin, Spacebattles.+\n{e}"
+                write_to_logs(errorText)
+                return False
+        except Exception as e:
+            errorText=f"Error has occurred in the production.+\n{e}"
+            write_to_logs(errorText)
+            return
+
+    rooturl=""
+    match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", novelURL)
+    if match:
+        rooturl=match.group(1)
+    first,last,total=get_first_last_chapter(bookTitle)
+    
+    bookID=int(remove_invalid_characters(bookID))
+    #logging.warning(bookID)
+    directory = create_epub_directory_url(bookTitle)
+    create_Entry(
+        bookID=bookID,
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+    
+    create_latest(
+        bookID=int(bookID),
+        bookName=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=description,
+        websiteHost=rooturl,
+        firstChapter=first,
+        lastChapter=last,
+        totalChapters=total,
+        directory=directory
+    )
+
 
 def setCookie(newCookie):
     global cookie
@@ -821,7 +920,7 @@ async def royalroad_main_interface(bookurl):
             await updateEpub(bookurl,bookTitle)
 
     logging.warning("Generating new epub")
-    await produceEpub(new_epub,bookurl,bookTitle,default_css)
+    await royalroad_produceEpub(new_epub,bookurl,bookTitle,default_css)
     rooturl=""
     match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", bookurl)
     if match:
@@ -1906,7 +2005,7 @@ async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
     storeEpub(bookTitle, new_epub)
 
 
-async def test_interface(bookurl):
+async def spacebattles_interface(bookurl):
     if re.search(r'/reader/page-\d+/$',bookurl):
         bookurl=re.sub(r'/reader/page-\d+/$','/reader/',bookurl)
     elif not (bookurl.endswith('/reader/')):
@@ -1970,7 +2069,22 @@ async def test_interface(bookurl):
 
 url="https://forums.spacebattles.com/threads/quahinium-ind5235ustries-shipworks-k525ancolle-si.1103320/reader/"
 link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"
-#asyncio.run(test_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
+#asyncio.run(spacebattles_interface("https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/reader/"))
 #logging.warning(bookID)
 #logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
 #logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
+
+
+def write_to_logs(log):
+    todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
+    log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
+    fileLocation=f"{logLocation}/{todayDate}"
+    if (check_directory_exists(fileLocation)):
+        f=open(fileLocation,"a")
+        f.write(log)
+    else:
+        f=open(fileLocation,'w')
+        f.write(log)
+
+#write_to_logs("Test log")
+#logging.warning(datetime.datetime.now().strftime('%c'))
