@@ -207,19 +207,28 @@ def store_chapter(content, bookTitle, chapterTitle, chapterID):
 
 
 def update_existing_order_of_contents(bookTitle,chapterList):
-    bookDirLocation=f"./books/raw/{bookTitle}"
-    if not (check_directory_exists(bookDirLocation)):
-        make_directory(bookDirLocation)
-    fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
-    if (os.path.exists(fileLocation)):
-        f=open(fileLocation,"w")
-    else:
-        f=open(fileLocation,"x")
-    for line in chapterList:
-        f.write(str(line)) #FORMATTING IS FUCKED
-    f.close()
-    
-    
+    try:
+        bookDirLocation=f"./books/raw/{bookTitle}"
+        if not (check_directory_exists(bookDirLocation)):
+            make_directory(bookDirLocation)
+        fileLocation=f"./books/raw/{bookTitle}/order_of_chapters.txt"
+        if (os.path.exists(fileLocation)):
+            f=open(fileLocation,"w")
+        else:
+            f=open(fileLocation,"x")
+            
+        try:
+            for line in chapterList:
+                f.write(str(line)) #FORMATTING IS FUCKED
+        except Exception as e:
+            errorText=f"Updating order of contents failed. Function update_existing_order_of_contents Error: {e}"
+            write_to_logs(errorText)
+        finally:
+            f.close()
+    except Exception as e:
+        errorText=f"Updating order of contents failed. Function update_existing_order_of_contents Error: {e}"
+        write_to_logs(errorText)
+        
     
 def append_order_of_contents(bookTitle,chapterData):
     logging.warning(chapterData)
@@ -283,12 +292,15 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
 
 
 def generate_new_ID(bookTitle):
-    #logging.warning(check_existing_book_Title(bookTitle))
-    if (check_existing_book_Title(bookTitle)):
-        bookData=get_Entry_Via_Title(bookTitle)
-        if bookData:
-            return bookData["bookID"]
-    return get_Total_Books()+1
+    try:
+        if (check_existing_book_Title(bookTitle)):
+            bookData=get_Entry_Via_Title(bookTitle)
+            if bookData:
+                return bookData["bookID"]
+        return get_Total_Books()+1
+    except Exception as e:
+        errorText=f"Generate new id failed. Function generate_new_ID Error: {e}"
+        write_to_logs(errorText)
 
 
 
@@ -336,6 +348,8 @@ class ScraperFactory:
         elif "spacebattles.com" in url:
             return SpaceBattlesScraper()
         else:
+            errorText="Failed to get scraper. Function get_scraper Error: Unsupported website"
+            write_to_logs(errorText)
             raise ValueError("Unsupported website")
         
 
@@ -350,159 +364,184 @@ class Scraper:
         raise NotImplementedError
     async def get_soup(self,url):
         global gHeaders
-        async with aiohttp.ClientSession(headers = gHeaders) as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    html = await response.text()
-                    soup = bs4.BeautifulSoup(html, 'html.parser')
-                    return soup
+        
+        try:
+            async with aiohttp.ClientSession(headers = gHeaders) as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        html = await response.text()
+                        soup = bs4.BeautifulSoup(html, 'html.parser')
+                        return soup
+                    else:
+                        errorText=f"Failed to get soup. Function get_soup Error: {response.status}"
+                        write_to_logs(errorText)
+        except Exception as e:
+            errorText=f"Failed to get soup. Function get_soup Error: {e}"
+            write_to_logs(errorText)
 
 class SpaceBattlesScraper(Scraper):
     async def fetch_novel_data(self,url):
         soup=await self.get_soup(url)
         if soup:
-            x=re.findall(r'(\d+)',url)
-            bookID=x[len(x)-1]
-            
-            bookTitle=soup.find("div",{"class":"p-title"}).get_text()
-            bookTitle=remove_invalid_characters(bookTitle)
-            
-            #the assumption is that there is always a bookTitle
-            bookAuthor=soup.find("div",{"class":"p-description"})
-            bookAuthor=bookAuthor.find("a").get_text()
-            
-            description=soup.find("div",{"class":"threadmarkListingHeader-extraInfo"})
-            description=description.find("div",{"class":"bbWrapper"}).get_text()
-            description=description.encode('utf-8').decode('utf-8')
-            description = description.replace('\n', ' ')  # Replaces newline characters with a space
-            description = description.replace('  ', ' ')  # Reduces double spacing to a single space
-            description = description.strip()  # Removes leading and trailing whitespace
-            lastScraped=datetime.datetime.now()
-            
-            chapterTable=soup.find("div",{"class":"structItemContainer"})
-            rows=chapterTable.find_all("li")
-            
-            latestChapter=rows[len(rows)-1]
-            latestChapter=latestChapter.get_text()
-            match=re.search(r'\b\d+(?:-\d+)?\b',latestChapter)
-            latestChapterID=match.group()
-            
             try:
-                img_url = soup.find("span",{"class":"avatar avatar--l"})
-                img_url=img_url.find("img")
-                if (img_url):
-                    saveDirectory=f"./books/raw/{bookTitle}/"
-                    if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-                        async with aiohttp.ClientSession(headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-                        }) as session:
-                            if not isinstance(img_url,str):
-                                img_url=img_url["src"]
-                            async with session.get(f"https://forums.spacebattles.com/{img_url}") as response:
-                                if response.status == 200:
-                                    fileNameDir=f"{saveDirectory}cover_image.png"
-                                    if not (check_directory_exists(saveDirectory)):
-                                        make_directory(saveDirectory)
-                                    if not (check_directory_exists(fileNameDir)):
-                                        response=await response.content.read()
-                                        with open (fileNameDir,'wb') as f:
-                                            f.write(response)
-                                        f.close()
+                x=re.findall(r'(\d+)',url)
+                bookID=x[len(x)-1]
+                
+                bookTitle=soup.find("div",{"class":"p-title"}).get_text()
+                bookTitle=remove_invalid_characters(bookTitle)
+                
+                #the assumption is that there is always a bookTitle
+                bookAuthor=soup.find("div",{"class":"p-description"})
+                bookAuthor=bookAuthor.find("a").get_text()
+                
+                description=soup.find("div",{"class":"threadmarkListingHeader-extraInfo"})
+                description=description.find("div",{"class":"bbWrapper"}).get_text()
+                description=description.encode('utf-8').decode('utf-8')
+                description = description.replace('\n', ' ')  # Replaces newline characters with a space
+                description = description.replace('  ', ' ')  # Reduces double spacing to a single space
+                description = description.strip()  # Removes leading and trailing whitespace
+                lastScraped=datetime.datetime.now()
+                
+                chapterTable=soup.find("div",{"class":"structItemContainer"})
+                rows=chapterTable.find_all("li")
+                
+                latestChapter=rows[len(rows)-1]
+                latestChapter=latestChapter.get_text()
+                match=re.search(r'\b\d+(?:-\d+)?\b',latestChapter)
+                latestChapterID=match.group()
+            
+                try:
+                    img_url = soup.find("span",{"class":"avatar avatar--l"})
+                    img_url=img_url.find("img")
+                    if (img_url):
+                        saveDirectory=f"./books/raw/{bookTitle}/"
+                        if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                            async with aiohttp.ClientSession(headers = {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                            }) as session:
+                                if not isinstance(img_url,str):
+                                    img_url=img_url["src"]
+                                async with session.get(f"https://forums.spacebattles.com/{img_url}") as response:
+                                    if response.status == 200:
+                                        fileNameDir=f"{saveDirectory}cover_image.png"
+                                        if not (check_directory_exists(saveDirectory)):
+                                            make_directory(saveDirectory)
+                                        if not (check_directory_exists(fileNameDir)):
+                                            response=await response.content.read()
+                                            with open (fileNameDir,'wb') as f:
+                                                f.write(response)
+                                            f.close()
+                except Exception as e:
+                    errorText=f"Failed to get cover image. There might be no cover. Or a different error. Function fetch_novel_data Error: {e}"
+                    write_to_logs(errorText)
+                #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
+                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
             except Exception as e:
-                logging.warning("There is no image")
-            #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
-            return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+                errorText=f"Failed to get novel data. Function Spacebattles fetch_novel_data Error: {e}"
+                write_to_logs(errorText)
     
     async def fetch_chapter_list(self,url):
-        logging.warning('Fetching spacebattles total pages')
-        logging.warning(url)
+        #logging.warning('Fetching spacebattles total pages')
+        #logging.warning(url)
         soup=await self.get_soup(url)
         last=0
-        pagelist=soup.find("ul",{"class":"pageNav-main"})
-        for anchor in pagelist.find_all("a"):
-            pagenum=anchor.get_text()
-            #logging.warning(pagenum)
-            if pagenum.isdigit():
-                last = max(last,int(pagenum))
-        logging.warning(last)
-        return last
+        try:
+            pagelist=soup.find("ul",{"class":"pageNav-main"})
+            for anchor in pagelist.find_all("a"):
+                pagenum=anchor.get_text()
+                #logging.warning(pagenum)
+                if pagenum.isdigit():
+                    last = max(last,int(pagenum))
+            #logging.warning(last)
+            return last
+        except Exception as e:
+            errorText=f"Failed to get total number of pages. Function Spacebattles fetch_chapter_list Error: {e}"
+            write_to_logs(errorText)
 
     async def fetch_chapter_content(self,soup):
-        
         raise NotImplementedError
-    async def fetch_chapter_title(self,soup):
-        threadmarkTitle=soup.find("span",{"class":"threadmarkLabel"})
-        return threadmarkTitle.get_text()
     
+    async def fetch_chapter_title(self,soup):
+        try:
+            threadmarkTitle=soup.find("span",{"class":"threadmarkLabel"})
+            return threadmarkTitle.get_text()
+        except Exception as e:
+            errorText=f"Failed to get chapter title. Function Spacebattles fetch_chapter_title Error: {e}"
+            write_to_logs(errorText)
     
     
     
     
     
 class RoyalRoadScraper(Scraper):
-    # async def get_soup(self,url):
-    #     async with aiohttp.ClientSession(headers = gHeaders) as session:
-    #             async with session.get(url) as response:
-    #                 if response.status == 200:
-    #                     html = await response.text()
-    #                     soup = bs4.BeautifulSoup(html, 'html.parser')
-    #                     return soup
-    
     async def fetch_novel_data(self, url):
         # RoyalRoad-specific logic
         return await self.RoyalRoad_Fetch_Novel_Data(url)
     
     async def RoyalRoad_Fetch_Novel_Data(self,novelURL):
         soup=await self.get_soup(novelURL)
-        x=re.search("/[0-9]+/",novelURL)
-        bookID=x.group()
-        
-        novelData=soup.find("div",{"class":"fic-title"})
-        novelData=novelData.get_text().strip().split("\n")
-        bookTitle=novelData[0]
-        bookAuthor=novelData[len(novelData)-1]
-        #logging.warning(novelData)
-        
-        bookTitle=remove_invalid_characters(bookTitle)
+        if (soup):
+            try:
+                x=re.search("/[0-9]+/",novelURL)
+                bookID=x.group()
                 
-        description=soup.find("div",{"class":"description"}).get_text()
+                novelData=soup.find("div",{"class":"fic-title"})
+                novelData=novelData.get_text().strip().split("\n")
+                bookTitle=novelData[0]
+                bookAuthor=novelData[len(novelData)-1]
+                #logging.warning(novelData)
+                
+                bookTitle=remove_invalid_characters(bookTitle)
+                        
+                description=soup.find("div",{"class":"description"}).get_text()
+                
+                if ("\n" in description):
+                    description=description.replace("\n","")
+                if ("  " in description):
+                    description=description.replace("  "," ")
+                    
+                
+                lastScraped=datetime.datetime.now()
+                
+                chapterTable=soup.find("table",{"id":"chapters"})
+                rows=chapterTable.find_all("tr")
+                
+                latestChapter=rows[len(rows)-1]
+                latestChapter=latestChapter.find("a")["href"].split("/")
+                latestChapterID=latestChapter[5]
+                
+                img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
+                saveDirectory=f"./books/raw/{bookTitle}/"
+                if (img_url):
+                    if not (check_directory_exists(f"{saveDirectory}/cover_image.png")):
+                        await self.royalroad_save_cover_image(bookTitle,img_url,saveDirectory)
+                
+                #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
+                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+            except Exception as e:
+                errorText=f"Failed to get novel data. Function royalroad_fetch_novel_data Error: {e}"
+                write_to_logs(errorText)
+        else:
+            errorText=f"Failed to get soup for processing. Function RoyalRoad_Fetch_Novel_Data Error: No soup"
+            write_to_logs(errorText)
+            return None
         
-        if ("\n" in description):
-            description=description.replace("\n","")
-        if ("  " in description):
-            description=description.replace("  "," ")
-            
+    async def royalroad_save_cover_image(bookTitle,img_url,saveDirectory):
+        async with aiohttp.ClientSession(headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        }) as session:
+            if not isinstance(img_url,str):
+                img_url=img_url["src"]
+            async with session.get(img_url) as response:
+                if response.status == 200:
+                    fileNameDir=f"{saveDirectory}cover_image.png"
+                    if not (check_directory_exists(saveDirectory)):
+                        make_directory(saveDirectory)
+                    response=await response.content.read()
+                    with open (fileNameDir,'wb') as f:
+                        f.write(response)
+                    f.close()
         
-        lastScraped=datetime.datetime.now()
-        
-        chapterTable=soup.find("table",{"id":"chapters"})
-        rows=chapterTable.find_all("tr")
-        
-        latestChapter=rows[len(rows)-1]
-        latestChapter=latestChapter.find("a")["href"].split("/")
-        latestChapterID=latestChapter[5]
-        
-        img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
-        saveDirectory=f"./books/raw/{bookTitle}/"
-        if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-            async with aiohttp.ClientSession(headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-            }) as session:
-                if not isinstance(img_url,str):
-                    img_url=img_url["src"]
-                async with session.get(img_url) as response:
-                    if response.status == 200:
-                        fileNameDir=f"{saveDirectory}cover_image.png"
-                        if not (check_directory_exists(saveDirectory)):
-                            make_directory(saveDirectory)
-                        if not (check_directory_exists(fileNameDir)):
-                            response=await response.content.read()
-                            with open (fileNameDir,'wb') as f:
-                                f.write(response)
-                            f.close()
-        #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
-        return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
-        #print(description)
 
     async def fetch_chapter_list(self, url):
         # RoyalRoad-specific logic
