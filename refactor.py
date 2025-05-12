@@ -527,20 +527,24 @@ class RoyalRoadScraper(Scraper):
             return None
         
     async def royalroad_save_cover_image(bookTitle,img_url,saveDirectory):
-        async with aiohttp.ClientSession(headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-        }) as session:
-            if not isinstance(img_url,str):
-                img_url=img_url["src"]
-            async with session.get(img_url) as response:
-                if response.status == 200:
-                    fileNameDir=f"{saveDirectory}cover_image.png"
-                    if not (check_directory_exists(saveDirectory)):
-                        make_directory(saveDirectory)
-                    response=await response.content.read()
-                    with open (fileNameDir,'wb') as f:
-                        f.write(response)
-                    f.close()
+        try:
+            async with aiohttp.ClientSession(headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+            }) as session:
+                if not isinstance(img_url,str):
+                    img_url=img_url["src"]
+                async with session.get(img_url) as response:
+                    if response.status == 200:
+                        fileNameDir=f"{saveDirectory}cover_image.png"
+                        if not (check_directory_exists(saveDirectory)):
+                            make_directory(saveDirectory)
+                        response=await response.content.read()
+                        with open (fileNameDir,'wb') as f:
+                            f.write(response)
+                        f.close()
+        except Exception as error:
+            errorText=f"Failed to get soup for processing. Function RoyalRoad_save_cover_image Error: {error}"
+            write_to_logs(errorText)
         
 
     async def fetch_chapter_list(self, url):
@@ -550,22 +554,26 @@ class RoyalRoadScraper(Scraper):
     
     async def RoyalRoad_Fetch_Chapter_List(self,novelURL):
         soup=await self.get_soup(novelURL)
-        chapterTable=soup.find("table",{"id":"chapters"})
-        rows=chapterTable.find_all("tr")
-        
-        rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
-        rooturl=rooturl.group()
-        
-        chapterListURL=list()
-        for row in rows[1:len(rows)]:
-            chapterData={}
-            chapterData["name"]=row.find("a").contents[0].strip()
-            processChapterURL=row.find("a")["href"].split("/")
-            #Process into shortened link
-            chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
-            chapterListURL.append(chapterURL)
-            chapterData["url"]=chapterURL
-        return chapterListURL
+        try:
+            chapterTable=soup.find("table",{"id":"chapters"})
+            rows=chapterTable.find_all("tr")
+            
+            rooturl=re.search("https://([A-Za-z]+(.[A-Za-z]+)+)/",novelURL)
+            rooturl=rooturl.group()
+            
+            chapterListURL=list()
+            for row in rows[1:len(rows)]:
+                chapterData={}
+                chapterData["name"]=row.find("a").contents[0].strip()
+                processChapterURL=row.find("a")["href"].split("/")
+                #Process into shortened link
+                chapterURL=f"{rooturl}{processChapterURL[2]}/{processChapterURL[4]}/{processChapterURL[5]}/"
+                chapterListURL.append(chapterURL)
+                chapterData["url"]=chapterURL
+            return chapterListURL
+        except Exception as error:
+            errorText=f"Failed to get soup for processing. Function RoyalRoad_Fetch_Chapter_List Error: {error}"
+            write_to_logs(errorText)
 
     
     async def fetch_chapter_content(self, soup):
@@ -577,14 +585,20 @@ class RoyalRoadScraper(Scraper):
         chapterContent = soup.find("div", {"class": "chapter-inner chapter-content"})
         
         if soup is None:
-            logging.warning(f"Did not receive soup")
+            errorText=f"Failed to get soup for processing. Function RoyalRoad_Fetch_Chapter Error: No soup"
+            write_to_logs(errorText)
+            return None
         elif chapterContent is None:
-            logging.warning(f"Failed to extract content from soup")
+            errorText=f"Failed to get content. Function RoyalRoad_Fetch_Chapter Error: Soup has no chapter-inner"
+            write_to_logs(errorText)
+#            logging.warning(errorText)
             return None
         return chapterContent#.encode('ascii')
         
     async def query_royalroad(self,title, option):
         if (title.isspace() or title==""):
+            errorText=f"Failed to search title. Function query_royalroad Error: No title inputted"
+            write_to_logs(errorText)
             return "Invalid Title"
             
         if (option ==0):
@@ -592,20 +606,30 @@ class RoyalRoadScraper(Scraper):
         elif (option==1):
             querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}&orderBy=popularity"
         else:
+            errorText=f"Improper query attempt. Function query_royalroad Error: Invalid query option. How did you even do this?"
+            write_to_logs(errorText)
             return ("Invalid Option")
 
         soup=await self.get_soup(querylink)
-        resultTable=soup.find("div",{"class":"fiction-list"})
-        bookTable=resultTable.find("h2",{"class":"fiction-title"})
-        bookRows=bookTable.find_all("a")
-        firstResult=bookRows[0]['href']
-        #formatting
-        resultLink=f"https://www.royalroad.com{firstResult}"
-        return resultLink
-    
+        try:
+            resultTable=soup.find("div",{"class":"fiction-list"})
+            bookTable=resultTable.find("h2",{"class":"fiction-title"})
+            bookRows=bookTable.find_all("a")
+            firstResult=bookRows[0]['href']
+            #formatting
+            resultLink=f"https://www.royalroad.com{firstResult}"
+            return resultLink
+        except Exception as error:
+            errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_royalroad Error: {error}"
+            write_to_logs(errorText)
+            
     async def fetch_chapter_title(self,soup):
-        chapterTitle=soup.find("h1").get_text()
-        return chapterTitle
+        try:
+            chapterTitle=soup.find("h1").get_text()
+            return chapterTitle
+        except Exception as error:
+            errorText=f"Failed to get title from soup. Function fetch_chapter_title Error: {error}"
+            write_to_logs(errorText)
 
 
     
