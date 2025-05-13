@@ -635,12 +635,17 @@ class RoyalRoadScraper(Scraper):
     
 class FoxaholicScraper(Scraper):
     async def get_soup(self,url):
-        driver = webdriver.Firefox()
-        driver.request_interceptor=interception
-        driver.get(url)
-        soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
-        driver.close()
-        return soup
+        try:
+            driver = webdriver.Firefox()
+            driver.request_interceptor=interception
+            driver.get(url)
+            soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+            driver.close()
+            return soup
+        except Exception as error:
+            errorText=f"Failed to get soup Function foxaholic_get_soup Error: {error}"
+            write_to_logs(errorText)
+        return None
     
     async def fetch_novel_data(self, url):
         # Foxaholic-specific logic
@@ -648,84 +653,96 @@ class FoxaholicScraper(Scraper):
 
     
     async def foxaholic_Fetch_Novel_Data(self,novelURL):
-        soup=await self.get_soup(novelURL)
-        
-        bookData=soup.find("div",{"class":"post-content"})
-        novelData=bookData.find_all("div",{"class":"summary-content"}) or bookData.find_all("div",{"class":"summary_content"})
+        try:
+            soup=await self.get_soup(novelURL)
+            
+            bookData=soup.find("div",{"class":"post-content"})
+            novelData=bookData.find_all("div",{"class":"summary-content"}) or bookData.find_all("div",{"class":"summary_content"})
 
-        bookTitle=soup.find("div",{"class":"post-title"}).get_text() or soup.find("div",{"class":"post_title"}).get_text()
-        bookAuthor=novelData[2].get_text()
-        #logging.warning(bookTitle)
-        bookTitle=remove_invalid_characters(bookTitle)
-        
-        bookID=str(generate_new_ID(bookTitle))
-        #logging.warning(bookID)
+            bookTitle=soup.find("div",{"class":"post-title"}).get_text() or soup.find("div",{"class":"post_title"}).get_text()
+            bookAuthor=novelData[2].get_text()
+            #logging.warning(bookTitle)
+            bookTitle=remove_invalid_characters(bookTitle)
+            
+            bookID=str(generate_new_ID(bookTitle))
+            #logging.warning(bookID)
+                    
+            descriptionBox=soup.find("div",{"class":"description-summary"})
+            description=descriptionBox.find("div",{"class":"summary__content"}).get_text()
+            
+            if (description.startswith("Description: ")):
+                description=description[13:]
+            if ("\n" in description):
+                description=description.replace("\n","")
+            if ("  " in description):
+                description=description.replace("  "," ")
                 
-        descriptionBox=soup.find("div",{"class":"description-summary"})
-        description=descriptionBox.find("div",{"class":"summary__content"}).get_text()
-        
-        if (description.startswith("Description: ")):
-            description=description[13:]
-        if ("\n" in description):
-            description=description.replace("\n","")
-        if ("  " in description):
-            description=description.replace("  "," ")
-            
-            
-        location1=re.search("translator",description ,re.IGNORECASE)
-        if not location1:
-            location1=len(description)
-        else:
-            location1=location1.start()
-        location2=re.search("release schedule",description,re.IGNORECASE)
-        if not location2:
-            location2=len(description)
-        else:
-            location2=location2.start()
-        location3=re.search('editor',description,re.IGNORECASE)
-        if not location3:
-            location3=len(description)
-        else:
-            location3=location3.start()
+                
+            location1=re.search("translator",description ,re.IGNORECASE)
+            if not location1:
+                location1=len(description)
+            else:
+                location1=location1.start()
+            location2=re.search("release schedule",description,re.IGNORECASE)
+            if not location2:
+                location2=len(description)
+            else:
+                location2=location2.start()
+            location3=re.search('editor',description,re.IGNORECASE)
+            if not location3:
+                location3=len(description)
+            else:
+                location3=location3.start()
 
-        location=min(location1,location2,location3)
-        description=description[:location].strip()
+            location=min(location1,location2,location3)
+            description=description[:location].strip()
 
-        logging.warning(description)
-        lastScraped=datetime.datetime.now()
-        chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
-        rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
-        
-        latestChapter=rows[0]
-        latestChapterID=latestChapter.find("a")["href"].split("/")
-        latestChapterID=latestChapterID[len(latestChapterID)-2]
-        latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
-        
-        img_url = soup.find("div",{"class":"summary_image"}).find("img")
-        
-        if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-            await self.foxaholic_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
-        
-        return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
-    
+            logging.warning(description)
+            lastScraped=datetime.datetime.now()
+            chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
+            rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+            
+            latestChapter=rows[0]
+            latestChapterID=latestChapter.find("a")["href"].split("/")
+            latestChapterID=latestChapterID[len(latestChapterID)-2]
+            latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
+            
+            img_url = soup.find("div",{"class":"summary_image"}).find("img")
+            
+            if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                await self.foxaholic_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
+            
+            return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+        except Exception as error:
+            errorText=f"Failed to extract noveldata from soup. Function foxaholic_fetch_novel_data Error: {error}"
+            write_to_logs(errorText)
+        return None
     async def foxaholic_save_cover_image(title,img_url,saveDirectory):
-        driver = webdriver.Firefox()
-        driver.request_interceptor=interception
-        driver.get(img_url["src"])
-        image=driver.find_element(By.CSS_SELECTOR, 'img')
+        try:
+            driver = webdriver.Firefox()
+            driver.request_interceptor=interception
+            driver.get(img_url["src"])
+            image=driver.find_element(By.CSS_SELECTOR, 'img')
+            driver.close()
+        except Exception as error:
+            errorText=f"Failed to retrieve image from url. Function foxaholic_save_cover_image Error: {error}"
+            write_to_logs(errorText)
         
-        if (saveDirectory.endswith("/")):
-            fileNameDir=f"{saveDirectory}{title}.png"
-        else:
-            fileNameDir=f"{saveDirectory}/{title}.png"
-        if image:
-            if not (check_directory_exists(saveDirectory)):
-                make_directory(saveDirectory)
-            if not (check_directory_exists(fileNameDir)):
-                with open (fileNameDir,'wb') as f:
-                    f.write(image.screenshot_as_png)
-                f.close()
-        driver.close()
+        try:
+            if (saveDirectory.endswith("/")):
+                fileNameDir=f"{saveDirectory}{title}.png"
+            else:
+                fileNameDir=f"{saveDirectory}/{title}.png"
+            if image:
+                if not (check_directory_exists(saveDirectory)):
+                    make_directory(saveDirectory)
+                if not (check_directory_exists(fileNameDir)):
+                    with open (fileNameDir,'wb') as f:
+                        f.write(image.screenshot_as_png)
+                    f.close()
+        except Exception as error:
+            errorText=f"Failed to save image. Function foxaholic_save_cover_image Error: {error}"
+            write_to_logs(errorText)
 
 
 
@@ -738,68 +755,83 @@ class FoxaholicScraper(Scraper):
         #https://www.codecademy.com/article/web-scrape-with-selenium-and-beautiful-soup
         soup = await self.get_soup(url)
         
-        #logging.warning(soup)
-        chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
-        #logging.warning(chapterTable)
-        rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
-        chapterListURL=list()
-        for row in rows[1:len(rows)]:
-            chapterData={}
-            chapterData["name"]=row.find("a").contents[0].strip()
-            processChapterURL=row.find("a")["href"]
-                        
-            chapterURL=processChapterURL
-            chapterListURL.append(chapterURL)
-        chapterListURL=list(reversed(chapterListURL))
-        #logging.warning(chapterListURL)
-        return chapterListURL
+        try:
+            #logging.warning(soup)
+            chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+            chapterListURL=list()
+            for row in rows[1:len(rows)]:
+                chapterData={}
+                chapterData["name"]=row.find("a").contents[0].strip()
+                processChapterURL=row.find("a")["href"]
+                            
+                chapterURL=processChapterURL
+                chapterListURL.append(chapterURL)
+            chapterListURL=list(reversed(chapterListURL))
+            #logging.warning(chapterListURL)
+            return chapterListURL
+        except Exception as error:
+            errorText=f"Failed to get chapter urls from chapter list of page. Function foxaholic_get_chapter_list Error: {error}"
+            write_to_logs(errorText)
     
     async def fetch_chapter_content(self, soup):
         # Foxaholic-specific logic
         return self.foxaholic_scrape_chapter_page(soup)
     
     def foxaholic_scrape_chapter_page(self,soup):
-        pageContent=soup.find_all("div",{"class":"reading-content"})[0]
-        chapterContent=pageContent.find_all("p")
-        
-        chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
-        chapterContent=re.sub('</p>,','</p>',str(chapterContent))
-        
-        if (chapterContent.startswith('[')):
-            chapterContent=chapterContent[1:]
-        if (chapterContent.endswith(']')):
-            chapterContent=chapterContent[:-1]
-        
-        return bs4.BeautifulSoup(chapterContent,'html.parser')
-    
+        try:
+            pageContent=soup.find_all("div",{"class":"reading-content"})[0]
+            chapterContent=pageContent.find_all("p")
+            
+            chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
+            chapterContent=re.sub('</p>,','</p>',str(chapterContent))
+            
+            if (chapterContent.startswith('[')):
+                chapterContent=chapterContent[1:]
+            if (chapterContent.endswith(']')):
+                chapterContent=chapterContent[:-1]
+            
+            return bs4.BeautifulSoup(chapterContent,'html.parser')
+        except Exception as error:
+                errorText=f"Failed to grab content from soup. Function foxaholic_scrape_chapter_page Error: {error}"
+                write_to_logs(errorText)
     async def fetch_chapter_title(self,soup):
-        chapterTitle=soup.find('div',{"class":"reading-content"})
-        chapterTitle=chapterTitle.find("h1")
+        
+        try:
+            chapterTitle=soup.find('div',{"class":"reading-content"})
+            chapterTitle=chapterTitle.find("h1")
 
-        if chapterTitle:
-            chapterTitle=chapterTitle.get_text()
-        else:
-            chapterTitle=soup.find('ol',{"class":"breadcrumb"})
-            chapterTitle=chapterTitle.find("li",{"class":"active"}).get_text()
-            if (" - " in chapterTitle):
-                chapterTitle=chapterTitle.split(" - ")[1]
-            elif (": " in chapterTitle):
-                chapterTitle.split(": ")[1]
-        chapterTitle=remove_invalid_characters(chapterTitle)
-        return chapterTitle
+            if chapterTitle:
+                chapterTitle=chapterTitle.get_text()
+            else:
+                chapterTitle=soup.find('ol',{"class":"breadcrumb"})
+                chapterTitle=chapterTitle.find("li",{"class":"active"}).get_text()
+                if (" - " in chapterTitle):
+                    chapterTitle=chapterTitle.split(" - ")[1]
+                elif (": " in chapterTitle):
+                    chapterTitle.split(": ")[1]
+            chapterTitle=remove_invalid_characters(chapterTitle)
+            return chapterTitle
+        except Exception as error:
+            errorText=f"Failed to get chapter title. Function foxaholic_fetch-chapter_title Error: {error}"
+            write_to_logs(errorText)
 
-    
     
 class NovelBinScraper(Scraper):
     async def get_soup(self,url):
-        driver = webdriver.Firefox()
-        driver.request_interceptor=interception
-        driver.get(url)
-        await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
-        soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
-        driver.close()
-        return soup
-    
+        try:
+            driver = webdriver.Firefox()
+            driver.request_interceptor=interception
+            driver.get(url)
+            await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
+            soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+            driver.close()
+            return soup
+        except Exception as error:
+            errorText=f"Failed to get soup from url. Function novelbin_get_soup Error: {error}"
+            write_to_logs(errorText)
+
     async def fetch_novel_data(self, url):
         # Novelbin-specific logic
         return await self.novelbin_fetch_novel_data(url)
@@ -809,54 +841,61 @@ class NovelBinScraper(Scraper):
         soup=await self.get_soup(novelURL)
         
         #There is a problem with the title, it is getting cut off by commas
-        
-        bookTitle=soup.find("h3",{"class":"title"}).get_text()
-        bookTitle=remove_invalid_characters(bookTitle)
-        logging.warning(bookTitle)
-        
-        bookID=str(generate_new_ID(bookTitle))
-        logging.warning(bookID)
-        
-        firstHalfBookData=soup.find("ul",{"class":"info info-meta"})
-        novelData=firstHalfBookData.find_all("li")
-        bookAuthor=novelData[0].get_text()
-        
-        if ("\n" in bookAuthor):
-            bookAuthor=bookAuthor.replace("\n","")
-        if ("  " in bookAuthor):
-            bookAuthor=bookAuthor.replace("  "," ")
+        try:
+            bookTitle=soup.find("h3",{"class":"title"}).get_text()
+            bookTitle=remove_invalid_characters(bookTitle)
+            logging.warning(bookTitle)
             
-        if ("Author:" in bookAuthor):
-            bookAuthor=bookAuthor.replace("Author:","")
+            bookID=str(generate_new_ID(bookTitle))
+            logging.warning(bookID)
             
-        descriptionBox=soup.find("div",{"id":"tab-description"})
-        description=descriptionBox.find("div",{"class":"desc-text"}).get_text()
+            firstHalfBookData=soup.find("ul",{"class":"info info-meta"})
+            novelData=firstHalfBookData.find_all("li")
+            bookAuthor=novelData[0].get_text()
+            
+            if ("\n" in bookAuthor):
+                bookAuthor=bookAuthor.replace("\n","")
+            if ("  " in bookAuthor):
+                bookAuthor=bookAuthor.replace("  "," ")
+                
+            if ("Author:" in bookAuthor):
+                bookAuthor=bookAuthor.replace("Author:","")
+                
+            descriptionBox=soup.find("div",{"id":"tab-description"})
+            description=descriptionBox.find("div",{"class":"desc-text"}).get_text()
 
-        if (description.startswith("Description: ")):
-            description=description[13:]
-        description=description.strip()
-        if ("\n" in description):
-            description=description.replace("\n","")
-        if ("  " in description):
-            description=description.replace("  "," ")
+            if (description.startswith("Description: ")):
+                description=description[13:]
+            description=description.strip()
+            if ("\n" in description):
+                description=description.replace("\n","")
+            if ("  " in description):
+                description=description.replace("  "," ")
+            
+            logging.warning(description)
+            
+            lastScraped=datetime.datetime.now()
+            
+            chapterTable = soup.find("div", {"id": "list-chapter"})
+            rows= chapterTable.find_all("li")
+            
+            latestChapter=rows[len(rows)-1]
+            latestChapterID=latestChapter.find("a")["href"].split("/")
+            latestChapterID=latestChapterID[len(latestChapterID)-1]
+            latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
+        except Exception as error:
+            errorText=f"Failed to get novel data. Function novelbin-fetch_novel_data Error: {error}"
+            write_to_logs(errorText)
         
-        logging.warning(description)
-        
-        lastScraped=datetime.datetime.now()
-        
-        chapterTable = soup.find("div", {"id": "list-chapter"})
-        rows= chapterTable.find_all("li")
-        
-        latestChapter=rows[len(rows)-1]
-        latestChapterID=latestChapter.find("a")["href"].split("/")
-        latestChapterID=latestChapterID[len(latestChapterID)-1]
-        latestChapterID=re.search(r'[0-9]+',latestChapterID).group()
-        
-        img_url = soup.find("img",{"class":"lazy"})
-        
-        if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-            await self.novelbin_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
-        
+        try:
+            img_url = soup.find("img",{"class":"lazy"})
+            
+            if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                await self.novelbin_save_cover_image("cover_image",img_url,f"./books/raw/{bookTitle}")
+        except Exception as error:
+            errorText=f"Failed to find image, or save it. Function novelbin_fetch_novel_data Error: {error}"
+            write_to_logs(errorText)
+            
         return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
 
 
@@ -872,14 +911,12 @@ class NovelBinScraper(Scraper):
                         fileNameDir=f"{saveDirectory}{title}.png"
                     else:
                         fileNameDir=f"{saveDirectory}/{title}.png"
-                    
                     if not (check_directory_exists(saveDirectory)):
                         make_directory(saveDirectory)
-                    if not (check_directory_exists(fileNameDir)):
-                        response=await response.content.read()
-                        with open (fileNameDir,'wb') as f:
-                            f.write(response)
-                            f.close()
+                    response=await response.content.read()
+                    with open (fileNameDir,'wb') as f:
+                        f.write(response)
+                        f.close()
                             
     async def fetch_chapter_title(self,soup):
         chapterTitle=soup.find('span',{"class":"chr-text"})
@@ -901,8 +938,10 @@ class NovelBinScraper(Scraper):
             chapterTitle=remove_invalid_characters(chapterTitle)
             return chapterTitle
         else:
+            errorText=f"Failed to get chapter title. Function novelbin_get_chapter_list Error: No chapterTitle found"
+            write_to_logs(errorText)
             return None
-
+            
     async def fetch_chapter_list(self, url):
         # novelbin-specific logic
         return await self.novelbin_get_chapter_list(url)
@@ -911,38 +950,44 @@ class NovelBinScraper(Scraper):
         #https://www.codecademy.com/article/web-scrape-with-selenium-and-beautiful-soup
         soup = await self.get_soup(f"{url}#tab-chapters-title")
         
-        #logging.warning(soup)
-        chapterTable = soup.find("div", {"id": "list-chapter"})
-        #logging.warning(chapterTable)
-        rows= chapterTable.find_all("li")
-        
-        chapterListURL=list()
-        for row in rows[:len(rows)]:
-            processChapterURL=row.find("a")["href"]
-            chapterURL=processChapterURL
-            chapterListURL.append(chapterURL)
-        #logging.warning(chapterListURL)
-        return chapterListURL
-    
+        try:
+            #logging.warning(soup)
+            chapterTable = soup.find("div", {"id": "list-chapter"})
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li")
+            
+            chapterListURL=list()
+            for row in rows[:len(rows)]:
+                processChapterURL=row.find("a")["href"]
+                chapterURL=processChapterURL
+                chapterListURL.append(chapterURL)
+            #logging.warning(chapterListURL)
+            return chapterListURL
+        except Exception as error:
+            errorText=f"Failed to get chapter urls from chapter list of page. Function novelbin_get_chapter_list Error: {error}"
+            write_to_logs(errorText)
+            
     async def fetch_chapter_content(self, soup):
         # Foxaholic-specific logic
         return self.novelbin_scrape_chapter_page(soup)
     
     def novelbin_scrape_chapter_page(self,soup):
-        pageContent=soup.find_all("div",{"id":"chr-content"})[0]
-        chapterContent=pageContent.find_all("p")
-        
-        chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
-        chapterContent=re.sub('</p>,','</p>',str(chapterContent))
-        
-        if (chapterContent.startswith('[')):
-            chapterContent=chapterContent[1:]
-        if (chapterContent.endswith(']')):
-            chapterContent=chapterContent[:-1]
-        
-        return bs4.BeautifulSoup(chapterContent,'html.parser')
-    
-
+        try:
+            pageContent=soup.find_all("div",{"id":"chr-content"})[0]
+            chapterContent=pageContent.find_all("p")
+            
+            chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
+            chapterContent=re.sub('</p>,','</p>',str(chapterContent))
+            
+            if (chapterContent.startswith('[')):
+                chapterContent=chapterContent[1:]
+            if (chapterContent.endswith(']')):
+                chapterContent=chapterContent[:-1]
+            
+            return bs4.BeautifulSoup(chapterContent,'html.parser')
+        except Exception as error:
+            errorText=f"Failed to get chapterContent as soup object. Function novelbin_scrape_chapter_page Error: {error}"
+            write_to_logs(errorText)
 
 class EpubProducer:
     async def fetch_chapter_list(self, url):
@@ -956,17 +1001,20 @@ class EpubProducer:
     
     async def retrieve_images_in_chapter(self,images_url,image_dir,image_count,new_epub):
         current_image_count=image_count
-        for img_url in images_url:
-            image_path=f"{image_dir}/{img_url}"
-            epubImage=Image.open(image_path)
-            b=io.BytesIO()
-            epubImage.save(b,'png')
-            image_data=b.getvalue()
-            image_item = epub.EpubItem(uid=f"image_{current_image_count}", file_name=img_url, media_type="image/png", content=image_data)
-            new_epub.add_item(image_item)
-            current_image_count+=1
-        return current_image_count
-    
+        try:
+            for img_url in images_url:
+                image_path=f"{image_dir}/{img_url}"
+                epubImage=Image.open(image_path)
+                b=io.BytesIO()
+                epubImage.save(b,'png')
+                image_data=b.getvalue()
+                image_item = epub.EpubItem(uid=f"image_{current_image_count}", file_name=img_url, media_type="image/png", content=image_data)
+                new_epub.add_item(image_item)
+                current_image_count+=1
+            return current_image_count
+        except Exception as error:
+            errorText=f"Failed to retrieve images for chapter to add to epub object. Function retrieve_images_in_chapter Error: {error}"
+            write_to_logs(errorText)
     def get_existing_order_of_contents(self, book_title):
         # Default implementation
         dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
@@ -999,11 +1047,15 @@ class EpubProducer:
         return os.path.basename(dir_location).split(" - ")[-1].replace(".html", "")
 
     def create_epub_chapter(self, chapter_title,file_chapter_title,chapter_content, css):
-        chapter_content=chapter_content.encode('ascii')
-        chapter=epub.EpubHtml(title=chapter_title,file_name=file_chapter_title+'.xhtml',lang='en')
-        chapter.set_content(chapter_content)
-        chapter.add_item(css)
-        return chapter
+        try:
+            chapter_content=chapter_content.encode('ascii')
+            chapter=epub.EpubHtml(title=chapter_title,file_name=file_chapter_title+'.xhtml',lang='en')
+            chapter.set_content(chapter_content)
+            chapter.add_item(css)
+            return chapter
+        except Exception as error:
+            errorText=f"Failed to create chapter to add to epub. Function create_epub_chapter Error: {error}"
+            write_to_logs(errorText)
 
     def add_cover_image(self, book_title, new_epub):
         img = retrieve_cover_from_storage(book_title)
