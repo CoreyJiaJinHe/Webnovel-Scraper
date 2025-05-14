@@ -19,7 +19,7 @@ async function downloadBook(id,getBook){
 
 function bookCard({data:{_id, bookName,lastScraped,latestChapter},getBook}){
     return(
-        <div className="todo-card" class="grid flex max-w-96 mt-5 mb-5 border-solid border-black border-2 rounded-lg">
+        <div id="todo-card" className="grid flex max-w-96 mt-5 mb-5 border-solid border-black border-2 rounded-lg">
             <div className="st-4 p-2">
                 <h3>{bookName ? bookName:"Failed to get"}</h3>
                 <div>
