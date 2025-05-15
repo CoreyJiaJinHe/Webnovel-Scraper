@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import BookCard from '../components/BookCard.jsx'
+import NavBar from '../components/NavBar'
 
 import axios from "axios";
 const API_URL = "http://localhost:8000/api";
@@ -172,6 +173,7 @@ function DownloadPage() {
     //DONE: Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
     return (
     <>
+    <NavBar/>
     <div className='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
         <div className='flex flex-col gap-10 h-full mx-50 text-center '>
         <h1 className='text-4xl mt-10'>Rudimentary File Hosting</h1>

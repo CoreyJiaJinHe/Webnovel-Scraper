@@ -20,11 +20,11 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   {
-    path: "/react/LoginPage",
+    path: "/react/LoginPage/",
     element: <LoginPage />,
   },
   {
-    path: "/react/DownloadPage",
+    path: "/react/DownloadPage/",
     element: <DownloadPage />,
   },
 ]);

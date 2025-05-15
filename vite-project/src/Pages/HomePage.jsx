@@ -3,19 +3,22 @@
 // const API_URL = "http://localhost:8000/api";
 // const api = axios.create({ baseURL: API_URL });
 
+import NavBar from '../components/NavBar'
+
 export function HomePage() {
 //   useEffect(()=>{
 
 //       })
   return (
     <>
-    <h1>
-        Welcome to the HomePage.
-    </h1>
-    <div id="bar" className="width">
-        
+    <NavBar/>
+    <div className="centered-container">
+      <div className="main-content">
+        <h1>
+            Welcome to the HomePage.
+        </h1>
+      </div>
     </div>
-
     </>
   )
 }
