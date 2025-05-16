@@ -109,6 +109,7 @@ def remove_non_english_characters(text):
     invalid_chars='【】'
     for char in invalid_chars:
         text=text.replace(char,'')
+    text = re.sub(r'\s+', ' ', text)
     result = re.search(r'([A-Za-z0-9,!\'\-]+( [A-Za-z0-9,!\'\-]+)+)', text)
     #logging.warning(result)
     if not result:
@@ -116,9 +117,17 @@ def remove_non_english_characters(text):
     return result.group() 
 
 def remove_invalid_characters(inputString):
+    invalid_chars = '.-<>:;"/\\|?*()'
+    for char in invalid_chars:
+        inputString=inputString.replace(char,' ')
+#    inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
+    inputString=remove_non_english_characters(inputString)
+    return inputString.strip()
+
+def remove_tags_from_title(inputString):
     invalid_chars = '.-<>:;"/\\|?*'
     for char in invalid_chars:
-        inputString=inputString.replace(char,'')
+        inputString=inputString.replace(char,' ')
     inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
     inputString=remove_non_english_characters(inputString)
     return inputString.strip()
@@ -155,7 +164,7 @@ def retrieve_cover_from_storage(bookTitle):
             errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
             write_to_logs(errorText)
             return None
-    errorText=f"Cover image does not exist. Function retrieve_cover_from_storage. Error: {e}"
+    errorText=f"Cover image does not exist. Function retrieve_cover_from_storage."
     write_to_logs(errorText)
     return None
 
@@ -376,11 +385,12 @@ class Scraper:
                         errorText=f"Failed to get soup. Function get_soup Error: {response.status}"
                         write_to_logs(errorText)
         except Exception as e:
-            errorText=f"Failed to get soup. Function get_soup Error: {e}"
+            errorText=f"Failed to get soup. Function get_soup Error: {e}, {url}"
             write_to_logs(errorText)
 
 class SpaceBattlesScraper(Scraper):
     async def fetch_novel_data(self,url):
+        logging.warning(url)
         soup=await self.get_soup(url)
         if soup:
             try:
@@ -388,7 +398,7 @@ class SpaceBattlesScraper(Scraper):
                 bookID=x[len(x)-1]
                 
                 bookTitle=soup.find("div",{"class":"p-title"}).get_text()
-                bookTitle=remove_invalid_characters(bookTitle)
+                bookTitle=remove_tags_from_title(bookTitle)
                 
                 #the assumption is that there is always a bookTitle
                 bookAuthor=soup.find("div",{"class":"p-description"})
@@ -452,7 +462,7 @@ class SpaceBattlesScraper(Scraper):
                 #logging.warning(pagenum)
                 if pagenum.isdigit():
                     last = max(last,int(pagenum))
-            #logging.warning(last)
+            logging.warning(f"Last page: {last}")
             return last
         except Exception as e:
             errorText=f"Failed to get total number of pages. Function Spacebattles fetch_chapter_list Error: {e}"
@@ -491,7 +501,7 @@ class RoyalRoadScraper(Scraper):
                 bookAuthor=novelData[len(novelData)-1]
                 #logging.warning(novelData)
                 
-                bookTitle=remove_invalid_characters(bookTitle)
+                bookTitle=remove_tags_from_title(bookTitle)
                         
                 description=soup.find("div",{"class":"description"}).get_text()
                 
@@ -662,7 +672,7 @@ class FoxaholicScraper(Scraper):
             bookTitle=soup.find("div",{"class":"post-title"}).get_text() or soup.find("div",{"class":"post_title"}).get_text()
             bookAuthor=novelData[2].get_text()
             #logging.warning(bookTitle)
-            bookTitle=remove_invalid_characters(bookTitle)
+            bookTitle=remove_tags_from_title(bookTitle)
             
             bookID=str(generate_new_ID(bookTitle))
             #logging.warning(bookID)
@@ -843,7 +853,7 @@ class NovelBinScraper(Scraper):
         #There is a problem with the title, it is getting cut off by commas
         try:
             bookTitle=soup.find("h3",{"class":"title"}).get_text()
-            bookTitle=remove_invalid_characters(bookTitle)
+            bookTitle=remove_tags_from_title(bookTitle)
             logging.warning(bookTitle)
             
             bookID=str(generate_new_ID(bookTitle))
@@ -1032,7 +1042,7 @@ class EpubProducer:
     def get_chapter_from_saved(self, chapter_id, saved_chapters):
         for chapter in saved_chapters:
             chapter = chapter.split(";")
-            if chapter_id == chapter[0]:
+            if str(chapter_id) == str(chapter[0]):
                 return chapter[0], chapter[2].strip()
         return None, None
 
@@ -1081,7 +1091,7 @@ class EpubProducer:
         with open(file_location, "w") as f:
             for data in chapter_metadata:
                 logging.warning(data)
-                f.write(";".join(data)+ "\n")
+                f.write(";".join(str(data))+ "\n")
             
     # async def updateEpub(self,novelURL,bookTitle):
     #     already_saved_chapters=self.get_existing_order_of_contents(bookTitle)
@@ -1158,27 +1168,37 @@ class EpubProducer:
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
         #logging.warning(img_urls)
-        for img_url in img_urls:
-            image_path = f"{save_directory}image_{image_count}.png"
-            if not os.path.exists(image_path):
-                async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
-                    if not isinstance(img_url,str):
-                        img_url=img_url["src"]
-                    async with session.get(img_url) as response:
-                        if response.status == 200:
-                            response=await response.content.read()
-                            with open(image_path, "wb") as f:
-                                f.write(response)
-            # Add image to EPUB
-            epubImage=Image.open(image_path)
-            b=io.BytesIO()
-            epubImage.save(b,'png')
-            image_data=b.getvalue()
-            image_item = epub.EpubItem(uid=f"image_{image_count}", file_name=f"images/image_{image_count}.png", media_type="image/png", content=image_data)
-            new_epub.add_item(image_item)
-            image_count += 1
-            await asyncio.sleep(0.5)
-        return image_count
+        try:
+            for img_url in img_urls:
+                image_path = f"{save_directory}image_{image_count}.png"
+                if not os.path.exists(image_path):
+                    async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                        if not isinstance(img_url,str):
+                            img_url=img_url["src"]
+                        async with session.get(img_url) as response:
+                            if response.status == 200:
+                                response=await response.content.read()
+                                with open(image_path, "wb") as f:
+                                    f.write(response)
+                                    try:
+                                        # Add image to EPUB
+                                        epubImage=Image.open(image_path)
+                                        b=io.BytesIO()
+                                        epubImage.save(b,'png')
+                                        image_data=b.getvalue()
+                                        image_item = epub.EpubItem(uid=f"image_{image_count}", file_name=f"images/image_{image_count}.png", media_type="image/png", content=image_data)
+                                        new_epub.add_item(image_item)
+                                    except Exception as e:
+                                        errorText=f"Failed to add image to epub. Function save_images_in_chapter Error: {e}"
+                                        write_to_logs(errorText)
+                                        continue
+                                    image_count += 1
+                await asyncio.sleep(0.5)
+            return image_count
+        except Exception as e:
+            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
+            write_to_logs(errorText)
+            
 
 
 class SpaceBattlesEpubProducer(EpubProducer):
@@ -1253,11 +1273,11 @@ class SpaceBattlesEpubProducer(EpubProducer):
         tocList=list()
         imageCount=0
         scraper=SpaceBattlesScraper()
-        for pageNum in range(1, await self.spacebattles_fetch_chapter_list(novelURL)):
+        for pageNum in range(1, await self.spacebattles_fetch_chapter_list(novelURL)+1):
             await asyncio.sleep(1)
             page_url = f"{novelURL}page-{pageNum}/"
             
-            
+            logging.warning (page_url)
             #Retrieval does not work at the moment
             if check_if_chapter_exists(page_url, already_saved_chapters):
                 chapter_id, dir_location = self.get_chapter_from_saved(pageNum, already_saved_chapters)
@@ -1269,17 +1289,24 @@ class SpaceBattlesEpubProducer(EpubProducer):
                     chapter_title=chapter_title.get_text()
                     images=chapter_soup.find_all('img')
                     images=[image['src'] for image in images]
+                    currentImageCount=imageCount
                     if images:
                         for image in images:
-                            imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-                            epubImage=retrieve_stored_image(imageDir)
-                            b=io.BytesIO()
-                            epubImage.save(b,'png')
-                            b_image1=b.getvalue()
-                            
-                            image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                            new_epub.add_item(image_item)
-                            currentImageCount+=1
+                            try:
+                                imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                                epubImage=retrieve_stored_image(imageDir)
+                                b=io.BytesIO()
+                                epubImage.save(b,'png')
+                                b_image1=b.getvalue()
+                                
+                                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                                new_epub.add_item(image_item)
+                                currentImageCount+=1
+                            except Exception as e:
+                                errorText=f"Failed to add image to epub. Image does not exist, was never saved. Function spacebattles_produce_epub Error: {e}"
+                                write_to_logs(errorText)
+                                continue
+                    imageCount=currentImageCount
                     chapter=epub.EpubHtml(title=chapter_title, file_name=f"{bookTitle} - {pageNum} - {chapter_title}.xhtml", lang='en')
                     chapter_content=chapter_soup.encode('ascii')
                     chapter.set_content(chapter_content)
@@ -1297,7 +1324,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
                     for article in articles:
                         threadmarkTitle=article.find("span",{"class":"threadmarkLabel"})
                         title=threadmarkTitle.get_text()
-                        title=remove_invalid_characters(title)
+                        title=remove_tags_from_title(title)
                         logging.warning(title)
                         
                         chapterContent=article.find("div",{"class":"message-userContent"})
@@ -1373,7 +1400,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
                 image1_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image1)
                 new_epub.add_item(image1_item)
             except Exception as e:
-                logging.warning(f"Failed to save image:{e}")
+                logging.warning(f"There is no cover image:{e}")
         
         new_epub.toc=tocList
         new_epub.spine=tocList
@@ -1549,8 +1576,10 @@ def get_first_last_chapter(bookTitle):
     return firstChapterID,lastChapterID,len(lines)
 
 
-async def main_interface(url):
+async def main_interface(url, cookie):
     try:
+        if (cookie):
+            setCookie(cookie)
         epub_producer = None
         if "royalroad.com" in url:
             epub_producer = RoyalRoadEpubProducer()
@@ -1560,16 +1589,17 @@ async def main_interface(url):
             epub_producer= NovelBinEpubProducer()
         elif "spacebattles.com" in url:
             epub_producer=SpaceBattlesEpubProducer()
-            if re.search(r'/reader/page-\d+/$',url):
-                url=re.sub(r'/reader/page-\d+/$','/reader/',url)
-            elif not (url.endswith('/reader/')):
-                if (url.endswith('/')):
-                    url+='reader/'
+            normalized_url = url if url.endswith('/') else url + '/'
+            if re.search(r'/reader/page-\d+/$',normalized_url):
+             url = re.sub(r'/reader/page-\d+/?$', '/reader/', url)
+            elif not url.rstrip('/').endswith('/reader'):
+                if url.endswith('/'):
+                    url += 'reader/'
                 else:
-                    url+='/reader/'
+                    url += '/reader/'
         else:
             raise ValueError("Unsupported website")
-        
+        logging.warning(url)
         logging.warning('Creating scraper')
         scraper=ScraperFactory.get_scraper(url)
         logging.warning('Fetching novel data')
@@ -1631,5 +1661,6 @@ async def main_interface(url):
         
 #link="https://novelbin.com/b/raising-orphans-not-assassins"
 #link="https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"
-link="https://forums.spacebattles.com/threads/the-factory-must-wo-wo-class-abyssal-si.1221239/"
-asyncio.run(main_interface(link))
+#link="https://forums.spacebattles.com/threads/the-factory-must-wo-wo-class-abyssal-si.1221239/"
+link="https://forums.spacebattles.com/threads/salvage-sarcasm-and-submarines-a-kancolle-fic.836982/reader/page-18"
+asyncio.run(main_interface(link, None))
