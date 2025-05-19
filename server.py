@@ -98,6 +98,30 @@ def getAllBooks():
 
 #THE ERROR WITH MAPPING STARTS HERE^. ITS NOT A DICTIONARY
 #FIXED BY DOING IT ON THE FRONT END
+
+
+
+
+#TODO: Write hashing function for passwords
+#Create user login function
+#Create user registration function
+#Create user profile function
+#Create user book list return function
+#Create user book list add function
+#Create user book list remove function
+
+
+#Learn how to use JWT Tokens/Cookies
+
+
+
+
+
+
+
+
+
+
     
 @app.get("/", tags=["root"])
 async def read_root() -> dict:

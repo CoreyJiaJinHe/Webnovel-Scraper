@@ -230,18 +230,106 @@ def create_latest(**kwargs):
 
 
 
+def check_existing_reading_list(userID):
+    db=Database.get_instance()
+    userBookLibrary=db["UserLists"]
+    results=userBookLibrary.find_one({"userID":userID})
+    if (results==None):
+        return False
+    else:
+        return results
 
 
+def create_user_reading_list(**kwargs):
+    db=Database.get_instance()
+    userBookLibrary=db["UserLists"]
+    
+    userExists=check_verified_user(kwargs["userID"])
+    if (userExists):
+        readingListExists=check_existing_reading_list(kwargs["userID"])
+        if (readingListExists):
+            getFollowList=readingListExists["followList"]
+            for i in kwargs["followList"]:
+                if (i not in getFollowList):
+                    getFollowList.append(i)
+            record={
+                "userID": kwargs["userID"],
+                "followList":getFollowList
+            }
+            userBookLibrary.update_one(record)
+            logging.warning("Updated user reading list for:"+str(userBookLibrary.insert_one(record)))
+
+        else:
+            record={
+                "userID": kwargs["userID"],
+                "followList":kwargs["followList"]
+            }
+            logging.warning("Created user reading list for:"+str(userBookLibrary.insert_one(record)))
+    else:
+        logging.warning("User does not exist; Therefore we cannot make a reading list.")
+
+def remove_from_user_reading_list(**kwargs):
+    db=Database.get_instance()
+    savedBooks=db["UserLists"]
+    results=check_existing_reading_list(kwargs["userID"])
+    if (results):
+        for i in kwargs["removeList"]:
+            if (i in results["followList"]):
+                results["followList"].remove(i)
+        savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
+        return True
+    else:
+        logging.warning("User does not exist.")
+        return False
+    
 
 
+def create_verified_user(userID,userName, passWord):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results==None):
+        record={
+            "userID": userID,
+            "username": userName,
+            "password": passWord,
+        }
+        verifiedUsers.insert_one(record)
+        logging.warning("Created verified user for:"+str(verifiedUsers.insert_one(record)))
+        return True
+    else:
+        logging.warning("User already exists.")
+    return False
 
+def delete_verified_user(userID):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results==None):
+        return False
+    else:
+        verifiedUsers.delete_one({"userID":userID})
+        return True
 
+def check_verified_user(userID):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results==None):
+        return False
+    else:
+        return True
 
+def check_login_credentials(userID,password):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results!=None):
+        if (results["password"]==password):
+            return True
+    return False
 
-
-
-
-
+#create_user_reading_list(userID=2,followList=[1,2,3,4,5])
 
 
 def template_server_data():
