@@ -2078,7 +2078,7 @@ link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elit
 def write_to_logs(log):
     todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
     log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
-    fileLocation=f"{logLocation}/{todayDate}"
+    fileLocation=f"{logLocation}/{todayDate}.txt"
     if (check_directory_exists(fileLocation)):
         f=open(fileLocation,"a")
         f.write(log)

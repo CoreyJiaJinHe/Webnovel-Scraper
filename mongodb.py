@@ -11,7 +11,7 @@ MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
 mydb=myclient["BotServers"]
 botServers=mydb["Servers"]
-
+from scrape import write_to_logs 
 
 class Database:
     _instance = None
@@ -256,7 +256,7 @@ def create_user_reading_list(**kwargs):
                 "userID": kwargs["userID"],
                 "followList":getFollowList
             }
-            userBookLibrary.update_one(record)
+            result=userBookLibrary.update_one(record)
             logging.warning("Updated user reading list for:"+str(userBookLibrary.insert_one(record)))
 
         else:
@@ -264,7 +264,8 @@ def create_user_reading_list(**kwargs):
                 "userID": kwargs["userID"],
                 "followList":kwargs["followList"]
             }
-            logging.warning("Created user reading list for:"+str(userBookLibrary.insert_one(record)))
+            result=userBookLibrary.insert_one(record)
+            logging.warning("Created user reading list for:"+str(result))
     else:
         logging.warning("User does not exist; Therefore we cannot make a reading list.")
 
@@ -276,30 +277,56 @@ def remove_from_user_reading_list(**kwargs):
         for i in kwargs["removeList"]:
             if (i in results["followList"]):
                 results["followList"].remove(i)
-        savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
+        result=savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
         return True
     else:
         logging.warning("User does not exist.")
         return False
     
-
-
-def create_verified_user(userID,userName, passWord):
+def generate_userID():
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
+    userID=verifiedUsers.count_documents({})+1
+    return userID
+
+def create_new_user(userName, passWord):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    userID=generate_userID()
     results=verifiedUsers.find_one({"userID":userID})
     if (results==None):
         record={
             "userID": userID,
             "username": userName,
             "password": passWord,
+            "developer":False,
+            "verified":False,
+            "dateCreated":datetime.datetime.now(),
+            "lastLogin":datetime.datetime.now(),
         }
-        verifiedUsers.insert_one(record)
-        logging.warning("Created verified user for:"+str(verifiedUsers.insert_one(record)))
+        result=str(verifiedUsers.insert_one(record))
+        write_to_logs(result)
+        logging.warning("Created verified user for:"+result)
         return True
     else:
         logging.warning("User already exists.")
     return False
+
+def verify_user(userID):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results):
+        result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"verified":True}}))
+        write_to_logs(result)
+
+def is_verified_user(userID):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"userID":userID})
+    if (results):
+        logging.warning("User is verified")
+    logging.warning("User is not verified")
 
 def delete_verified_user(userID):
     db=Database.get_instance()
@@ -308,7 +335,8 @@ def delete_verified_user(userID):
     if (results==None):
         return False
     else:
-        verifiedUsers.delete_one({"userID":userID})
+        result=str(verifiedUsers.delete_one({"userID":userID}))
+        write_to_logs(result)
         return True
 
 def check_verified_user(userID):
@@ -318,15 +346,27 @@ def check_verified_user(userID):
     if (results==None):
         return False
     else:
+        result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
+        write_to_logs(result)
         return True
+
+def get_hashed_password(username):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"username":username})
+    if (results!=None):
+        result=str(verifiedUsers.update_one({"username":username},{"$set":{"lastLogin":datetime.datetime.now()}}))
+        write_to_logs(result)
+        return results["password"]
 
 def check_login_credentials(userID,password):
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
     results=verifiedUsers.find_one({"userID":userID})
     if (results!=None):
-        if (results["password"]==password):
-            return True
+        result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
+        write_to_logs(result)
+        return results["password"]
     return False
 
 #create_user_reading_list(userID=2,followList=[1,2,3,4,5])

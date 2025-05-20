@@ -9,20 +9,73 @@ const api = axios.create({ baseURL: API_URL });
 
 export function LoginPage() {
   const [showAccountCreation, setShowAccountCreation] = useState(false);
+  const [username, setUserName]=useState("");
+  const [password, setPassword]=useState("");
+  const [confirmPassword, setConfirmPassword]=useState("");
 
+  //Cookies for login.
 
-  function handleSubmit(e){
+  async function handleLoginSubmit(e){
     e.preventDefault();
 
-    const form=e.target;
+    const form = e.target;
     const formData=new FormData(form)
+    const username = formData.get("username");
+    const password = formData.get("password");
+    setUserName(formData.get("username"));
+    setPassword(formData.get("password"));
+
+    console.log(username)
+    console.log(password)
+
+    if (username==="" || password===""){
+      alert ("Please enter a username and password");
+      return;
+    }
+
+    const response=await axios.post(`${API_URL}/login`, { 
+      username: username,
+      password: password
+    });
+    console.log(response)
+    alert (response.data);
   }
     
-  function handleAccountCreation(e){
-  
-  
-  
+  async function handleAccountCreation(e){
+    e.preventDefault();
+
+
+    const form = e.target;
+    const formData=new FormData(form)
+    const username = formData.get("username");
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassWord");
+    setUserName(formData.get("username"));
+    setPassword(formData.get("password"));
+    setConfirmPassword(formData.get("confirmPassWord"));
+
+    console.log(username)
+    console.log(password)
+    console.log(confirmPassword)
+
+    if (username==="" || password===""){
+      alert ("Please enter a username and password");
+      return;
+    }
+
+    if (password!==confirmPassword){
+      alert ("Passwords do not match");
+      return;
+    }
+    const response=await axios.post(`${API_URL}/register/`, { username, password })
+    console.log(response)
+    
+    alert (response.data);
+
+
+
   }
+
   return (
     <>
     <NavBar/>
@@ -31,38 +84,41 @@ export function LoginPage() {
           <div className="login-content">
             <h1>Create Account</h1>
             <p>Fill out the form to create a new account.</p>
-            <form className="login-form" method="post" onSubmit={handleAccountCreation}>
+            <form className="login-form" onSubmit={handleAccountCreation}>
               <p>Username</p>
               <label>
-                <input name="userName"/>
+                <input name="username"/>
               </label>
               <p>Password</p>
-              <input name="passWord"/>
+              <input type="password" name="password"/>
               <p>Confirm Password</p>
               <input name="confirmPassWord"/>
-              <button type="submit">Create Account</button>
-              <button type="button" onClick={() => setShowAccountCreation(false)}>
-                Back to Login
-              </button>
+              <button className="block mt-6 mx-auto" type="submit">Create Account</button>
+              
             </form>
+            <button type="button" onClick={() => setShowAccountCreation(false)}>
+              Back to Login
+            </button>
           </div>
         ) : (
           <div className="login-content">
             <h1>Welcome.</h1>
             <p>Login below to get access to the rest of the site.</p>
-            <form className="login-form" method="post" onSubmit={handleSubmit}>
+            <form className="login-form" onSubmit={handleLoginSubmit}>
               <p>Username</p>
               <label>
-                <input name="userName"/>
+                <input name="username"/>
               </label>
               <p>Password</p>
-              <input name="passWord"/>
-              <button type="submit">Login</button>
-              <p>Don't have an account?</p>
-              <button type="button" onClick={() => setShowAccountCreation(true)}>
+              <input type="password" name="password"/>
+              <button className="block mt-6 mx-auto"type="submit">Login</button>
+              
+              
+            </form>
+            <p>Don't have an account?</p>
+            <button type="button" onClick={() => setShowAccountCreation(true)}>
                 Create Account
               </button>
-            </form>
           </div>
         )}
       </div>
