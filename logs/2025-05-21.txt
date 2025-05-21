@@ -1,0 +1,86 @@
+Wed May 21 13:39:18 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:40:47 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:41:07 2025 Function: create_new_user. Error: User already exists.
+Wed May 21 13:41:10 2025 Function: create_new_user. Error: User already exists.
+Wed May 21 13:41:13 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:42:26 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:43:07 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:44:49 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:45:46 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:45:46 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. tes
+Wed May 21 13:45:58 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:45:58 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:45:58 2025 User authenticated
+Wed May 21 13:45:58 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:45:58 2025 Error: unsupported type for timedelta minutes component: str
+Wed May 21 13:46:24 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:46:24 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:46:24 2025 User authenticated
+Wed May 21 13:46:24 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:46:24 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTM4NH0.bYJldsSgrYbJUGXYuP-Xp7_JnVqkhpXoA6ZHCWCS35k
+Wed May 21 13:46:24 2025 Error: Response.set_cookie() got an unexpected keyword argument 'name'
+Wed May 21 13:46:55 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:46:55 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:46:56 2025 User authenticated
+Wed May 21 13:46:56 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:46:56 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTQxNn0.lHxHUEyPopLnGFTS8vbCl-usOM1OYBCl02b0skMRP0w
+Wed May 21 13:46:56 2025 Error: Response.__call__() got an unexpected keyword argument 'content'
+Wed May 21 13:48:25 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:48:25 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:48:25 2025 User authenticated
+Wed May 21 13:48:25 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:48:25 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTUwNX0.b_XkT9XqcZrCJcNJ__Z4mYYEQiXopKHHwtCM9QUhDLo
+Wed May 21 13:48:25 2025 Error: can only concatenate str (not "Response") to str
+Wed May 21 13:48:47 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:48:47 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:48:47 2025 User authenticated
+Wed May 21 13:48:47 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:48:47 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTUyN30.JttTxRknLoJUc-c8WXLBFsZxQBYzmyqrsVnyg8pfC0I
+Wed May 21 13:48:47 2025 <starlette.responses.Response object at 0x000001730B010AD0>
+Wed May 21 13:49:54 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:49:54 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:49:54 2025 User authenticated
+Wed May 21 13:49:54 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:49:54 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTU5NH0.3qE9-yEIioYe2IU07SPEhG4dK1pgYtb4JndX8Vy7Oic
+Wed May 21 13:49:54 2025 <starlette.responses.Response object at 0x000001730AF634D0>
+Wed May 21 13:50:03 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:50:03 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:50:03 2025 User authenticated
+Wed May 21 13:50:03 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:50:03 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTYwM30.6cgwfwgDZhA8oBAIkwYZgPHVEHG1gbb1AmkaJyi_YJA
+Wed May 21 13:50:03 2025 <starlette.responses.Response object at 0x000001730AF63890>
+Wed May 21 13:52:06 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:52:06 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:52:06 2025 User authenticated
+Wed May 21 13:52:06 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:52:06 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MTcyNn0.1AaYC_LSCC_OL1oV1EWc2QRYzZ7P6Xw2h_tPr4B8EgE
+Wed May 21 13:59:01 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:59:01 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:59:01 2025 User authenticated
+Wed May 21 13:59:01 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:59:01 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MjE0MX0.MjrCMA0xJIXWgwNlUhlNVqDekeeWBPFRlVzncKd4Yv0
+Wed May 21 13:59:21 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 13:59:21 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 13:59:21 2025 User authenticated
+Wed May 21 13:59:21 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 13:59:21 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MjE2MX0.NuK5jIkZV-VJ6VyVSHlLmw3174y44KmpZhVM54wkRus
+Wed May 21 14:01:28 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 14:01:28 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 14:01:29 2025 User authenticated
+Wed May 21 14:01:29 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 14:01:29 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MjI4OX0.qGTkhrhR_z3jiYCEWbSkS__7AFwPglVIEszYPODfNrQ
+Wed May 21 14:01:48 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 14:01:48 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 14:01:49 2025 User authenticated
+Wed May 21 14:01:49 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 14:01:49 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImV4cCI6MTc0Nzg1MjMwOX0.Me29feAY1PdXy8iEpkJLiQJWcLiHzTkMxH_EurvsiJM
+Wed May 21 14:15:13 2025 Error: 401: Could not validate credentials
+Wed May 21 14:15:53 2025 Error: 401: Could not validate credentials
+Wed May 21 14:17:00 2025 Error: 401: Could not validate credentials
+Wed May 21 14:17:20 2025 Error: 401: Could not validate credentials
+Wed May 21 14:18:24 2025 Error: 401: Could not validate credentials
+Wed May 21 14:24:16 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Wed May 21 14:24:16 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Wed May 21 14:24:16 2025 User authenticated
+Wed May 21 14:24:16 2025 function: get_userID. Success: Retrieved userID for:1
+Wed May 21 14:24:16 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiIxIiwidXNlcm5hbWUiOiJ0ZXMiLCJleHAiOjE3NDc4NTM2NTZ9.xSxo35chMBvyGyQhi5cV-yzAK1s1niqYBEcYUNUIqsE

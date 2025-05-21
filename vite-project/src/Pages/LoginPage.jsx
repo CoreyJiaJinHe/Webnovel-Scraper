@@ -13,7 +13,7 @@ export function LoginPage() {
   const [password, setPassword]=useState("");
   const [confirmPassword, setConfirmPassword]=useState("");
 
-  //Cookies for login.
+  //TODO Cookies for login.
 
   async function handleLoginSubmit(e){
     e.preventDefault();
@@ -36,9 +36,9 @@ export function LoginPage() {
     const response=await axios.post(`${API_URL}/login`, { 
       username: username,
       password: password
-    });
+    }, { withCredentials: true });
     console.log(response)
-    alert (response.data);
+    //alert (response.data);
   }
     
   async function handleAccountCreation(e){

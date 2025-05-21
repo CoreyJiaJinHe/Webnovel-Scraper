@@ -227,62 +227,6 @@ def create_latest(**kwargs):
         else:
             savedBooks.insert_one(book)
 
-
-
-
-def check_existing_reading_list(userID):
-    db=Database.get_instance()
-    userBookLibrary=db["UserLists"]
-    results=userBookLibrary.find_one({"userID":userID})
-    if (results==None):
-        return False
-    else:
-        return results
-
-
-def create_user_reading_list(**kwargs):
-    db=Database.get_instance()
-    userBookLibrary=db["UserLists"]
-    
-    userExists=check_verified_user(kwargs["userID"])
-    if (userExists):
-        readingListExists=check_existing_reading_list(kwargs["userID"])
-        if (readingListExists):
-            getFollowList=readingListExists["followList"]
-            for i in kwargs["followList"]:
-                if (i not in getFollowList):
-                    getFollowList.append(i)
-            record={
-                "userID": kwargs["userID"],
-                "followList":getFollowList
-            }
-            result=userBookLibrary.update_one(record)
-            logging.warning("Updated user reading list for:"+str(userBookLibrary.insert_one(record)))
-
-        else:
-            record={
-                "userID": kwargs["userID"],
-                "followList":kwargs["followList"]
-            }
-            result=userBookLibrary.insert_one(record)
-            logging.warning("Created user reading list for:"+str(result))
-    else:
-        logging.warning("User does not exist; Therefore we cannot make a reading list.")
-
-def remove_from_user_reading_list(**kwargs):
-    db=Database.get_instance()
-    savedBooks=db["UserLists"]
-    results=check_existing_reading_list(kwargs["userID"])
-    if (results):
-        for i in kwargs["removeList"]:
-            if (i in results["followList"]):
-                results["followList"].remove(i)
-        result=savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
-        return True
-    else:
-        logging.warning("User does not exist.")
-        return False
-    
 def generate_userID():
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
@@ -293,7 +237,7 @@ def create_new_user(userName, passWord):
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
     userID=generate_userID()
-    results=verifiedUsers.find_one({"userID":userID})
+    results=verifiedUsers.find_one({"username":userName})
     if (results==None):
         record={
             "userID": userID,
@@ -305,11 +249,10 @@ def create_new_user(userName, passWord):
             "lastLogin":datetime.datetime.now(),
         }
         result=str(verifiedUsers.insert_one(record))
-        write_to_logs(result)
-        logging.warning("Created verified user for:"+result)
+        write_to_logs("Function: create_new_user. Success: Created verified user for:"+result)
         return True
     else:
-        logging.warning("User already exists.")
+        write_to_logs("Function: create_new_user. Error: User already exists.")
     return False
 
 def verify_user(userID):
@@ -320,13 +263,19 @@ def verify_user(userID):
         result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"verified":True}}))
         write_to_logs(result)
 
-def is_verified_user(userID):
+def is_verified_user(userID,username):
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
-    results=verifiedUsers.find_one({"userID":userID})
+    results=verifiedUsers.find_one({"userID":int(userID)})
     if (results):
-        logging.warning("User is verified")
+        logging.warning(results["username"])
+        logging.warning(username)
+        if (results["username"]==username):
+            logging.warning("User is verified")
+            return True
     logging.warning("User is not verified")
+
+is_verified_user("1","tes")
 
 def delete_verified_user(userID):
     db=Database.get_instance()
@@ -359,15 +308,85 @@ def get_hashed_password(username):
         write_to_logs(result)
         return results["password"]
 
-def check_login_credentials(userID,password):
+
+def get_userID(username):
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
-    results=verifiedUsers.find_one({"userID":userID})
+    results=verifiedUsers.find_one({"username":username})
     if (results!=None):
-        result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
-        write_to_logs(result)
-        return results["password"]
-    return False
+        userID=results["userID"]
+        result=str(userID)
+        write_to_logs("function: get_userID. Success: Retrieved userID for:"+result)
+        return str(userID)
+    return None
+
+def check_existing_reading_list(userID):
+    db=Database.get_instance()
+    userBookLibrary=db["UserLists"]
+    results=userBookLibrary.find_one({"userID":userID})
+    if (results==None):
+        write_to_logs("Function: check_existing_reading_list. Error: User does not exist")
+        return False
+    else:
+        return results
+
+#Must use a userID. Therefore, using username login, get the user's ID and start using that.
+
+
+def create_user_reading_list(**kwargs):
+    db=Database.get_instance()
+    userBookLibrary=db["UserLists"]
+    
+    userExists=check_verified_user(kwargs["userID"])
+    if (userExists):
+        readingListExists=check_existing_reading_list(kwargs["userID"])
+        if (readingListExists):
+            getFollowList=readingListExists["followList"]
+            for i in kwargs["followList"]:
+                if (i not in getFollowList):
+                    getFollowList.append(i)
+            record={
+                "userID": kwargs["userID"],
+                "followList":getFollowList
+            }
+            result=str(userBookLibrary.update_one(record))
+            write_to_logs("Function: create_user_reading_list. Success: Updated user reading list for:"+result)
+
+        else:
+            record={
+                "userID": kwargs["userID"],
+                "followList":kwargs["followList"]
+            }
+            result=str(userBookLibrary.insert_one(record))
+            write_to_logs("Function: create_user_reading_list. Success: Created user reading list for:"+result)
+    else:
+        write_to_logs("Function: create_user_reading_list. Error: User does not exist; Therefore we cannot make a reading list.")
+
+def remove_from_user_reading_list(**kwargs):
+    db=Database.get_instance()
+    savedBooks=db["UserLists"]
+    results=check_existing_reading_list(kwargs["userID"])
+    if (results):
+        for i in kwargs["removeList"]:
+            if (i in results["followList"]):
+                results["followList"].remove(i)
+        result=savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
+        write_to_logs("Function: remove_from_user_reading_list. Sucess: Removed from user reading list:"+result)
+        return True
+    else:
+        write_to_logs("Function: remove_from_user_reading_list. Error: User does not exist.")
+        return False
+    
+
+# def check_login_credentials(userID,password):
+#     db=Database.get_instance()
+#     verifiedUsers=db["VerifiedUsers"]
+#     results=verifiedUsers.find_one({"userID":userID})
+#     if (results!=None):
+#         result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
+#         write_to_logs(result)
+#         return results["password"]
+#     return False
 
 #create_user_reading_list(userID=2,followList=[1,2,3,4,5])
 
