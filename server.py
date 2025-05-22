@@ -173,12 +173,12 @@ def create_access_token(data:dict, expires_delta: timedelta | None=None):
     encoded_jwt=jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
     return encoded_jwt
 
-async def authenticate_token(token):
-    credentials_exception = HTTPException(
+credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+async def authenticate_token(token):
     try:
         payload=jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
@@ -187,38 +187,66 @@ async def authenticate_token(token):
         username=payload.get("username")
         if (userID is None or username is None):
             raise credentials_exception
-        if (mongodb.is_verified_user(userID,username)):
+        verifiedStatus=mongodb.is_verified_user(userID,username)
+        if (verifiedStatus):
             access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
             new_access_token = create_access_token(
                 data={"userid": str(userID), "username": username},
                 expires_delta=access_token_expires
             )
-            return new_access_token
+            return new_access_token, username, verifiedStatus
         return False
     except jwt.ExpiredSignatureError:
         raise credentials_exception        
     except InvalidTokenError:
         raise credentials_exception
 
-@app.post("/api/login/")
-async def login(request: Request, response: Response):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+@app.post("/api/token/")
+async def login (request: Request, response: Response):
+    received_access_token=request.cookies.get("access_token")
+    logging.error(f"New Access Token: {received_access_token}")
+    if (received_access_token):
+        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        logging.error(f"New Access Token: {new_access_token}")
+        if (new_access_token):
+            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus}, status_code=200)
+            response.set_cookie(
+                key="access_token",
+                value=new_access_token,
+                httponly=True,
+                samesite="lax",
+                secure=False,
+                max_age=60 * 60 * 24,  # 1 day in seconds
+                expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+            )
+            return response
+    else:
+        raise credentials_exception
+
     
+    
+@app.post("/api/login/")
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response):
     try:
-        received_access_token=request.cookies.get("access_token")
-        logging.error(f"New Access Token: {received_access_token}")
-        if (received_access_token):
-            new_access_token=await authenticate_token(received_access_token)
-            logging.error(f"New Access Token: {new_access_token}")
-            if (new_access_token):
-                response=JSONResponse(content={"message":"Already logged in"}, status_code=200)
+        username = form_data.username
+        password = form_data.password
+        if not username or not password:
+            raise credentials_exception
+            #return JSONResponse(content={"error": "Missing username or password"}, status_code=400)
+        #scrape.write_to_logs(username + " " + password)
+        hashed_password=mongodb.get_hashed_password(username)
+        if (hashed_password):
+            scrape.write_to_logs(hashed_password + " " + password)
+            if (authenticate_user(password,hashed_password)):
+                scrape.write_to_logs("User authenticated")
+                userID=mongodb.get_userID(username)
+                access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
+                access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
+                scrape.write_to_logs("Access Token: "+access_token)
+                response=JSONResponse(content={"message":"Login successful"},status_code=200)
                 response.set_cookie(
                     key="access_token",
-                    value=new_access_token,
+                    value=access_token,
                     httponly=True,
                     samesite="lax",
                     secure=False,
@@ -227,35 +255,7 @@ async def login(request: Request, response: Response):
                 )
                 return response
         else:
-            data = await request.json()
-            username = data.get("username")
-            password = data.get("password")
-            if not username or not password:
-                raise credentials_exception
-                #return JSONResponse(content={"error": "Missing username or password"}, status_code=400)
-            #scrape.write_to_logs(username + " " + password)
-            hashed_password=mongodb.get_hashed_password(username)
-            if (hashed_password):
-                scrape.write_to_logs(hashed_password + " " + password)
-                if (authenticate_user(password,hashed_password)):
-                    scrape.write_to_logs("User authenticated")
-                    userID=mongodb.get_userID(username)
-                    access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
-                    access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
-                    scrape.write_to_logs("Access Token: "+access_token)
-                    response=JSONResponse(content={"message":"Login successful"},status_code=200)
-                    response.set_cookie(
-                        key="access_token",
-                        value=access_token,
-                        httponly=True,
-                        samesite="lax",
-                        secure=False,
-                        max_age=60 * 60 * 24,  # 1 day in seconds
-                        expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
-                    )
-                    return response
-            else:
-                return {"message": "Invalid Credentials"}
+            return {"message": "Invalid Credentials"}
     except Exception as e:
         scrape.write_to_logs("FastApi Login Error: "+str(e))
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
@@ -281,8 +281,44 @@ async def register (request: Request):
         logging.error(f"Login error: {e}")
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
     
-
-
+@app.post("/api/changepassword/")
+async def changePassword(request: Request):
+    try:
+        data = await request.json()
+        username=data.get("username")
+        password=data.get("password")
+        newPassword=data.get("newPassword")
+        
+        hashed_password=mongodb.get_hashed_password(username)
+        if (authenticate_user(password,hashed_password)):
+            userID=mongodb.get_userID(username)
+            newPassword=get_password_hash(newPassword)
+            
+            try:
+                if (mongodb.update_password(username,newPassword)):
+                    access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
+                    access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
+                    scrape.write_to_logs("Access Token: "+access_token)
+                    response=JSONResponse(content={"message":"Login successful"},status_code=200)
+                    response.set_cookie(
+                        key="access_token",
+                        value=access_token,
+                        httponly=True,
+                        samesite="lax",
+                        secure=False,
+                        max_age=60 * 60 * 24,  # 1 day in seconds
+                        expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+                    )
+                    return response
+                else:
+                    scrape.write_to_logs("How the fuck did you get here. This should not be possible. We check username multiple times before this")
+            except Exception as e:
+                scrape.write_to_logs("FastAPI Change Password Error: "+str(e))
+        else:
+            return {"message": "Invalid Credentials"}
+    except Exception as e:
+        scrape.write_to_logs("FastApi Change Password Error: "+str(e))
+        return JSONResponse(content={"error": "FastApi Change Password Error"}, status_code=400)
     
 @app.get("/", tags=["root"])
 async def read_root() -> dict:

@@ -274,8 +274,9 @@ def is_verified_user(userID,username):
             logging.warning("User is verified")
             return True
     logging.warning("User is not verified")
+    return False
 
-is_verified_user("1","tes")
+#is_verified_user("1","tes")
 
 def delete_verified_user(userID):
     db=Database.get_instance()
@@ -308,6 +309,16 @@ def get_hashed_password(username):
         write_to_logs(result)
         return results["password"]
 
+def update_password(username,password):
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find_one({"username":username})
+    if (results!=None):
+        result=str(verifiedUsers.update_one({"username":username},{"$set":{"lastLogin":datetime.datetime.now(), "password":password}}))
+        write_to_logs(result)
+        return True
+    return False
+    
 
 def get_userID(username):
     db=Database.get_instance()

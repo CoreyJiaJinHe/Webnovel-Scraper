@@ -102,7 +102,7 @@ async def RoyalRoad_Fetch_Novel_Data(novelURL):
                     html = await response.text()
                     soup = bs4.BeautifulSoup(html, 'html.parser')
                     x=re.search("/[0-9]+/",novelURL)
-                    bookID=x.group()
+                    bookID=f"rr{x.group()}"
                     
                     novelData=soup.find("div",{"class":"fic-title"})
                     novelData=novelData.get_text().strip().split("\n")
@@ -245,7 +245,7 @@ def remove_non_english_characters(text):
     invalid_chars='【】'
     for char in invalid_chars:
         text=text.replace(char,'')
-    result = re.sub(r'[^A-Za-z0-9,!\'\-\s]', '', text)
+    result = re.sub(r'[^A-Za-z0-9,!\'\-\s]', '', text) #removes all non-english characters.
     #logging.warning(result)
     if not result:
         return text
@@ -310,10 +310,9 @@ async def save_images_in_chapter(img_urls,saveDirectory,imageCount):
                         response=await response.content.read()
                         with open (imageDir,'wb') as f:
                             f.write(response)
+                            imageCount+=1
                         f.close()
         await asyncio.sleep(0.5)
-            
-        imageCount+=1
     return imageCount
 
 def retrieve_stored_image(imageDir):
@@ -829,7 +828,7 @@ async def mainInterface(novelURL, cookie):
         rooturl=match.group(1)
     first,last,total=get_first_last_chapter(bookTitle)
     
-    bookID=int(remove_invalid_characters(bookID))
+    bookID=remove_invalid_characters(bookID)
     #logging.warning(bookID)
     directory = create_epub_directory_url(bookTitle)
     create_Entry(
@@ -845,7 +844,7 @@ async def mainInterface(novelURL, cookie):
     )
     
     create_latest(
-        bookID=int(bookID),
+        bookID=bookID,
         bookName=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=description,
@@ -927,7 +926,7 @@ async def royalroad_main_interface(bookurl):
         rooturl=match.group(1)
     first,last,total=get_first_last_chapter(bookTitle)
     
-    bookID=int(remove_invalid_characters(bookID))
+    bookID=remove_invalid_characters(bookID)
     #logging.warning(bookID)
     directory = create_epub_directory_url(bookTitle)
     create_Entry(
@@ -943,7 +942,7 @@ async def royalroad_main_interface(bookurl):
     )
     
     create_latest(
-        bookID=int(bookID),
+        bookID=bookID,
         bookName=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=description,
@@ -965,15 +964,33 @@ async def royalroad_main_interface(bookurl):
 
     #implement store order of chapters
 
-#asyncio.run(royalroad_main_interface("https://www.royalroad.com/fiction/100326/into-the-unown-pokemon-fanfiction-oc"))
-
-#asyncio.run(mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg"))
-#asyncio.run(mainInterface("https://Test.com"))
-#asyncio.run(mainInterface("Final Core"))
 
 
-#mainInterface("https://www.royalroad.com/my/follows")
-#mainInterface("https://www.royalroad.com/fiction/54046/final-core-a-holy-dungeon-core-litrpg")
+#royalroad cookie: .AspNetCore.Identity.Application
+
+gHeaders={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    "cookie":rrcookie
+}
+async def retrieve_from_royalroad_follow_list():
+    soup=await getSoup("https://www.royalroad.com/my/follows")
+    bookTitles=soup.find_all("h2",{"class":"fiction-title"})
+    bookLinks=[]
+    for title in bookTitles:
+        a_tag = title.find("a")
+        if a_tag and "href" in a_tag.attrs:
+            bookLinks.append(f"https://www.royalroad.com{a_tag["href"]}")
+    logging.warning(bookLinks)
+    for link in bookLinks:
+        logging.warning(await royalroad_main_interface(link))
+    
+#asyncio.run(retrieve_from_royalroad_follow_list())
+    
+    
+
 
 #logging.warning(getAllBooks())
 
@@ -1053,14 +1070,30 @@ def foxaholic_scrape_chapter_page(soup):
     
     return bs4.BeautifulSoup(chapterContent,'html.parser')
 
+def find_total_from_source(websiteHost):
+    count=savedBooks.find({"bookID": {"$ne": -1},"websiteHost":websiteHost}).count_documents({})
+    if (websiteHost=="foxaholic"):
+        newID=f"fox{count+1}"
+    elif (websiteHost=="novelbin"):   
+        newID=f"nb{count+1}"
 
+    
 
-def generate_new_ID(bookTitle):
+def generate_new_book_ID(bookTitle,websiteHost):
     logging.warning(check_existing_book_Title(bookTitle))
     if (check_existing_book_Title(bookTitle)):
         bookData=get_Entry_Via_Title(bookTitle)
         if bookData:
             return bookData["bookID"]
+    else:
+        if (websiteHost=="foxaholic" or "novelbin"):
+            newID=find_total_from_source(websiteHost)
+        
+
+
+
+
+
     return get_Total_Books()+1
 
 async def foxaholic_Fetch_Novel_Data(novelURL):
@@ -1074,7 +1107,7 @@ async def foxaholic_Fetch_Novel_Data(novelURL):
     logging.warning(bookTitle)
     bookTitle=remove_invalid_characters(bookTitle)
     
-    bookID=str(generate_new_ID(bookTitle))
+    bookID=str(generate_new_book_ID(bookTitle,"foxaholic"))
     logging.warning(bookID)
             
     descriptionBox=soup.find("div",{"class":"description-summary"})
@@ -1307,7 +1340,7 @@ async def foxaholic_main_interface(bookurl):
     first,last,total=get_first_last_chapter(bookTitle)
     
     logging.warning(bookID)
-    bookID=int(remove_invalid_characters(bookID))
+    bookID=remove_invalid_characters(bookID)
     #logging.warning(bookID)
     directory = create_epub_directory_url(bookTitle)
     create_Entry(
@@ -1323,7 +1356,7 @@ async def foxaholic_main_interface(bookurl):
     )
     
     create_latest(
-        bookID=int(bookID),
+        bookID=bookID,
         bookName=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=description,
@@ -1448,7 +1481,7 @@ async def novelbin_fetch_novel_data(novelURL):
     bookTitle=remove_invalid_characters(bookTitle)
     logging.warning(bookTitle)
     
-    bookID=str(generate_new_ID(bookTitle))
+    bookID=str(generate_new_book_ID(bookTitle,"novelbin"))
     logging.warning(bookID)
     
     firstHalfBookData=soup.find("ul",{"class":"info info-meta"})
@@ -1686,7 +1719,7 @@ async def novelbin_main_interface(bookurl):
     first,last,total=get_first_last_chapter(bookTitle)
     
     logging.warning(bookID)
-    bookID=int(remove_invalid_characters(bookID))
+    bookID=remove_invalid_characters(bookID)
     #logging.warning(bookID)
     directory = create_epub_directory_url(bookTitle)
     create_Entry(
@@ -1702,7 +1735,7 @@ async def novelbin_main_interface(bookurl):
     )
     
     create_latest(
-        bookID=int(bookID),
+        bookID=bookID,
         bookName=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=description,
@@ -1736,7 +1769,7 @@ async def spacebattles_retrieve_novel_data(url):
     soup=await spacebattles_fetch_page_soup(url)
     if soup:
         x=re.findall(r'(\d+)',url)
-        bookID=x[len(x)-1]
+        bookID=f"sb{x[len(x)-1]}"
         
         bookTitle=soup.find("div",{"class":"p-title"}).get_text()
         bookTitle=remove_invalid_characters(bookTitle)
@@ -2038,7 +2071,7 @@ async def spacebattles_interface(bookurl):
 
     first,last,total=get_first_last_chapter(bookTitle)
     
-    bookID=int(remove_invalid_characters(bookID))
+    bookID=remove_invalid_characters(bookID)
     #logging.warning(bookID)
     directory = create_epub_directory_url(bookTitle)
     create_Entry(
@@ -2054,7 +2087,7 @@ async def spacebattles_interface(bookurl):
     )
     
     create_latest(
-        bookID=int(bookID),
+        bookID=bookID,
         bookName=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=description,
@@ -2088,3 +2121,5 @@ def write_to_logs(log):
 
 #write_to_logs("Test log")
 #logging.warning(datetime.datetime.now().strftime('%c'))
+
+    
