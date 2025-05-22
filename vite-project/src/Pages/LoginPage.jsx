@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import NavBar from '../components/NavBar'
-
+import { useNavigate } from 'react-router-dom';
 
 import axios from "axios";
 
@@ -14,6 +14,23 @@ export function LoginPage() {
   const [confirmPassword, setConfirmPassword]=useState("");
 
   //TODO Cookies for login.
+
+  useEffect(()=>{
+    tokenLogin()
+    },[])
+
+  const navigate = useNavigate();
+  async function tokenLogin(){
+    const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
+    console.log(response)
+    if (response.status===200){
+      navigate("/react/HomePage/");
+    }
+    else
+    {
+      console.log("Not logged in")
+    }
+  }
 
   async function handleLoginSubmit(e){
     e.preventDefault();
@@ -32,11 +49,18 @@ export function LoginPage() {
       alert ("Please enter a username and password");
       return;
     }
+    const params = new URLSearchParams();
+    params.append('username', username);
+    params.append('password', password);
 
-    const response=await axios.post(`${API_URL}/login`, { 
-      username: username,
-      password: password
-    }, { withCredentials: true });
+    const response=await axios.post(`${API_URL}/login`, params, {
+      withCredentials: true,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    // const response=await axios.post(`${API_URL}/login`, { 
+    //   username: username,
+    //   password: password
+    // }, { withCredentials: true });
     console.log(response)
     //alert (response.data);
   }

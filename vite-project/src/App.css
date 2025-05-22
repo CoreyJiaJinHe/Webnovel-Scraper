@@ -17,6 +17,7 @@
     min-height: 400px; /* Optional: set a min-height for consistent downward expansion */
 }
 
+
 .login-content {
   margin-top: 80px; /* Add top margin to push content down */
   display: flex;

@@ -20,6 +20,9 @@ function Navbar(){
             </div>
             <div className="navbar-right">
                 <li>
+                    <Link to="/react/UserPage">User</Link>
+                </li>
+                <li>
                     <Link to="/react/LoginPage">Login</Link>
                 </li>
             </div>
