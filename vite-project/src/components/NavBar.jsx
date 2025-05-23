@@ -5,7 +5,7 @@ function Navbar(){
     return(
         <>
         <nav>
-            <div className="navbar-center">
+            <navbar className="navbar-center">
                 <ul className="nav-links">
                     <li>
                         
@@ -17,15 +17,18 @@ function Navbar(){
 
 
                 </ul>
-            </div>
-            <div className="navbar-right">
+            </navbar>
+            <navbar className="navbar-right">
+                <li>
+                    <Link to="/react/FollowListPage">Follow Lists</Link>
+                </li>
                 <li>
                     <Link to="/react/UserPage">User</Link>
                 </li>
                 <li>
                     <Link to="/react/LoginPage">Login</Link>
                 </li>
-            </div>
+            </navbar>
 
 
         </nav>        

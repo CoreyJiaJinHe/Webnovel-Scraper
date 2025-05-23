@@ -62,6 +62,7 @@ export function LoginPage() {
     //   password: password
     // }, { withCredentials: true });
     console.log(response)
+    navigate("/react/HomePage/");
     //alert (response.data);
   }
     
