@@ -24,7 +24,7 @@ export function UserPage() {
     console.log(response)
     if (response.status===200){
       setUserName(response.data.username);
-      setVerifiedState(response.data.verified);
+      setVerifiedState(response.data.verifiedStatus);
     }
     else
     {
