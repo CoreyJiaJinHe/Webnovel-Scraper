@@ -1,14 +1,10 @@
 import React from 'react';
 import axios from "axios";
-//import Swal from "sweetalert2";
-
-//This fixes INVALID_URL error with Axios
-const API_URL="http://localhost:8000/api";
-const api= axios.create({baseURL: API_URL});
+import "../BookCard.css"
 
 async function downloadBook(id,getBook){
         try{
-            console.log("This is the ID:" +id)
+            //console.log("This is the ID:" +id)
             getBook(id)
         }
         catch(error){
@@ -19,14 +15,14 @@ async function downloadBook(id,getBook){
 
 function bookCard({data:{_id, bookName,lastScraped,latestChapter},getBook}){
     return(
-        <div id="todo-card" className="grid flex max-w-96 mt-5 mb-5 border-solid border-black border-2 rounded-lg">
-            <div className="st-4 p-2">
+        <div className="book-card">
+            <div className="book-card-content">
                 <h3>{bookName ? bookName:"Failed to get"}</h3>
                 <div>
                     <p>Latest scraped chapter: {latestChapter ? latestChapter:"?" }</p>
                     <p>Last scraped: {lastScraped? lastScraped:"?"}</p>
                 </div>
-                <button onClick={()=>downloadBook(_id,getBook)}>Download</button>
+                <button className="download-button" onClick={()=>downloadBook(_id,getBook)}>Download</button>
 
             </div>
 

@@ -268,8 +268,8 @@ def is_verified_user(userID,username):
     verifiedUsers=db["VerifiedUsers"]
     results=verifiedUsers.find_one({"userID":int(userID)})
     if (results):
-        logging.warning(results["username"])
-        logging.warning(username)
+        #logging.warning(results["username"])
+        #logging.warning(username)
         if (results["username"]==username):
             logging.warning("User is verified")
             return True
@@ -341,9 +341,41 @@ def check_existing_reading_list(userID):
     else:
         return results
 
+def get_Followed_Books(username):
+    db=Database.get_instance()
+    userBookLibrary=db["VerifiedUsers"]
+    results=userBookLibrary.find_one({"username":username})
+    
+    logging.warning(results)
+    userID=results["userID"]
+    
+    savedBooks=db["Books"]
+    distinctSites=savedBooks.distinct("websiteHost")
+    
+    results=check_existing_reading_list(userID)
+    followListResults=[]
+    if (results):
+        followList=results["followList"]
+        for site in distinctSites:
+            bookList=[]
+            for i in followList:    
+                logging.warning(i)
+
+                bookData=savedBooks.find_one({"bookID":i,"websiteHost":site})
+                if (bookData):
+                    book=[bookData["bookID"],bookData["bookName"],(bookData["lastScraped"]).strftime('%m/%d/%Y'),bookData["lastChapter"]]
+                    bookList.append(book)
+            if (bookList):
+                followListResults.append([site,bookList])
+        logging.warning(followListResults)
+        write_to_logs("Function: get_Followed_Books. Success: Retrieved followed books for userID:"+str(userID))
+        return followListResults
+    return None
+
+#logging.warning(get_Followed_Books("tes"))
+
+    
 #Must use a userID. Therefore, using username login, get the user's ID and start using that.
-
-
 def create_user_reading_list(**kwargs):
     db=Database.get_instance()
     userBookLibrary=db["UserLists"]

@@ -144,11 +144,11 @@ function DownloadPage() {
         return null; // Skip rendering this section
         }
         return (
-        <div key={index} className="book-section mb-8">
+        <section key={index} className="book-section mb-8">
             {/* Section Header */}
             <h2 className="text-2xl font-bold mb-4">{websiteHost}</h2>
             {/* Grid of BookCards */}
-            <div className="grid grid-cols-4 gap-6">
+            <article className="grid grid-cols-4 gap-6 rounded-lg">
             {booksArray.map((book) => (
                 <BookCard
                 key={book[0]} // Assuming book[0] is the bookID
@@ -161,8 +161,8 @@ function DownloadPage() {
                 getBook={grabBook}
                 />
             ))}
-            </div>
-        </div>
+            </article>
+        </section>
         );
     });
     };
@@ -175,19 +175,14 @@ function DownloadPage() {
     <>
     <NavBar/>
     <div className='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
-        <div className='flex flex-col gap-10 h-full mx-50 text-center '>
-        <h1 className='text-4xl mt-10'>Rudimentary File Hosting</h1>
-        <p>Get your files below</p>
-
-        <button onClick={getFiles}>Get File</button>
-        
-
-        </div>
-        <div className='mt-20'>
-        {
-        renderBookSections()
-        }
-        </div>
+        <header className='flex flex-col gap-10 h-full mx-50 text-center '>
+            <h1 className='text-4xl mt-10'>Rudimentary File Hosting</h1>
+            <p>Get your files below</p>
+            <button onClick={getFiles}>Get File</button>
+        </header>
+        <main className='mt-20'>
+            {renderBookSections()}
+        </main>
     </div>
     </>
     )

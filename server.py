@@ -10,6 +10,14 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi import Request
 from fastapi import FastAPI, File, UploadFile
 import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+#logging.getLogger("uvicorn").setLevel(logging.DEBUG)
+#logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
+#logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+
 
 import scrape
 
@@ -120,6 +128,35 @@ def getAllBooks():
 #THE ERROR WITH MAPPING STARTS HERE^. ITS NOT A DICTIONARY
 #FIXED BY DOING IT ON THE FRONT END
 
+@app.get("/api/followedBooks/")
+async def getFollowedBooks(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    logging.error(f"New Access Token: {received_access_token}")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        logging.error(f"New Access Token: {new_access_token}")
+        if (new_access_token):
+            followedBooks = mongodb.get_Followed_Books(str(username))
+            logging.error(followedBooks)
+            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus, "allbooks":followedBooks}, status_code=200)
+            response.set_cookie(
+                key="access_token",
+                value=new_access_token,
+                httponly=True,
+                samesite="lax",
+                secure=False,
+                max_age=60 * 60 * 24,  # 1 day in seconds
+                expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+            )
+            return response
+        
+    except Exception as e:
+        logging.error(f"Token authentication failed: {e}")
+        raise credentials_exception  # 401 Unauthorized
+    
+    
 
 
 

@@ -10,6 +10,8 @@ import HomePage from './Pages/HomePage'
 import LoginPage from './Pages/LoginPage'
 import DownloadPage from './Pages/DownloadPage'
 import UserPage from './Pages/UserPage'
+import FollowListPage from './Pages/FollowListPage'
+import DeveloperPage from './Pages/DeveloperPage'
 
 const router = createBrowserRouter([
   {
@@ -32,6 +34,15 @@ const router = createBrowserRouter([
     path: "/react/DownloadPage/",
     element: <DownloadPage />,
   },
+  {
+    path: "/react/FollowListPage/",
+    element: <FollowListPage />,
+  },
+  {
+    path: "/react/DeveloperPage/",
+    element: <DeveloperPage />,
+  }
+
 ]);
 
 createRoot(document.getElementById('root')).render(
