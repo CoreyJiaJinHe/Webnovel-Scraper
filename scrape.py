@@ -44,6 +44,18 @@ foxaholic_cookie="cf_clearance=Yv3eBS15RqF0OJDkWUQMp4VMkavycicNn.BAmjp5k_s-17454
 novelbin_cookie="cf_clearance=uV5dVAIEDMPgsA4aAHzYOojtcZLaDZud0OXYDA8.p0c-1744912119-1.2.1.1-SXDR6LWOaDbZ1WGCsFWuANVtmkzCCR_nlP6gzDP6Rk5GBavG0gGbzn2rb0LVhDjEP6bp6I2YzEmAKe1B4hPkTFAqvrBZQIkvahjz.vBPbQ9El6K5ItTLIOpodv..q.lXeFlVa4eqRxB_0fwQMW4z1pDOU3rsh6pCH42VmYfuGbYzygiA2Y0KT39254p88Z0XUr8pS8szqlcY2nbRZSuD.kakIq7dmgudb_o9tS1JCdg4Uf3Mnfp70zZDf5VlT8Z7iMeWwuO0aWI05d70kS8SGf6v.jtfBsbcREU74t34FShuZfM8mgym0fXmLTzRORmlA4jr42pdMWPZ4ixIPHzsIh01uaJi0xOJfR.4EFEfu_g"
 novelbin_link="https://novelbin.me/novel-book/raising-orphans-not-assassins"
 
+def write_to_logs(log):
+    todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
+    log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
+    fileLocation=f"{logLocation}/{todayDate}.txt"
+    if (check_directory_exists(fileLocation)):
+        f=open(fileLocation,"a")
+        f.write(log)
+    else:
+        f=open(fileLocation,'w')
+        f.write(log)
+
+
 global options
 options={
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
@@ -113,6 +125,10 @@ async def RoyalRoad_Fetch_Novel_Data(novelURL):
                     bookTitle=remove_invalid_characters(bookTitle)
                             
                     description=soup.find("div",{"class":"description"}).get_text()
+                    if ("\n" in description):
+                        description=description.replace("\n","")
+                    if ("  " in description):
+                        description=description.replace("  "," ")
                     lastScraped=datetime.datetime.now()
                     
                     chapterTable=soup.find("table",{"id":"chapters"})
@@ -280,9 +296,11 @@ def check_if_chapter_exists(chapterID,savedChapters):
 
 #Returns ChapterID and chapter file name
 def get_chapter_from_saved(chapterID,savedChapters):
+    logging.warning(chapterID)
+    #logging.warning(savedChapters)
     for chapter in savedChapters:
         chapter=chapter.split(";")
-        if chapterID == int(chapter[0]):
+        if chapterID == chapter[0]:
             return chapter[0],chapter[2].replace("\n","")
         
     return -1,-1
@@ -298,6 +316,8 @@ async def save_images_in_chapter(img_urls,saveDirectory,imageCount):
     if not (check_directory_exists(saveDirectory)):
         make_directory(saveDirectory)
     for image_url in img_urls:
+        if ("emoji" in image_url):
+            continue
         logging.warning(image_url)
         imageDir=f"{saveDirectory}image_{imageCount}.png"
         if not (check_directory_exists(imageDir)):
@@ -311,13 +331,16 @@ async def save_images_in_chapter(img_urls,saveDirectory,imageCount):
                         with open (imageDir,'wb') as f:
                             f.write(response)
                             imageCount+=1
-                        f.close()
         await asyncio.sleep(0.5)
     return imageCount
 
 def retrieve_stored_image(imageDir):
     if os.path.exists(imageDir):
-        return Image.open(imageDir)
+        try:
+            return Image.open(imageDir)
+        except Exception as e:
+            write_to_logs(f"Function: retrieve_stored_image. Failed to open image: {e} File Name: {imageDir}")
+            return None
     else:
         logging.warning(f"Image file not found: {imageDir}")
     return None
@@ -345,6 +368,7 @@ async def royalroad_produceEpub(new_epub,novelURL,bookTitle,css):
         if (check_if_chapter_exists(chapterID,already_saved_chapters)):
             #logging(check_if_chapter_exists(chapterID,already_saved_chapters))
             chapterID,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
+            logging.warning(dirLocation)
             chapterContent=get_chapter_contents_from_saved(dirLocation)
             fileChapterTitle=extract_chapter_title(dirLocation)
             chapterTitle=fileChapterTitle.split('-')
@@ -354,12 +378,13 @@ async def royalroad_produceEpub(new_epub,novelURL,bookTitle,css):
             for image in images:
                 imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
                 epubImage=retrieve_stored_image(imageDir)
-                b=io.BytesIO()
-                epubImage.save(b,'png')
-                b_image1=b.getvalue()
-                
-                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                new_epub.add_item(image_item)
+                if (epubImage):
+                    b=io.BytesIO()
+                    epubImage.save(b,'png')
+                    b_image1=b.getvalue()
+                    
+                    image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                    new_epub.add_item(image_item)
                 currentImageCount+=1
             chapterContent=chapterContent.encode("utf-8")
         else:
@@ -371,26 +396,50 @@ async def royalroad_produceEpub(new_epub,novelURL,bookTitle,css):
             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
             chapterContent=await RoyalRoad_Fetch_Chapter(soup)
             
+            hyperlinks=chapterContent.find_all('a',{'class':'link'})
+            for link in hyperlinks:
+                if 'imgur' in link['href']:
+                    p_text=link.get_text()
+                    imgur_url=link['href']
+                    if not imgur_url.startswith('https://i.imgur.com/'):
+                        match = re.search(r'(https?://)?(www\.)?imgur\.com/([a-zA-Z0-9]+)', imgur_url)
+                        if match:
+                            imgur_id = match.group(3)  # Extract the unique Imgur ID
+                            imgur_url = f"https://i.imgur.com/{imgur_id}.png"  # Convert to i.imgur.com format
+                    p_tag=bs4.BeautifulSoup(f"<p>{p_text}</p><div><img class=\"image\" src={imgur_url}></div>", 'html.parser')
+                    link.replace_with(p_tag)
+                    chapterContent=bs4.BeautifulSoup(str(chapterContent),'html.parser')
+            
+            
             if chapterContent:
                 images=chapterContent.find_all('img')
-                images=[image['src'] for image in images]
+                try:
+                    images=[image['src'] for image in images]
+                except Exception as e:
+                    logging.warning(f"Failed to extract image src: {e}")
+                    images=None
                 imageDir=f"./books/raw/{bookTitle}/images/"
                 currentImageCount=imageCount
                 #logging.warning(images)
                 if (images):
+                    logging.warning("There are images in this chapter")
                     imageCount=await save_images_in_chapter(images,imageDir,imageCount)
-                    for img,image in zip(chapterContent.find_all('img'),images):
-                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
-                        
-                        imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
-                        epubImage=retrieve_stored_image(imageDir)
-                        b=io.BytesIO()
-                        epubImage.save(b,'png')
-                        b_image1=b.getvalue()
-                        
-                        image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
-                        new_epub.add_item(image_item)
-                        currentImageCount+=1
+                    if (imageCount!=currentImageCount): #This means we succeeded in saving the image.
+                        for img,image in zip(chapterContent.find_all('img'),images):
+                            img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                            
+                            imageDir=f"./books/raw/{bookTitle}/images/image_{currentImageCount}.png"
+                            epubImage=retrieve_stored_image(imageDir)
+                            if (epubImage):
+                                b=io.BytesIO()
+                                epubImage.save(b,'png')
+                                b_image1=b.getvalue()
+                                
+                                image_item=epub.EpubItem(uid=f'image_{currentImageCount}',file_name=f'images/image_{currentImageCount}.png', media_type='image/png', content=b_image1)
+                                new_epub.add_item(image_item)
+                            currentImageCount+=1
+                    else:
+                        logging.warning("We failed to save the images in this chapter.")
                 else:
                     logging.warning("There are no images in this chapter")
             else:
@@ -514,7 +563,7 @@ def get_Entry_Via_Title(bookTitle):
         return None
     return results
 
-def check_latest_chapter(bookID,bookTitle,latestChapter):
+def check_latest_chapter(bookID,bookTitle,latestChapter:int):
     bookData=get_Entry_Via_ID(bookID)
     if (bookData is None):
         bookData=get_Entry_Via_Title(bookTitle)
@@ -522,9 +571,11 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
             return False
     logging.warning(bookData["lastChapter"])
     logging.warning(latestChapter)
-    if (bookData["lastChapter"]==latestChapter):
+    latestChapter=int(latestChapter)
+    savedLastChapter=int(bookData["lastChapter"])
+    if (savedLastChapter==latestChapter):
         return True
-    elif (bookData["lastChapter"]<=latestChapter):
+    elif (savedLastChapter<=latestChapter):
         return False
     return True
 
@@ -968,15 +1019,24 @@ async def royalroad_main_interface(bookurl):
 
 #royalroad cookie: .AspNetCore.Identity.Application
 
-gHeaders={
+specialHeaders={
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
     "Accept-Encoding": "gzip, deflate, br",
     "cookie":rrcookie
 }
+
+async def specialSoup(url, specialHeaders):
+    async with aiohttp.ClientSession(headers = specialHeaders) as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    return soup
+                
 async def retrieve_from_royalroad_follow_list():
-    soup=await getSoup("https://www.royalroad.com/my/follows")
+    soup=await specialSoup("https://www.royalroad.com/my/follows", specialHeaders)
     bookTitles=soup.find_all("h2",{"class":"fiction-title"})
     bookLinks=[]
     for title in bookTitles:
@@ -987,7 +1047,7 @@ async def retrieve_from_royalroad_follow_list():
     for link in bookLinks:
         logging.warning(await royalroad_main_interface(link))
     
-#asyncio.run(retrieve_from_royalroad_follow_list())
+asyncio.run(retrieve_from_royalroad_follow_list())
     
     
 
@@ -1176,7 +1236,6 @@ async def foxaholic_save_cover_image(title,img_url,saveDirectory):
         if not (check_directory_exists(fileNameDir)):
             with open (fileNameDir,'wb') as f:
                 f.write(image.screenshot_as_png)
-            f.close()
     driver.close()
 
 
@@ -1532,7 +1591,6 @@ async def novelbin_save_cover_image(title,img_url,saveDirectory):
                     response=await response.content.read()
                     with open (fileNameDir,'wb') as f:
                         f.write(response)
-                    f.close()
 def novelbin_Fetch_Chapter_Title(soup):
     chapterTitle=soup.find('span',{"class":"chr-text"})
 
@@ -1814,7 +1872,6 @@ async def spacebattles_retrieve_novel_data(url):
                                     response=await response.content.read()
                                     with open (fileNameDir,'wb') as f:
                                         f.write(response)
-                                    f.close()
         except Exception as e:
             logging.warning("There is no image")
         #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
@@ -1890,7 +1947,6 @@ async def spacebattles_save_page_content(chapterContent,bookTitle,fileTitle):
         with open (completeName,"w", encoding="utf-8") as f:
             chapterContent=chapterContent.encode('ascii')
             f.write(chapterContent.decode('utf-8'))
-    f.close()
 
 async def test_save_chapter_content(chapterContent):
     if (isinstance(chapterContent,list)):
@@ -1903,7 +1959,6 @@ async def test_save_chapter_content(chapterContent):
         with open ('test.html','a', encoding="utf-8") as f:
             chapterContent=chapterContent.encode('ascii')
             f.write(chapterContent.decode('utf-8'))
-    f.close()
     
 async def spacebattles_produce_epub(new_epub,novelURL,bookTitle,css):
     already_saved_chapters = get_existing_order_of_contents(bookTitle)
@@ -2107,17 +2162,6 @@ link="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elit
 #logging.warning(asyncio.run(spacebattles_retrieve_novel_data(link)))
 #logging.warning(get_first_last_chapter("The New Normal - A Pokemon Elite 4 SI"))
 
-
-def write_to_logs(log):
-    todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
-    log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
-    fileLocation=f"{logLocation}/{todayDate}.txt"
-    if (check_directory_exists(fileLocation)):
-        f=open(fileLocation,"a")
-        f.write(log)
-    else:
-        f=open(fileLocation,'w')
-        f.write(log)
 
 #write_to_logs("Test log")
 #logging.warning(datetime.datetime.now().strftime('%c'))

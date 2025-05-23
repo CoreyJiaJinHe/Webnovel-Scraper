@@ -40,3 +40,37 @@ Fri May 23 15:30:21 2025 Function: get_Followed_Books. Success: Retrieved follow
 Fri May 23 15:30:21 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
 Fri May 23 15:30:48 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
 Fri May 23 15:30:49 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:35:38 2025 UpdateResult({'n': 1, 'nModified': 1, 'ok': 1.0, 'updatedExisting': True}, acknowledged=True)
+Fri May 23 15:35:38 2025 $2b$12$tQiMyFNAjIXAZnUEGaqDqODWGLJaMk/5DfiOOJnqqk1jqn/HqLp9. test
+Fri May 23 15:35:38 2025 User authenticated
+Fri May 23 15:35:38 2025 function: get_userID. Success: Retrieved userID for:1
+Fri May 23 15:35:38 2025 Access Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiIxIiwidXNlcm5hbWUiOiJEZXZlbG9wZXIiLCJleHAiOjE3NDgwMzA3Mzh9.TtFvhx7HiUdxb7D5ZHVdmfyvbWhXV5kf7eXn0v6pCC0
+Fri May 23 15:35:42 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:35:42 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:36:18 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:36:18 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:36:43 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 15:36:43 2025 Function: get_Followed_Books. Success: Retrieved followed books for userID:1
+Fri May 23 16:55:41 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:26 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:26 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:26 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:27 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:27 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:27 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:27 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:27 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:28 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:28 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 16:59:28 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:12:17 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Calamitous Bob/images/image_0.png' File Name: ./books/raw/The Calamitous Bob/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_1.png' File Name: ./books/raw/The Homunculus Knight/images/image_1.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
+Fri May 23 17:30:08 2025 Function: retrieve_stored_image. Failed to open image: cannot identify image file './books/raw/The Homunculus Knight/images/image_0.png' File Name: ./books/raw/The Homunculus Knight/images/image_0.png
