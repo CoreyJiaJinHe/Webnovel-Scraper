@@ -419,6 +419,18 @@ def remove_from_user_reading_list(**kwargs):
     else:
         write_to_logs("Function: remove_from_user_reading_list. Error: User does not exist.")
         return False
+
+
+def check_developer(username):
+    db=Database.get_instance()
+    savedBooks=db["VerifiedUsers"]
+    results=savedBooks.find_one({"username":username, "developer":True})
+    if (results):
+        write_to_logs("Function: check_developer. Success: User is a developer.")
+        return True
+    
+    write_to_logs("Function: check_developer. Error: User is not a developer.")
+    return False
     
 
 # def check_login_credentials(userID,password):

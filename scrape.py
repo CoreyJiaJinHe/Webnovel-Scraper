@@ -1047,7 +1047,7 @@ async def retrieve_from_royalroad_follow_list():
     for link in bookLinks:
         logging.warning(await royalroad_main_interface(link))
     
-asyncio.run(retrieve_from_royalroad_follow_list())
+#asyncio.run(retrieve_from_royalroad_follow_list())
     
     
 

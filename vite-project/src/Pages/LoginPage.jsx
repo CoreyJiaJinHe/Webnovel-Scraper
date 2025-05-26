@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import NavBar from '../components/NavBar'
 import { useNavigate } from 'react-router-dom';
-
+import { useUser } from "../components/UserContext";
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
@@ -12,23 +12,33 @@ export function LoginPage() {
   const [username, setUserName]=useState("");
   const [password, setPassword]=useState("");
   const [confirmPassword, setConfirmPassword]=useState("");
-
-  //TODO Cookies for login.
-
+  const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn} = useUser();
   useEffect(()=>{
     tokenLogin()
     },[])
 
   const navigate = useNavigate();
+  
   async function tokenLogin(){
-    const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
-    console.log(response)
-    if (response.status===200){
+    if (!isLoggedIn){
+        const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
+        console.log(response)
+        if (response.status===200){
+          navigate("/react/HomePage/");
+          console.log(response.data.isDeveloper);
+          setIsDeveloper(response.data.isDeveloper);
+          setIsLoggedIn(true);
+        }
+        else
+        {
+          console.log("Not logged in")
+          setIsDeveloper(False);
+        }
+      }
+    
+    else{
+      
       navigate("/react/HomePage/");
-    }
-    else
-    {
-      console.log("Not logged in")
     }
   }
 
@@ -52,17 +62,29 @@ export function LoginPage() {
     const params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
+    try {
+        const response=await axios.post(`${API_URL}/login/`, params, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+        console.log("Login response status:", response.status);
 
-    const response=await axios.post(`${API_URL}/login`, params, {
-      withCredentials: true,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
-    // const response=await axios.post(`${API_URL}/login`, { 
-    //   username: username,
-    //   password: password
-    // }, { withCredentials: true });
-    console.log(response)
-    navigate("/react/HomePage/");
+        if (response.status===200){
+          console.log("Logged in successfully");
+          localStorage.setItem("loginTime", Date.now().toString()); // Optional: for 1-day timeout
+          //console.log(response.data.isDeveloper);
+          setIsDeveloper(response.data.isDeveloper);
+          setIsLoggedIn(true);
+          setTimeout(() => {
+            navigate("/react/HomePage/");
+          }, 5000); // Redirect after 5 seconds
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          alert ("Invalid username or password. Please try again.");
+        }
+      }
+    
     //alert (response.data);
   }
     

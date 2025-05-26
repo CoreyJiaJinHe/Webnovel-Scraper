@@ -1,12 +1,12 @@
 import { useState, useEffect,useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar'
+import { useUser } from "../components/UserContext";
 import '../UserPage.css'
 
 import axios from "axios";
 const API_URL = "http://localhost:8000/api";
 const api = axios.create({ baseURL: API_URL });
-
 
 
 export function UserPage() {
@@ -15,22 +15,30 @@ export function UserPage() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const formRef = useRef(null);
 
+  const {isLoggedIn, setIsLoggedIn } = useUser(); // <-- get setIsLoggedIn from context
 
   useEffect(()=>{tokenLogin()},[])
 
   const navigate = useNavigate();
   async function tokenLogin(){
-    const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
-    console.log(response)
-    if (response.status===200){
-      setUserName(response.data.username);
-      setVerifiedState(response.data.verifiedStatus);
+    if (!isLoggedIn){
+    try {
+        const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
+        console.log(response)
+        // If successful, do nothing (user is authenticated)
+        if (response.status===200){
+          setUserName(response.data.username);
+          setVerifiedState(response.data.verifiedStatus);
+          setIsLoggedIn(true); // <-- set global login state
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          // No valid access token, redirect to login
+          navigate("/react/LoginPage/");
+        }
+      }
     }
-    else
-    {
-      navigate("/react/LoginPage/")
-      console.log("Not logged in")
-    }
+
   }
   
   useEffect(() => {
