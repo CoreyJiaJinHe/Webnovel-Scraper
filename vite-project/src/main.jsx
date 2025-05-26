@@ -12,6 +12,8 @@ import DownloadPage from './Pages/DownloadPage'
 import UserPage from './Pages/UserPage'
 import FollowListPage from './Pages/FollowListPage'
 import DeveloperPage from './Pages/DeveloperPage'
+import NavBar from './components/NavBar.jsx'
+import {UserContext, UserProvider} from './components/UserContext.jsx'
 
 const router = createBrowserRouter([
   {
@@ -42,12 +44,18 @@ const router = createBrowserRouter([
     path: "/react/DeveloperPage/",
     element: <DeveloperPage />,
   }
-
+,
+  {
+    path: "/react/NavBar/",
+    element: <NavBar />,
+  }
 ]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <UserProvider>
     <RouterProvider router={router} />
     {/* <App /> */}
+    </UserProvider>
   </StrictMode>,
 )

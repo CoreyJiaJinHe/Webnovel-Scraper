@@ -201,7 +201,9 @@ def authenticate_user(password:str,hashed_password:str):
     return True
 
 def create_access_token(data:dict, expires_delta: timedelta | None=None):
+    logging.warning(f"Creating access token with data: {data}")
     to_encode=data.copy()
+    
     if expires_delta:
         expire=datetime.now(timezone.utc)+expires_delta
     else:
@@ -238,6 +240,18 @@ async def authenticate_token(token):
     except InvalidTokenError:
         raise credentials_exception
 
+@app.post("/api/developer/")
+async def developerLogin(request: Request, response: Response):
+    logging.error("Checking to see if you are a developer")
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        if(mongodb.check_developer(username)):
+            return True
+    else:
+        
+        raise credentials_exception
+
 @app.post("/api/token/")
 async def login (request: Request, response: Response):
     received_access_token=request.cookies.get("access_token")
@@ -246,7 +260,9 @@ async def login (request: Request, response: Response):
         new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
         logging.error(f"New Access Token: {new_access_token}")
         if (new_access_token):
-            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus}, status_code=200)
+            if(mongodb.check_developer(username)):
+                isDeveloper=True
+            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper or False}, status_code=200)
             response.set_cookie(
                 key="access_token",
                 value=new_access_token,
@@ -258,10 +274,12 @@ async def login (request: Request, response: Response):
             )
             return response
     else:
+        
         raise credentials_exception
 
-    
-    
+
+
+
 @app.post("/api/login/")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response):
     try:
@@ -274,13 +292,19 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
         hashed_password=mongodb.get_hashed_password(username)
         if (hashed_password):
             scrape.write_to_logs(hashed_password + " " + password)
+            logging.error(f"Verifying password for user: {username}")
+
             if (authenticate_user(password,hashed_password)):
+                logging.error(f"User {username} authenticated successfully")
                 scrape.write_to_logs("User authenticated")
                 userID=mongodb.get_userID(username)
                 access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
+                if(mongodb.check_developer(username)):
+                    isDeveloper=True
                 access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
                 scrape.write_to_logs("Access Token: "+access_token)
-                response=JSONResponse(content={"message":"Login successful"},status_code=200)
+                
+                response=JSONResponse(content={"message":"Login successful", "isDeveloper":isDeveloper or False},status_code=200)
                 response.set_cookie(
                     key="access_token",
                     value=access_token,
@@ -290,6 +314,8 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
                     max_age=60 * 60 * 24,  # 1 day in seconds
                     expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
                 )
+                logging.warning("Returning response with access token cookie")
+                logging.error(response)
                 return response
         else:
             return {"message": "Invalid Credentials"}
