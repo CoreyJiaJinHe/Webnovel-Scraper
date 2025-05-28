@@ -1,0 +1,36 @@
+
+.developer-page-main-panel{
+    background: white;
+    margin: 20px;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-height: 80vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.developer-page-left-statistics-panel{
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 16px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    min-width: 260px;
+    max-width: 350px;
+    color: black;
+    margin-right: 24px;
+}
+
+.developer-page-right-users-panel{
+    background: #f0f8ff;
+    border-radius: 6px;
+    padding: 16px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    color: black;
+    max-width: 25%;
+    min-width: 200px;
+    flex: 0 0 25%;
+    align-self: flex-start;
+}

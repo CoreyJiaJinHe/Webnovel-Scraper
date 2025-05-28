@@ -11,7 +11,6 @@ const api = axios.create({ baseURL: API_URL });
 
 function Navbar(){
     const { isDeveloper, setIsDeveloper, isLoggedIn, setIsLoggedIn } = useUser();
-
     
     function logout(e){
         setIsLoggedIn(false);
