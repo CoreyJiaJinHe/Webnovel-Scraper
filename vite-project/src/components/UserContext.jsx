@@ -9,6 +9,10 @@ const api = axios.create({ baseURL: API_URL });
 export function UserProvider({ children }) {
     const [isDeveloper, setIsDeveloper] = useState(false);
     const [isLoggedIn, setIsLoggedIn]=useState(false);
+    const [username, setUsername] = useState("");
+    const [verifiedState, setVerifiedState] = useState(false);
+
+
     useEffect(() => {
         const loginTime = localStorage.getItem("loginTime");
         if (loginTime) {
@@ -50,7 +54,12 @@ export function UserProvider({ children }) {
     }
 
     return (
-        <UserContext.Provider value={{ isDeveloper, setIsDeveloper, isLoggedIn, setIsLoggedIn, logout }}>
+        <UserContext.Provider value={{ 
+            isDeveloper, setIsDeveloper, 
+            isLoggedIn, setIsLoggedIn, logout,
+            username, setUsername,
+            verifiedState, setVerifiedState
+            }}>
             {children}
         </UserContext.Provider>
     );
