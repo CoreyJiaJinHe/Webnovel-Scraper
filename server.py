@@ -153,12 +153,12 @@ async def getFollowedBooks(request: Request):
         logging.error(f"Token authentication failed: {e}")
         raise credentials_exception  # 401 Unauthorized
     
-@app.get("/api/developer_fetch_unverifiedUsers/")
+@app.get("/api/dev_get_unverified/")
 async def getUnverifiedUsers():
     users=mongodb.get_unverified_users()
     return JSONResponse(content=users)
     
-@app.get("/api/dev_verify_users/")
+@app.post("/api/dev_verify_users/")
 async def verifyUser(request: Request):
     try:
         data=await request.json()

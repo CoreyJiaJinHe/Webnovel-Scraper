@@ -31,7 +31,7 @@ export function DeveloperPage() {
 
   async function fetchUsersToVerify(){
     try{
-      const response = await axios.get(`${API_URL}/developer_fetch_unverifiedUsers/`, { withCredentials: true });
+      const response = await axios.get(`${API_URL}/dev_get_unverified/`, { withCredentials: true });
       if (response.status===200){
         setUsersToVerify(response.data);
         console.log("Users to verify:", response.data);
@@ -49,7 +49,7 @@ export function DeveloperPage() {
     if (!usersToVerify || usersToVerify.length === 0) {
     return <div>No users to verify.</div>;
     }
-    console.log(usersToVerify);
+    //console.log(usersToVerify);
     return usersToVerify.map(user => (
       <UserCard
         key={user._id || user.userID}
@@ -63,17 +63,16 @@ export function DeveloperPage() {
   }
 
   function interface_verifyUser(userid){
-    handleVerifyUser(userid);
+    return verifyUser(userid);
   }
 
-  async function handleVerifyUser(userid){
-    try{
-      const response = await axios.get(`${API_URL}/dev_verify_users/`, {"userid":userid},{ withCredentials: true });
-      console.log(response);
-    }
-    catch (error){
-      
-    }
+  async function verifyUser(userid) {
+    try {
+        const response = await axios.post(`${API_URL}/dev_verify_users/`, {"userid":userid},{ withCredentials: true });
+
+        if (response.status === 200) return true;
+    } catch (e) {}
+    return false;
   }
 
   async function fetchBookCounts() {
@@ -123,7 +122,7 @@ export function DeveloperPage() {
     {
       try{
         const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
-        console.log(response)
+        //console.log(response)
         if (response.status===200){
           setUserName(response.data.username);
           setVerifiedState(response.data.verified);
@@ -143,7 +142,8 @@ export function DeveloperPage() {
         
       }
     }
-}
+  }
+
 
   
 

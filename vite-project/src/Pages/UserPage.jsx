@@ -10,12 +10,13 @@ const api = axios.create({ baseURL: API_URL });
 
 
 export function UserPage() {
-  const [username, setUserName] = useState("");
-  const [verifiedState, setVerifiedState] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const formRef = useRef(null);
-
-  const {isLoggedIn, setIsLoggedIn } = useUser(); // <-- get setIsLoggedIn from context
+  const {
+    isLoggedIn, setIsLoggedIn,
+    username, setUsername,
+    verifiedState, setVerifiedState
+  } = useUser();
 
   function hasAccessTokenCookie() {
     return document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='));
@@ -31,21 +32,21 @@ export function UserPage() {
   const navigate = useNavigate();
   async function tokenLogin(){
     if (!isLoggedIn){
-    try {
-        const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
-        console.log(response)
-        // If successful, do nothing (user is authenticated)
-        if (response.status===200){
-          setUserName(response.data.username);
-          setVerifiedState(response.data.verifiedStatus);
-          setIsLoggedIn(true); // <-- set global login state
+      try {
+          const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
+          console.log(response)
+          // If successful, do nothing (user is authenticated)
+          if (response.status===200){
+            setUserName(response.data.username);
+            setVerifiedState(response.data.verifiedStatus);
+            setIsLoggedIn(true); // <-- set global login state
+          }
+        } catch (error) {
+          if (error.response && error.response.status === 401) {
+            // No valid access token, redirect to login
+            navigate("/react/LoginPage/");
+          }
         }
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          // No valid access token, redirect to login
-          navigate("/react/LoginPage/");
-        }
-      }
     }
 
   }
