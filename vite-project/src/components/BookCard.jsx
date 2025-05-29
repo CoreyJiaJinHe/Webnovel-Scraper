@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from "axios";
-import "../BookCard.css"
+//import "../BookCard.css"
 
 async function downloadBook(id,getBook){
         try{

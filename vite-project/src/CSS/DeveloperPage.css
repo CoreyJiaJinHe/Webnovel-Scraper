@@ -33,4 +33,26 @@
     min-width: 200px;
     flex: 0 0 25%;
     align-self: flex-start;
+    max-height: 300px;
+}
+.developer-page-right-users-panel {
+    background: #f0f8ff;
+    border-radius: 6px;
+    padding: 16px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    color: black;
+    max-width: 25%;
+    min-width: 200px;
+    flex: 0 0 25%;
+    align-self: flex-start;
+    max-height: 300px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+.developer-page-users-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    margin-top: 8px;
 }

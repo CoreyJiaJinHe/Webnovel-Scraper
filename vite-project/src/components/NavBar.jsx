@@ -1,6 +1,6 @@
-import '../NavBar.css'
+//import '../NavBar.css'
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { useUser } from "./UserContext";
 
 
@@ -10,14 +10,14 @@ const api = axios.create({ baseURL: API_URL });
 
 
 function Navbar(){
-    const { isDeveloper, setIsDeveloper, isLoggedIn, setIsLoggedIn } = useUser();
-    
-    function logout(e){
-        setIsLoggedIn(false);
-        setIsDeveloper(false);
-        localStorage.removeItem("loginTime");
-    }
+    const { isDeveloper, isLoggedIn, logout } = useUser();
 
+    const navigate = useNavigate();
+
+    async function handleLogout(e) {
+        await logout();
+        navigate("/react/LoginPage");
+    }
 
     return(
         <>
@@ -48,7 +48,7 @@ function Navbar(){
                     <Link to="/react/UserPage">User</Link>
                 </li>
                 {isLoggedIn ? (
-                        <button onClick={logout} className="logout-button">
+                        <button onClick={handleLogout} className="logout-button">
                             Logout
                         </button>
                     ) : (

@@ -125,9 +125,6 @@ def getAllBooks():
     #logging.warning(allBooks)
     return JSONResponse(content=allBooks)
 
-#THE ERROR WITH MAPPING STARTS HERE^. ITS NOT A DICTIONARY
-#FIXED BY DOING IT ON THE FRONT END
-
 @app.get("/api/followedBooks/")
 async def getFollowedBooks(request: Request):
     received_access_token=request.cookies.get("access_token")
@@ -156,7 +153,24 @@ async def getFollowedBooks(request: Request):
         logging.error(f"Token authentication failed: {e}")
         raise credentials_exception  # 401 Unauthorized
     
+@app.get("/api/developer_fetch_unverifiedUsers/")
+async def getUnverifiedUsers():
+    users=mongodb.get_unverified_users()
+    return JSONResponse(content=users)
     
+@app.get("/api/dev_verify_users/")
+async def verifyUser(request: Request):
+    try:
+        data=await request.json()
+        userid=data.get("userid")
+        if(mongodb.verify_user(userid)):
+            return JSONResponse(content={"message": "User verified successfully"}, status_code=200)
+        else:
+            return JSONResponse(content={"error": "User verification failed"}, status_code=400)
+    except Exception as e:
+        logging.error(f"Error verifying user: {e}")
+        return JSONResponse(content={"error": "Invalid request"}, status_code=400)
+        
 
 
 
@@ -323,6 +337,17 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
         scrape.write_to_logs("FastApi Login Error: "+str(e))
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
 
+@app.post("/api/logout/")
+async def logout(response: Response):
+    try:
+        
+        response=JSONResponse(content={"message": "Logout successful"}, status_code=200)
+        response.delete_cookie("access_token")
+        logging.warning("User logged out successfully")
+        return response
+    except Exception as e:
+        logging.error(f"Logout error: {e}")
+        return JSONResponse(content={"error": "Invalid request"}, status_code=400)
 
 @app.post("/api/register/")
 async def register (request: Request):

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import NavBar from '../components/NavBar'
 import { useNavigate } from 'react-router-dom';
+import NavBar from '../components/NavBar'
 import { useUser } from "../components/UserContext";
+
+
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
@@ -13,9 +15,18 @@ export function LoginPage() {
   const [password, setPassword]=useState("");
   const [confirmPassword, setConfirmPassword]=useState("");
   const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn} = useUser();
-  useEffect(()=>{
-    tokenLogin()
-    },[])
+  
+  
+  function hasAccessTokenCookie() {
+    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='));
+  }
+
+  useEffect(() => {
+    // Only try tokenLogin if we have an access_token cookie
+    if (hasAccessTokenCookie()) {
+      tokenLogin();
+    }
+  }, []);
 
   const navigate = useNavigate();
   
@@ -117,7 +128,7 @@ export function LoginPage() {
     const response=await axios.post(`${API_URL}/register/`, { username, password })
     console.log(response)
     
-    alert (response.data);
+    alert ("Your account has been created. You can now log in. Please give it a few days for your account to be verified.");
 
 
 
