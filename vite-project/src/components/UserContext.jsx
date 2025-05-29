@@ -1,6 +1,11 @@
 import { createContext, useContext, useState,useEffect } from "react";
 export const UserContext = createContext();
 
+import axios from "axios";
+
+const API_URL = "http://localhost:8000/api";
+const api = axios.create({ baseURL: API_URL });
+
 export function UserProvider({ children }) {
     const [isDeveloper, setIsDeveloper] = useState(false);
     const [isLoggedIn, setIsLoggedIn]=useState(false);
@@ -13,14 +18,40 @@ export function UserProvider({ children }) {
                 setIsLoggedIn(true);
             } else {
                 setIsLoggedIn(false);
+                setIsDeveloper(false);
                 localStorage.removeItem("loginTime");
             }
+        } else {
+            setIsLoggedIn(false);
+            setIsDeveloper(false);
         }
     }, []);
+    
+    async function logout() {
+        setIsLoggedIn(false);
+        setIsDeveloper(false);
+        localStorage.removeItem("loginTime");
+        localStorage.removeItem("access_token"); // If you store it here
+
+        // Remove access_token cookie for all common cases
+        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
+        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
+        
+        try{
+            const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
+            console.log("Logout response:",response);
+        }
+        catch (error){
+        
+        }
+
+    }
 
     return (
-        <UserContext.Provider value={{ isDeveloper, setIsDeveloper, isLoggedIn, setIsLoggedIn}}>
-        {children}
+        <UserContext.Provider value={{ isDeveloper, setIsDeveloper, isLoggedIn, setIsLoggedIn, logout }}>
+            {children}
         </UserContext.Provider>
     );
 }

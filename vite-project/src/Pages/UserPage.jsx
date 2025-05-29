@@ -2,7 +2,7 @@ import { useState, useEffect,useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar'
 import { useUser } from "../components/UserContext";
-import '../UserPage.css'
+//import '../UserPage.css'
 
 import axios from "axios";
 const API_URL = "http://localhost:8000/api";
@@ -17,7 +17,16 @@ export function UserPage() {
 
   const {isLoggedIn, setIsLoggedIn } = useUser(); // <-- get setIsLoggedIn from context
 
-  useEffect(()=>{tokenLogin()},[])
+  function hasAccessTokenCookie() {
+    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='));
+  }
+
+  useEffect(() => {
+    // Only try tokenLogin if we have an access_token cookie
+    if (hasAccessTokenCookie()) {
+      tokenLogin();
+    }
+  }, []);
 
   const navigate = useNavigate();
   async function tokenLogin(){

@@ -68,7 +68,7 @@ export function FollowListPage() {
     };
 
     function grabBook(id){
-    getBook(id)
+      getBook(id)
     }
 
   return (

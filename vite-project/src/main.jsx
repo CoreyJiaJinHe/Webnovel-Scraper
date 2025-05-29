@@ -1,6 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+
+import './CSS/App.css'
+import './CSS/BookCard.css'
+import './CSS/DeveloperPage.css'
+import './CSS/index.css'
+import './CSS/NavBar.css'
+import './CSS/UserCard.css'
+import './CSS/UserPage.css'
+
 import {
   createBrowserRouter,
   RouterProvider,

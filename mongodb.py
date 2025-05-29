@@ -262,6 +262,8 @@ def verify_user(userID):
     if (results):
         result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"verified":True}}))
         write_to_logs(result)
+        return True
+    return False
 
 def is_verified_user(userID,username):
     db=Database.get_instance()
@@ -299,6 +301,21 @@ def check_verified_user(userID):
         result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
         write_to_logs(result)
         return True
+
+def get_unverified_users():
+    db=Database.get_instance()
+    verifiedUsers=db["VerifiedUsers"]
+    results=verifiedUsers.find({"verified":False})
+    unverifiedUsers=[]
+    if (results):
+        for result in results:
+            unverifiedUser = {
+            "username": result["username"],
+            "userID": result["userID"],
+            "dateCreated": result["dateCreated"].strftime('%m/%d/%Y')
+            }
+            unverifiedUsers.append(unverifiedUser)
+    return unverifiedUsers
 
 def get_hashed_password(username):
     db=Database.get_instance()
