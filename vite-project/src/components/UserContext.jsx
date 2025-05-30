@@ -42,14 +42,17 @@ export function UserProvider({ children }) {
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
 
-        
-        try{
-            const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
-            console.log("Logout response:",response);
+        if (document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='))){
+            try{
+                const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
+                console.log("Logout response:",response);
+            }
+            catch (error){
+            }
+
+
         }
-        catch (error){
-        
-        }
+
 
     }
 
