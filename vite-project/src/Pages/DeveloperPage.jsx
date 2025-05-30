@@ -14,9 +14,13 @@ const api = axios.create({ baseURL: API_URL });
 
 export function DeveloperPage() {
   
-  const [username, setUserName]=useState("");
-  const [verifiedState, setVerifiedState]=useState(false);
-  const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn} = useUser();
+  
+  const {
+    isLoggedIn, setIsLoggedIn,
+    username, setUsername,
+    verifiedState, setVerifiedState,
+    isDeveloper,setIsDeveloper} = useUser();
+
   const [bookCounts, setBookCounts] = useState({
     RoyalRoad: 0,
     NovelBin: 0,
@@ -150,7 +154,7 @@ export function DeveloperPage() {
   return (
     <>
     <NavBar/>
-    <div className="developer-page-main-panel">
+    <div className="developer-page-main-container">
         <div className="developer-page-left-statistics-panel">
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Books</h1>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -161,19 +165,22 @@ export function DeveloperPage() {
             <li><strong>Other:</strong> {bookCounts.Other}</li>
           </ul>
         </div>
+        {/*TODO*/}
+        <div className={"developer-page-center-panel"}>
+          <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Available Actions</h1>
+          <hr></hr>
+          <p>Retrieve my followed list from RoyalRoad</p>
+          <button className="button">Retrieve</button>
+
+        </div>
           {/* Right panel */}
         <div className="developer-page-right-users-panel">
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>
             Users that need verification</h1>
             <hr></hr>
             <div className="developer-page-users-list"
-            
           >{renderUsersToVerify()}</div>
-            
-
-
         </div>
-
     </div>
 
 
