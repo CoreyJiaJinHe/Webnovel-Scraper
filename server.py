@@ -317,8 +317,8 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
                     isDeveloper=True
                 access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
                 scrape.write_to_logs("Access Token: "+access_token)
-                
-                response=JSONResponse(content={"message":"Login successful", "isDeveloper":isDeveloper or False},status_code=200)
+                verifiedStatus=mongodb.is_verified_user(userID,username)
+                response=JSONResponse(content={"username":username, "verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper or False},status_code=200)
                 response.set_cookie(
                     key="access_token",
                     value=access_token,
@@ -331,6 +331,9 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
                 logging.warning("Returning response with access token cookie")
                 logging.error(response)
                 return response
+            else:
+                logging.error(f"Invalid credentials for user: {username}")
+                return JSONResponse(content={"message": "Invalid Credentials"}, status_code=401)
         else:
             return {"message": "Invalid Credentials"}
     except Exception as e:

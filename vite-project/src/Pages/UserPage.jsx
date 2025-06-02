@@ -27,17 +27,19 @@ export function UserPage() {
     if (hasAccessTokenCookie()) {
       tokenLogin();
     }
+    else {
+    navigate("/react/LoginPage/");
+    }
   }, []);
 
   const navigate = useNavigate();
   async function tokenLogin(){
-    if (!isLoggedIn){
       try {
           const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
           console.log(response)
           // If successful, do nothing (user is authenticated)
           if (response.status===200){
-            setUserName(response.data.username);
+            setUsername(response.data.username);
             setVerifiedState(response.data.verifiedStatus);
             setIsLoggedIn(true); // <-- set global login state
           }
@@ -47,8 +49,6 @@ export function UserPage() {
             navigate("/react/LoginPage/");
           }
         }
-    }
-
   }
   
   useEffect(() => {
