@@ -39,6 +39,9 @@ export function LoginPage() {
           console.log(response.data.isDeveloper);
           setIsDeveloper(response.data.isDeveloper);
           setIsLoggedIn(true);
+          setUsername(response.data.username); // <-- add this
+          setVerifiedState(response.data.verifiedStatus); // <-- add this (or correct field name)
+
         }
         else
         {
@@ -81,11 +84,14 @@ export function LoginPage() {
         console.log("Login response status:", response.status);
 
         if (response.status===200){
-          console.log("Logged in successfully");
+          alert("Logged in successfully");
           localStorage.setItem("loginTime", Date.now().toString()); // Optional: for 1-day timeout
-          //console.log(response.data.isDeveloper);
+          console.log(response.data.isDeveloper);
+          
           setIsDeveloper(response.data.isDeveloper);
           setIsLoggedIn(true);
+          setUsername(response.data.username);
+          setVerifiedState(response.data.verifiedStatus);
           setTimeout(() => {
             navigate("/react/HomePage/");
           }, 5000); // Redirect after 5 seconds

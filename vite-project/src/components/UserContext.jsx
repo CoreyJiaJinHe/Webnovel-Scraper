@@ -1,4 +1,4 @@
-import { createContext, useContext, useState,useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 export const UserContext = createContext();
 
 import axios from "axios";
@@ -24,10 +24,12 @@ export function UserProvider({ children }) {
                 setIsLoggedIn(false);
                 setIsDeveloper(false);
                 localStorage.removeItem("loginTime");
+                logout();
             }
         } else {
             setIsLoggedIn(false);
             setIsDeveloper(false);
+            logout();
         }
     }, []);
     

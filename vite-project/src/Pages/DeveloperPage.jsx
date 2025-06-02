@@ -142,14 +142,12 @@ export function DeveloperPage() {
           console.log("Not logged in")
           navigate("/react/LoginPage/")
         }
-
-        
       }
     }
   }
 
-
   
+
 
   return (
     <>
@@ -169,9 +167,12 @@ export function DeveloperPage() {
         <div className={"developer-page-center-panel"}>
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Available Actions</h1>
           <hr></hr>
-          <p>Retrieve my followed list from RoyalRoad</p>
-          <button className="button">Retrieve</button>
-
+          <div className="developer-page-action-cards-grid">
+            <div className="developer-page-action-card">
+              <p>Retrieve my followed list from RoyalRoad</p>
+              <button className="button">Retrieve</button>
+            </div>
+          </div>
         </div>
           {/* Right panel */}
         <div className="developer-page-right-users-panel">
