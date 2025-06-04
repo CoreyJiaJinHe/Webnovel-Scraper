@@ -152,15 +152,31 @@ def check_latest_chapter(bookID,bookTitle,latestChapter):
         bookData=get_Entry_Via_Title(bookTitle)
         if (bookData is None):
             return False
-    logging.warning(bookData["lastChapter"])
-    logging.warning(latestChapter)
-    if (bookData["lastChapter"]==latestChapter):
-        return True
-    elif (bookData["lastChapter"]<=latestChapter):
+    try:
+        logging.warning(bookData["lastChapterTitle"])
+        logging.warning(latestChapter)
+        
+        if (bookData["lastChapterTitle"]==latestChapter):
+            return True
         return False
-    return True
+    except KeyError:
+        logging.warning("KeyError: 'lastChapterTitle' not found in book data. This is likely because it is an old book entry.")
+        return False
+def check_recently_scraped(bookID):
+    bookData=get_Entry_Via_ID(bookID)
+    if (bookData is None):
+        bookData=get_Entry_Via_Title(bookID)
+        if (bookData is None):
+            logging.warning("Book data not found.")
+            return False
+    lastScraped=bookData["lastScraped"]
+    current_time = datetime.datetime.now()
+    time_difference = current_time - lastScraped
     
-
+    if time_difference.days < 1:
+        #Less than 24 hours since it was last scraped.
+        return True
+    return False
 
 #Requires 10 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
 
@@ -171,10 +187,19 @@ default_values = {
         "bookDescription": "Template",
         "websiteHost": "Template",
         "firstChapter": -1,
-        "lastChapter": -1,
+        "lastChapterID": -1,
+        "lastChapterTitle": "N/A",
+        "lastScraped": "1970-01-01 00:00:00",
+        #Using a default date that is unlikely to be used.
         "totalChapters":-1,
         "directory": "Template"
     }
+#This is dict merging.
+#Another method is to use .get(value, default_value) for each key, but that's not as clean.
+
+
+
+
 def create_Entry(**kwargs):
     global default_values
     #If missing keyword arguments, fill with template values.
@@ -186,10 +211,12 @@ def create_Entry(**kwargs):
         "bookDescription": book_data["bookDescription"],
         "websiteHost": book_data["websiteHost"],
         "firstChapter": book_data["firstChapter"],
-        "lastChapter": book_data["lastChapter"],
+        "lastChapterID": book_data["lastChapterID"],
+        "lastChapterTitle": book_data["lastChapterTitle"],
         "lastScraped": datetime.datetime.now(),
         "totalChapters": book_data["totalChapters"],
         "directory": book_data["directory"]
+        
     }
     
     
@@ -209,13 +236,14 @@ def create_latest(**kwargs):
         book_data = {**default_values, **kwargs}
         
         book = {
-            "bookID": -1,
+            "bookID": book_data["bookID"],
             "bookName": book_data["bookName"],
             "bookAuthor":book_data["bookAuthor"],
             "bookDescription": book_data["bookDescription"],
             "websiteHost": book_data["websiteHost"],
             "firstChapter": book_data["firstChapter"],
-            "lastChapter": book_data["lastChapter"],
+            "lastChapterID": book_data["lastChapterID"],
+            "lastChapterTitle": book_data["lastChapterTitle"],
             "lastScraped": datetime.datetime.now(),
             "totalChapters": book_data["totalChapters"],
             "directory": book_data["directory"]

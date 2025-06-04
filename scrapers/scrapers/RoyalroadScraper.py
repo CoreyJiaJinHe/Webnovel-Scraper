@@ -2,7 +2,6 @@ import bs4
 import re
 import os, errno
 import datetime
-from novel_template import NovelTemplate
 import logging
 import asyncio
 import io

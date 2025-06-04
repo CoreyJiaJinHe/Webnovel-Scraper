@@ -1,7 +1,6 @@
 import re
 import os, errno
 import datetime
-from novel_template import NovelTemplate
 import logging
 from ebooklib import epub 
 from PIL import Image
