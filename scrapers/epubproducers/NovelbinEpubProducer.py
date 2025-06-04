@@ -3,7 +3,7 @@ import re
 import logging
 
 import EpubProducer
-from scrapers.NovelbinScraper import NovelBinScraper
+from scrapers.NovelBinScraper import NovelBinScraper
 from common import(
     store_chapter
 )

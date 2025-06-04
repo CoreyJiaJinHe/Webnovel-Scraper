@@ -13,8 +13,8 @@
     ],
     "properties": {
         "bookID":{
-            "type":"int",
-            "description":"Must be a int and is required"
+            "type":"string",
+            "description":"Must be a string and is required"
         },
         "bookName":{
             "type":"string",
@@ -32,9 +32,13 @@
             "type":"int",
             "description":"Must be an int and is required"
         },
-        "lastChapter":{
+        "lastChapterID":{
             "type":"int",
             "description":"Must be an int and is required"
+        },
+        "lastChapterTitle":{
+            "type":"string",
+            "description":"Must be a string and is required"
         },
         "lastScraped":{
             "type":"date",
@@ -43,6 +47,10 @@
         "totalChapters":{
             "type":"int",
             "description":"Total chapters"
+        },
+        "directory":{
+            "type":"string",
+            "description":"Directory where the book is stored"
         }
     }
 }

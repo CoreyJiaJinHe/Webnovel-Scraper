@@ -36,7 +36,7 @@ async def main_interface(url, cookie):
             epub_producer=SpaceBattlesEpubProducer()
             normalized_url = url if url.endswith('/') else url + '/'
             if re.search(r'/reader/page-\d+/$',normalized_url):
-             url = re.sub(r'/reader/page-\d+/?$', '/reader/', url)
+                url = re.sub(r'/reader/page-\d+/?$', '/reader/', url)
             elif not url.rstrip('/').endswith('/reader'):
                 if url.endswith('/'):
                     url += 'reader/'

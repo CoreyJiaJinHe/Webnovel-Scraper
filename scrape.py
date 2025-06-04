@@ -5,7 +5,6 @@ from pathlib import Path
 from pymongo import MongoClient
 import os, errno
 import datetime
-from novel_template import NovelTemplate
 import logging
 import asyncio
 import io

@@ -1,4 +1,5 @@
 import bs4
+import re
 import os
 import logging
 import asyncio
@@ -11,7 +12,8 @@ from common import(
     write_to_logs,
     remove_invalid_characters,
     retrieve_cover_from_storage,
-    storeEpub
+    storeEpub,
+    basicHeaders
 )
 
 
@@ -33,16 +35,19 @@ class EpubProducer:
             for img_url in images_url:
                 image_path=f"{image_dir}/{img_url}"
                 epubImage=Image.open(image_path)
-                b=io.BytesIO()
-                epubImage.save(b,'png')
-                image_data=b.getvalue()
-                image_item = epub.EpubItem(uid=f"image_{current_image_count}", file_name=img_url, media_type="image/png", content=image_data)
-                new_epub.add_item(image_item)
+                if (epubImage):
+                    b=io.BytesIO()
+                    epubImage.save(b,'png')
+                    b_image1=b.getvalue()
+                    
+                    image_item=epub.EpubItem(uid=f'image_{current_image_count}',file_name=f'images/image_{current_image_count}.png', media_type='image/png', content=b_image1)
+                    new_epub.add_item(image_item)
                 current_image_count+=1
             return current_image_count
         except Exception as error:
             errorText=f"Failed to retrieve images for chapter to add to epub object. Function retrieve_images_in_chapter Error: {error}"
             write_to_logs(errorText)
+    
     def get_existing_order_of_contents(self, book_title):
         # Default implementation
         dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
@@ -126,6 +131,9 @@ class EpubProducer:
                 chapter_content = self.get_chapter_contents_from_saved(dir_location)
                 chapter_title = self.extract_chapter_title(dir_location)
                 chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
+                
+                
+                
                 #TODO: THIS NEEDS MODIFYING
                 images=chapter_content_soup.find_all('img')
                 images=[image['src'] for image in images]
@@ -148,12 +156,13 @@ class EpubProducer:
         self.finalize_epub(new_epub, toc_list, book_title, chapter_metadata)
 
     async def save_images_in_chapter(self, img_urls, save_directory, image_count, new_epub):
-        global gHeaders
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
         #logging.warning(img_urls)
         try:
             for img_url in img_urls:
+                if ("emoji" in img_url):
+                    continue
                 image_path = f"{save_directory}image_{image_count}.png"
                 if not os.path.exists(image_path):
                     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:

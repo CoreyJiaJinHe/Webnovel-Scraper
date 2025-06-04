@@ -9,7 +9,7 @@ from PIL import Image
 import aiohttp
 
 import EpubProducer
-from scrapers.RoyalroadScraper import RoyalRoadScraper
+from scrapers.RoyalRoadScraper import RoyalRoadScraper
 from common import(
     store_chapter
 )
@@ -30,6 +30,27 @@ class RoyalRoadEpubProducer(EpubProducer):
         #logging.warning(chapter_title)
         chapter_content = await scraper.fetch_chapter_content(soup)
         # Save chapter content
+        
+        
+        
+        hyperlinks=chapterContent.find_all('a',{'class':'link'})
+        for link in hyperlinks:
+            if ("emoji" in link):
+                link.extract() #Remove emoji links
+            if 'imgur' in link['href']:
+                p_text=link.get_text()
+                imgur_url=link['href']
+                if not imgur_url.startswith('https://i.imgur.com/'):
+                    match = re.search(r'(https?://)?(www\.)?imgur\.com/([a-zA-Z0-9]+)', imgur_url)
+                    if match:
+                        imgur_id = match.group(3)  # Extract the unique Imgur ID
+                        imgur_url = f"https://i.imgur.com/{imgur_id}.png"  # Convert to i.imgur.com format
+                p_tag=bs4.BeautifulSoup(f"<p>{p_text}</p><div><img class=\"image\" src={imgur_url}></div>", 'html.parser')
+                link.replace_with(p_tag)
+                chapterContent=bs4.BeautifulSoup(str(chapterContent),'html.parser')
+        
+        
+        
         currentImageCount=image_count
         # Process images
         # TODO: This needs modifying. 
