@@ -13,15 +13,18 @@ from PIL import Image
 import aiohttp
 
 
+
+from dotenv import load_dotenv, find_dotenv
+
+env_path = find_dotenv()
+load_dotenv(env_path, override=True)
+
 #Figure out how to swap tables text color in epub.
 
 MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
 mydb=myclient["Webnovels"]
 savedBooks=mydb["Books"]
-
-
-logLocation=os.getenv("logs")
 
 
 

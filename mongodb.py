@@ -3,8 +3,10 @@ import os
 import datetime
 import logging
 
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+
+env_path = find_dotenv()
+load_dotenv(env_path, override=True)
 
 
 MONGODB_URL=os.getenv('MONGODB_URI')
@@ -36,7 +38,7 @@ def get_Entry_Via_ID(bookID):
 def getLatest():
     db=Database.get_instance()
     savedBooks=db["Books"]
-    result=savedBooks.find_one({"bookID":-1})
+    result=savedBooks.find_one({"bookID":"-1"})
     logging.warning(result)
     return result
 
@@ -49,7 +51,7 @@ def get_Total_Books():
 def get_all_books():
     db=Database.get_instance()
     savedBooks=db["Books"]
-    result = savedBooks.find({"bookID": {"$nin": [-1, 0]}}).to_list(length=None).sort('bookName',1)
+    result = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}}).to_list(length=None).sort('bookName',1)
     result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapter"]] for result in result]
     return result
 
@@ -60,7 +62,7 @@ def get_organized_books():
     #logging.warning(results)
     all_books=[]
     for result in results:
-        books=savedBooks.find({"bookID":{"$nin":[-1,0]}, "websiteHost":result}).sort('bookName',1).to_list(length=None)
+        books=savedBooks.find({"bookID":{"$nin":["-1", "0"]}, "websiteHost":result}).sort('bookName',1).to_list(length=None)
         books=[[book["bookID"],book["bookName"],(book["lastScraped"]).strftime('%m/%d/%Y'),book["lastChapter"]] for book in books]
         if (books):
             all_books.append([result, books])
@@ -120,15 +122,18 @@ def check_existing_book(bookID):
     if (results==None):
         return False
     else:
+        logging.warning(f"Checking for bookID: {results['bookID']} ({type(results['bookID'])})")
+        logging.warning(f"Checking for bookName: {results['bookName']} ({type(results['bookName'])})")
         return True
 def check_existing_book_Title(bookTitle):
     db=Database.get_instance()
     savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookName":bookTitle})
+    results=savedBooks.find_one({"bookID":{"$ne": "-1"},"bookName":bookTitle})
     if (results==None):
         return False
     return True
 
+#check_existing_book("sb836982")
 
 #Return existing epub directory if the latest chapter is already stored.
 def getEpub(bookID):
@@ -141,7 +146,7 @@ def getEpub(bookID):
 def get_Entry_Via_Title(bookTitle):
     db=Database.get_instance()
     savedBooks=db["Books"]
-    results = savedBooks.find_one({"bookID": {"$ne": -1}, "bookName": bookTitle})
+    results = savedBooks.find_one({"bookID": {"$ne": "-1"}, "bookName": bookTitle})
     if not results:
         return None
     return results
@@ -170,9 +175,12 @@ def check_recently_scraped(bookID):
             logging.warning("Book data not found.")
             return False
     lastScraped=bookData["lastScraped"]
+    logging.warning(bookData)
     current_time = datetime.datetime.now()
+    logging.warning(f"Current time: {current_time}")
+    logging.warning(f"Last scraped time: {lastScraped}")
     time_difference = current_time - lastScraped
-    
+    logging.warning(f"Time difference in days: {time_difference.days}")
     if time_difference.days < 1:
         #Less than 24 hours since it was last scraped.
         return True
@@ -223,9 +231,14 @@ def create_Entry(**kwargs):
     logging.warning(book)
     db=Database.get_instance()
     savedBooks=db["Books"]
-    if (check_existing_book(book_data["bookID"]) and check_existing_book_Title(book_data["bookName"])):
-        result=savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
-        logging.warning(f"Replaced book: {result}")
+    
+    logging.warning(f"Checking if book with ID {book_data['bookID']} or title {book_data['bookName']} exists.")
+    if check_existing_book(book_data["bookID"]):
+        result = savedBooks.replace_one({"bookID": book_data["bookID"]}, book)
+        logging.warning(f"Replaced book by ID: {result}")
+    elif check_existing_book_Title(book_data["bookName"]):
+        result = savedBooks.replace_one({"bookName": book_data["bookName"]}, book)
+        logging.warning(f"Replaced book by Title: {result}")
     else:
         result = savedBooks.insert_one(book)
         logging.warning(f"Inserted book: {result}")
@@ -251,7 +264,7 @@ def create_latest(**kwargs):
         db=Database.get_instance()
         savedBooks=db["Books"]
         if (check_existing_book(-1)):
-            savedBooks.replace_one({"bookID": -1}, book)
+            savedBooks.replace_one({"bookID": "-1"}, book)
         else:
             savedBooks.insert_one(book)
 
