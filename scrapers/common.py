@@ -4,6 +4,11 @@ import datetime
 import logging
 from ebooklib import epub 
 from PIL import Image
+from dotenv import load_dotenv, find_dotenv
+
+env_path = find_dotenv()
+load_dotenv(env_path, override=True)
+
 
 from mongodb import (
     check_existing_book_Title,
@@ -44,17 +49,30 @@ def interception (request):
 
 
 
-logLocation=os.getenv("logs")
 def write_to_logs(log):
+    logLocation=os.getenv("LOGS",
+        #os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+    )
+    #Debugging purposes.
+    # logging.warning(f"Log location: {logLocation}")
+    
+    # print("CWD:", os.getcwd())
+    # print("LOGS env:", os.getenv("LOGS"))
+    # print("logLocation:", logLocation)
+    
+    
+    
     todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
     log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
-    fileLocation=f"{logLocation}/{todayDate}"
+    fileLocation=f"{logLocation}/{todayDate}.txt"
+    logging.warning(f"Writing to log file: {fileLocation}")
     if (check_directory_exists(fileLocation)):
         f=open(fileLocation,"a")
-        f.write(log)
     else:
         f=open(fileLocation,'w')
-        f.write(log)
+    f.write(log)
+    f.close()
+
 
 
 
@@ -262,3 +280,20 @@ def get_first_last_chapter(bookTitle):
     lastChapterID=lines[len(lines)-1].split(";")[0]
     
     return firstChapterID,lastChapterID,len(lines)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# print(os.getcwd())
+# write_to_logs("fucking bullshit")
