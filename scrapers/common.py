@@ -14,6 +14,7 @@ from mongodb import (
     check_existing_book_Title,
     get_Entry_Via_Title,
     get_Total_Books,
+    get_Total_Books_Organized
 )
 
 
@@ -239,13 +240,13 @@ def append_order_of_contents(bookTitle,chapterData):
             f.write(chapterID+";"+chapterLink+";"+chapterTitle+"\n")
     f.close()
     
-def generate_new_ID(bookTitle):
+def generate_new_ID(bookTitle,website):
     try:
         if (check_existing_book_Title(bookTitle)):
             bookData=get_Entry_Via_Title(bookTitle)
             if bookData:
                 return bookData["bookID"]
-        return get_Total_Books()+1
+        return get_Total_Books_Organized(website)+1
     except Exception as e:
         errorText=f"Generate new id failed. Function generate_new_ID Error: {e}"
         write_to_logs(errorText)
