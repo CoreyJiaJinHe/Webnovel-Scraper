@@ -48,6 +48,14 @@ def get_Total_Books():
     result=savedBooks.count_documents({})
     return result-2
 
+def get_Total_Books_Organized(websiteHost):
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    result=savedBooks.count_documents({"websiteHost": websiteHost, "bookID": {"$nin": ["-1", "0"]}})
+    return result
+
+#logging.warning(get_Total_Books_Organized("foxaholic.com"))
+
 def get_all_books():
     db=Database.get_instance()
     savedBooks=db["Books"]
@@ -72,7 +80,7 @@ def get_organized_books():
 def remove_excess_spaces():
     db=Database.get_instance()
     savedBooks=db["Books"]
-    results=savedBooks.find({"bookID":{"$ne":-1}})
+    results=savedBooks.find({"bookID":{"$ne":"-1"}})
     for result in results:
         bookDescription=result["bookDescription"]
         if ("\n" in bookDescription):
@@ -98,7 +106,7 @@ import re
 def fix_websiteHost_links():
     db=Database.get_instance()
     savedBooks=db["Books"]
-    results=savedBooks.find({"bookID":{"$ne":0}})
+    results=savedBooks.find({"bookID":{"$ne":"0"}})
     for result in results:
         websiteHost=result["websiteHost"]
         if re.match(r"^[A-Za-z0-9.-]+$", websiteHost):
