@@ -106,7 +106,7 @@ def remove_non_english_characters(text):
     return result.group() 
 
 def remove_invalid_characters(inputString):
-    invalid_chars = '.-<>:;"/\\|?*()'
+    invalid_chars = '.-<>:;"\'/\\|?*()'
     for char in invalid_chars:
         inputString=inputString.replace(char,' ')
 #    inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)

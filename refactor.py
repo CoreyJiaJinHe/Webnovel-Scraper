@@ -531,28 +531,6 @@ class RoyalRoadEpubProducer():
         logging.warning("Finalizing epub")
         self.finalize_epub(new_epub, toc_list, book_title)
 
-    async def retrieve_images_for_chapter(self, img_urls, save_directory, image_count, new_epub):
-        try:
-            for img_url in img_urls:
-                image_path = f"{save_directory}image_{image_count}.png"
-                try:
-                    # Add image to EPUB
-                    epubImage=Image.open(image_path)
-                    b=io.BytesIO()
-                    epubImage.save(b,'png')
-                    image_data=b.getvalue()
-                    image_item = epub.EpubItem(uid=f"image_{image_count}", file_name=f"images/image_{image_count}.png", media_type="image/png", content=image_data)
-                    new_epub.add_item(image_item)
-                except Exception as e:
-                    errorText=f"Failed to add image to epub. Function save_images_in_chapter Error: {e}"
-                    write_to_logs(errorText)
-                    continue
-                image_count += 1
-            return image_count
-        except Exception as e:
-            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
-            write_to_logs(errorText)
-
 
 
 
@@ -1057,27 +1035,6 @@ class SpaceBattlesEpubProducer():
         # logging.warning("Attempting to store epub")
         storeEpub(book_title, new_epub)
         
-    async def retrieve_images_for_chapter(self, img_urls, save_directory, image_count, new_epub):
-        try:
-            for img_url in img_urls:
-                image_path = f"{save_directory}image_{image_count}.png"
-                try:
-                    # Add image to EPUB
-                    epubImage=Image.open(image_path)
-                    b=io.BytesIO()
-                    epubImage.save(b,'png')
-                    image_data=b.getvalue()
-                    image_item = epub.EpubItem(uid=f"image_{image_count}", file_name=f"images/image_{image_count}.png", media_type="image/png", content=image_data)
-                    new_epub.add_item(image_item)
-                except Exception as e:
-                    errorText=f"Failed to add image to epub. Function save_images_in_chapter Error: {e}"
-                    write_to_logs(errorText)
-                    continue
-                image_count += 1
-            return image_count
-        except Exception as e:
-            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
-            write_to_logs(errorText)
     
 
 
@@ -1089,12 +1046,17 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
+firefox_options = FirefoxOptions()
 
+# Path to .xpi extension file
+path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
 
-
-
-
+# When creating the driver:
+#driver = webdriver.Firefox(options=firefox_options)
+#driver.install_addon(path_to_extension, temporary=True)
 
 
 
@@ -1173,7 +1135,8 @@ class FoxaholicScraper():
     
     async def get_soup(self,url):
         try:
-            driver = webdriver.Firefox()
+            driver = webdriver.Firefox(options=firefox_options)
+            driver.install_addon(path_to_extension, temporary=True)
             driver.request_interceptor=interception
             driver.get(url)
             soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
@@ -1403,7 +1366,7 @@ class FoxaholicEpubProducer():
             if str(chapter_id) in chapter:
                 return True
         return False
-
+    
     #TODO: DONE This needs modifying
     async def retrieve_images_in_chapter(self,images_url,image_dir,image_count,new_epub):
         current_image_count=image_count
@@ -1426,6 +1389,8 @@ class FoxaholicEpubProducer():
         except Exception as error:
             errorText=f"Failed to retrieve images for chapter to add to epub object. Function retrieve_images_in_chapter Error: {error}"
             write_to_logs(errorText)
+    
+    
     
     def get_existing_order_of_contents(self, book_title):
         # Default implementation
@@ -1489,27 +1454,6 @@ class FoxaholicEpubProducer():
         storeEpub(book_title, new_epub)
 
                 
-    async def retrieve_images_for_chapter(self, img_urls, save_directory, image_count, new_epub):
-        try:
-            for img_url in img_urls:
-                image_path = f"{save_directory}image_{image_count}.png"
-                try:
-                    # Add image to EPUB
-                    epubImage=Image.open(image_path)
-                    b=io.BytesIO()
-                    epubImage.save(b,'png')
-                    image_data=b.getvalue()
-                    image_item = epub.EpubItem(uid=f"image_{image_count}", file_name=f"images/image_{image_count}.png", media_type="image/png", content=image_data)
-                    new_epub.add_item(image_item)
-                except Exception as e:
-                    errorText=f"Failed to add image to epub. Function save_images_in_chapter Error: {e}"
-                    write_to_logs(errorText)
-                    continue
-                image_count += 1
-            return image_count
-        except Exception as e:
-            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
-            write_to_logs(errorText)
     
     async def produce_epub(self,book_title,css,new_epub):
         already_saved_chapters = self.get_existing_order_of_contents(book_title)
@@ -1550,8 +1494,469 @@ class FoxaholicEpubProducer():
         
         logging.warning("Finalizing epub")
         self.finalize_epub(new_epub, toc_list, book_title)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class NovelBinScraper():
+    #These four functions appear to be a common function.
+    def get_existing_order_of_contents(self, book_title):
+        # Default implementation
+        dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
+    def check_if_chapter_exists(self, chapter_id, saved_chapters):
+        for chapter in saved_chapters:
+            if str(chapter_id) in chapter:
+                return True
+        return False
+    
+    #THIS FUNCTION IS UNIQUE TO NOVELBIN
+    async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count):
+        soup = await self.get_soup(chapter_url)
+        chapter_title = await self.fetch_chapter_title(soup)
+        chapter_title=await self.generate_chapter_title(chapter_id)+" "+chapter_title
+        chapter_content = await self.fetch_chapter_content(soup)
+        
+        currentImageCount=image_count
+        chapterInsert=f'<h1>{chapter_title}</h1>'
+        chapter_content=chapterInsert+str(chapter_content)
+        chapter_content=bs4.BeautifulSoup(chapter_content,'html.parser')
+        # Process images
+        images=chapter_content.find_all('img')
+        images=[image['src'] for image in images]
+        image_dir = f"./books/raw/{book_title}/images/"
+        if images:
+            logging.warning(f"Images found in chapter content.{chapter_url}")
+            image_count = await self.save_images_in_chapter(images, image_dir, image_count)
+            for img,image in zip(chapter_content.find_all('img'),images):
+                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                currentImageCount+=1
+        else:
+            logging.warning("No images found in chapter content.")
+        encoded_chapter_content=chapter_content.encode('ascii')
+        file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+        store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
+
+        return file_chapter_title, currentImageCount
+
+    async def save_images_in_chapter(self, img_urls, save_directory, image_count):
+        if not os.path.exists(save_directory):
+            os.makedirs(save_directory)
+        #logging.warning(img_urls)
+        try:
+            for img_url in img_urls:
+                image_path = f"{save_directory}image_{image_count}.png"
+                if not os.path.exists(image_path):
+                    async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                        if not isinstance(img_url,str):
+                            img_url=img_url["src"]
+                        async with session.get(img_url) as response:
+                            if response.status == 200:
+                                response=await response.content.read()
+                                with open(image_path, "wb") as f:
+                                    f.write(response)
+                        image_count += 1
+                await asyncio.sleep(0.5)
+            return image_count
+        except Exception as e:
+            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
+            write_to_logs(errorText)
+            
+            
+    
+    def write_order_of_contents(self, book_title, chapter_metadata):
+        file_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        logging.warning(chapter_metadata)
+        with open(file_location, "w") as f:
+            for data in chapter_metadata:
+                logging.warning(data)
+                f.write(";".join(map(str, data))+ "\n")
+    #These four functions appear to be a common function.
     
     
+    
+    async def get_soup(self,url):
+        try:
+            #driver = webdriver.Firefox()
+                        
+            driver = webdriver.Firefox(options=firefox_options)
+            driver.install_addon(path_to_extension, temporary=True)
+            driver.request_interceptor=interception
+            driver.get(url)
+            await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
+            soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+            driver.close()
+            return soup
+        except Exception as error:
+            errorText=f"Failed to get soup from url. Function novelbin_get_soup Error: {error}"
+            write_to_logs(errorText)
+
+    async def fetch_novel_data(self, novelURL):
+        #CHECK: There is a problem with the title, it is getting cut off by commas
+        try:
+            soup=await self.get_soup(novelURL)
+            
+            bookTitle=soup.find("h3",{"class":"title"})
+            bookTitle=bookTitle.get_text()
+            bookTitle=remove_tags_from_title(bookTitle)
+            logging.warning(bookTitle)
+            
+            bookID=str(generate_new_ID(bookTitle, "novelbin.com"))
+            logging.warning(bookID)
+            
+            firstHalfBookData=soup.find("ul",{"class":"info info-meta"})
+            novelData=firstHalfBookData.find_all("li")
+            bookAuthor=novelData[0].get_text()
+            
+            if ("\n" in bookAuthor):
+                bookAuthor=bookAuthor.replace("\n","")
+            if ("  " in bookAuthor):
+                bookAuthor=bookAuthor.replace("  "," ")
+                
+            if ("Author:" in bookAuthor):
+                bookAuthor=bookAuthor.replace("Author:","")
+                
+            descriptionBox=soup.find("div",{"id":"tab-description"})
+            description=descriptionBox.find("div",{"class":"desc-text"})
+            description=description.get_text()
+
+            if (description.startswith("Description: ")):
+                description=description[13:]
+            description=description.strip()
+            if ("\n" in description):
+                description=description.replace("\n","")
+            if ("  " in description):
+                description=description.replace("  "," ")
+            
+            lastScraped=datetime.datetime.now()
+            
+            latestChapter = soup.find("div", {"class":"l-chapter"})
+            latestChapterID=latestChapter.find("a")
+            latestChapterID=latestChapterID.get_text()
+            latestChapterID=remove_tags_from_title(latestChapterID)
+            
+            
+            
+        except Exception as error:
+            errorText=f"Failed to get novel data. Function novelbin-fetch_novel_data Error: {error}"
+            write_to_logs(errorText)
+        
+        try:
+            img_url = soup.find("img",{"class":"lazy"})
+            if (img_url):
+                saveDirectory=f"./books/raw/{bookTitle}/"
+                if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                    await self.novelbin_save_cover_image("cover_image",img_url,saveDirectory)
+        except Exception as error:
+            errorText=f"Failed to find image, or save it. There might be no cover. Or a different error. Function novelbin_fetch_novel_data Error: {error}"
+            write_to_logs(errorText)
+            
+        return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+
+
+    async def novelbin_save_cover_image(self,title,img_url,saveDirectory):
+        async with aiohttp.ClientSession(headers = basicHeaders
+        ) as session:
+            if not isinstance(img_url,str):
+                img_url=img_url["src"]
+            async with session.get(img_url) as response:
+                #logging.warning(response)
+                if response.status == 200:
+                    if (saveDirectory.endswith("/")):
+                        fileNameDir=f"{saveDirectory}{title}.png"
+                    else:
+                        fileNameDir=f"{saveDirectory}/{title}.png"
+                    if not (check_directory_exists(saveDirectory)):
+                        make_directory(saveDirectory)
+                    response=await response.content.read()
+                    with open (fileNameDir,'wb') as f:
+                        f.write(response)
+
+
+    async def fetch_chapter_title(self,soup):
+        chapterTitle=soup.find('span',{"class":"chr-text"})
+
+        if chapterTitle:
+            chapterTitle=chapterTitle.get_text()
+            if (chapterTitle.count("-")>=3):
+                chapterTitle=re.sub(r'\bVol\.\s*\d+\s*-\s*Ch\.\s*\d+\s*-\s*', '', chapterTitle)
+            else:
+                chapterTitle=chapterTitle.split("-")
+                chapterTitle=chapterTitle[len(chapterTitle)-1]
+            
+            if ":" in chapterTitle:
+                chapterTitle=chapterTitle.split(": ")
+                chapterTitle=chapterTitle[len(chapterTitle)-1]
+            else:
+                chapterTitle=re.sub(r'\bChapter\s+\d+\b', '', chapterTitle)
+            
+            chapterTitle=remove_invalid_characters(chapterTitle)
+            return chapterTitle
+        else:
+            errorText=f"Failed to get chapter title. Function novelbin_get_chapter_list Error: No chapterTitle found"
+            write_to_logs(errorText)
+            return None
+            
+    async def fetch_chapter_list(self, url):
+        soup = await self.get_soup(f"{url}#tab-chapters-title")
+        
+        try:
+            #logging.warning(soup)
+            chapterTable = soup.find("div", {"id": "list-chapter"})
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li")
+            
+            chapterListURL=list()
+            for row in rows[:len(rows)]:
+                processChapterURL=row.find("a")["href"]
+                chapterURL=processChapterURL
+                chapterListURL.append(chapterURL)
+            #logging.warning(chapterListURL)
+            return chapterListURL
+        except Exception as error:
+            errorText=f"Failed to get chapter urls from chapter list of page. Function novelbin_get_chapter_list Error: {error}"
+            write_to_logs(errorText)
+            
+    async def fetch_chapter_content(self, soup):
+        try:
+            pageContent=soup.find_all("div",{"id":"chr-content"})[0]
+            chapterContent=pageContent.find_all("p")
+            
+            chapterContent=re.sub('<p>\\s+</p>,','',str(chapterContent))
+            chapterContent=re.sub('</p>,','</p>',str(chapterContent))
+            
+            if (chapterContent.startswith('[')):
+                chapterContent=chapterContent[1:]
+            if (chapterContent.endswith(']')):
+                chapterContent=chapterContent[:-1]
+            
+            return bs4.BeautifulSoup(chapterContent,'html.parser')
+        except Exception as error:
+            errorText=f"Failed to get chapterContent as soup object. Function novelbin_scrape_chapter_page Error: {error}"
+            write_to_logs(errorText)
+
+    async def process_new_book(self, book_url,book_title):
+        listofChapters= await self.fetch_chapter_list(book_url)
+        if not listofChapters:
+            errorText="Function: process_new_book. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        existingChapters= self.get_existing_order_of_contents(book_title)
+
+        chapter_metadata = []
+        image_counter=0 
+        for chapter_url in listofChapters:
+            chapter_id = await self.extract_chapter_ID(chapter_url)
+
+            if (self.check_if_chapter_exists(chapter_id, existingChapters)):
+                for line in existingChapters:
+                    logging.warning("This is the line from the file")
+                    logging.warning(line)
+                    if line.startswith(f"{chapter_id};"):
+                        logging.warning(f"Chapter {chapter_id} already exists. Skipping.")
+                        chapter_metadata.append(line.strip().split(";"))
+                        break
+                continue
+            
+            file_chapter_title, image_counter = await self.process_new_chapter(chapter_url, book_title, chapter_id, image_counter)
+            logging.warning(f"Processed chapter: {file_chapter_title}")
+            logging.warning(f"Chapter URL: {chapter_url}")
+            logging.warning(f"Chapter ID: {chapter_id}")
+            logging.warning(f"File chapter title: {file_chapter_title}")
+            chapter_metadata.append([chapter_id, chapter_url, f"./books/raw/{book_title}/{file_chapter_title}.html"])
+            
+        self.write_order_of_contents(book_title,chapter_metadata)
+
+    async def generate_chapter_title(self, chapter_id):
+        chapter_id=int(chapter_id)
+        
+        volume_number=int(chapter_id//10000)
+        chapter_number=int(chapter_id%10000)
+        
+        return f"V{volume_number}Ch{chapter_number}"
+    
+    #This grabs the numbers in the URL to treat as the ChapterID.
+    #And modifies the chapterID to be a unique increasing number
+    #The first number represents the volume if it exists, and the subsequent digits represent the order of the chapters
+    async def extract_chapter_ID(self, chapter_url):
+        chapterID=chapter_url.split("/")
+        chapterID=chapterID[len(chapterID)-1]
+        first_number=10000
+        if "vol-" in chapterID:
+            first_number=re.search(r'\d+',chapterID)
+            if (first_number):
+                first_number=first_number.group()
+            chapterID = re.sub(r'vol-+\d', '', chapterID)
+        if "volume-" in chapterID:
+            first_number=re.search(r'\d+',chapterID)
+            if (first_number):
+                first_number=first_number.group()
+            chapterID = re.sub(r'volume-+\d', '', chapterID)
+        chapterID=re.search(r'\d+',chapterID).group()
+        chapterID=int(first_number)*10000+int(chapterID)
+        return str(chapterID)
+
+
+
+
+
+
+class NovelBinEpubProducer():
+    #These two function are from epubproducer. They may become a 'common' function
+    def get_existing_order_of_contents(self, book_title):
+        # Default implementation
+        dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
+    def check_if_chapter_exists(self, chapter_id, saved_chapters):
+        for chapter in saved_chapters:
+            if str(chapter_id) in chapter:
+                return True
+        return False
+    
+    
+    #TODO: DONE This needs modifying
+    async def retrieve_images_in_chapter(self,images_url,image_dir,image_count,new_epub):
+        current_image_count=image_count
+        try:
+            for img_url in images_url:
+                image_path=f"{image_dir}/{img_url}"
+                epubImage=Image.open(image_path)
+                if (epubImage):
+                    try:
+                        b=io.BytesIO()
+                        epubImage.save(b,'png')
+                        b_image1=b.getvalue()
+                        
+                        image_item=epub.EpubItem(uid=f'image_{current_image_count}',file_name=f'images/image_{current_image_count}.png', media_type='image/png', content=b_image1)
+                        new_epub.add_item(image_item)
+                    except Exception as error:
+                        errorText=f"Failed to add image to epub. Function retrieve_images_in_chapter. Error: {error}. Possibly image is corrupted or not saved at all."
+                current_image_count+=1
+            return current_image_count
+        except Exception as error:
+            errorText=f"Failed to retrieve images for chapter to add to epub object. Function retrieve_images_in_chapter Error: {error}"
+            write_to_logs(errorText)
+    
+    def get_chapter_from_saved(self, chapter_id, saved_chapters):
+        for chapter in saved_chapters:
+            chapter = chapter.split(";")
+            if str(chapter_id) == str(chapter[0]):
+                return chapter[0], chapter[2].strip()
+        return None, None
+
+    def get_chapter_contents_from_saved(self, dir_location):
+        with open(dir_location, "r") as f:
+            return f.read()
+
+    #this might become a common function
+    #Nevermind. This one is different. It's not extracting the ID from the URL but frm the internal storage.
+    def extract_chapter_ID(self, chapter_url):
+        return chapter_url.split(";")[0]
+
+    def extract_chapter_title(self, dir_location):
+        return os.path.basename(dir_location).split(" - ")[-1].replace(".html", "")
+
+    def create_epub_chapter(self, chapter_title,file_chapter_title,chapter_content, css):
+        try:
+            chapter_content=chapter_content.encode('ascii')
+            chapter=epub.EpubHtml(title=chapter_title,file_name=file_chapter_title+'.xhtml',lang='en')
+            chapter.set_content(chapter_content)
+            chapter.add_item(css)
+            return chapter
+        except Exception as error:
+            errorText=f"Failed to create chapter to add to epub. Function create_epub_chapter Error: {error}"
+            write_to_logs(errorText)
+
+    def add_cover_image(self, book_title, new_epub):
+        img = retrieve_cover_from_storage(book_title)
+        if img:
+            b=io.BytesIO()
+            try:
+                img.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
+
+    def finalize_epub(self, new_epub, toc_list, book_title):
+        #logging.warning(toc_list)
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+        storeEpub(book_title, new_epub)
+
+    def write_order_of_contents(self, book_title, chapter_metadata):
+        file_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        logging.warning(chapter_metadata)
+        with open(file_location, "w") as f:
+            for data in chapter_metadata:
+                logging.warning(data)
+                f.write(";".join(map(str, data))+ "\n")
+
+    async def produce_epub(self, book_title, css, new_epub):
+        already_saved_chapters = self.get_existing_order_of_contents(book_title)
+        toc_list = []
+        image_count = 0
+        logging.warning("Producing epub for book, grabbing chapters")
+        for chapter_url in already_saved_chapters:
+            chapter_id = self.extract_chapter_ID(chapter_url)
+            chapter_id, dir_location = self.get_chapter_from_saved(chapter_id, already_saved_chapters)
+            chapter_content = self.get_chapter_contents_from_saved(dir_location)
+            chapter_title = self.extract_chapter_title(dir_location)
+            logging.warning(chapter_title)
+            chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
+            
+            #TODO: THIS NEEDS MODIFYING
+            images=chapter_content_soup.find_all('img')
+            images=[image['src'] for image in images]
+            image_dir = f"./books/raw/{book_title}/"
+            if images:
+                image_count=await self.retrieve_images_in_chapter(images, image_dir,image_count,new_epub)
+            
+            file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)
+            toc_list.append(chapter)
+            new_epub.add_item(chapter)
+
+        logging.warning("Adding cover image")
+        try:
+            self.add_cover_image(book_title, new_epub)
+        except Exception as e:
+            errorText=f"Failed to add cover image. Function add_cover_image Error: {e}"
+            write_to_logs(errorText)
+        
+        logging.warning("Finalizing epub")
+        self.finalize_epub(new_epub, toc_list, book_title)
 
 
 
@@ -1563,19 +1968,8 @@ class FoxaholicEpubProducer():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#https://www.reddit.com/r/learnpython/comments/4zzn69/how_do_i_get_adblockplus_to_work_with_selenium/
+#ADBLOCKING METHOD
 
 
 
@@ -1614,6 +2008,16 @@ async def main_interface(url, cookie):
                 logging.warning(errorText)
                 write_to_logs(errorText)
                 return None
+        elif "novelbin.com" or "novelbin.me" in url:
+            epub_producer = NovelBinEpubProducer()
+            logging.warning('Creating scraper')
+            scraper=NovelBinScraper()
+            prefix="nb"
+            if (cookie is None):
+                errorText="Function main_interface. Error: Cookie is required for NovelBin. Please provide a cookie."
+                logging.warning(errorText)
+                write_to_logs(errorText)
+                return None
         else:
             raise ValueError("Unsupported website")
         logging.warning(url)
@@ -1639,7 +2043,7 @@ async def main_interface(url, cookie):
             Ensures the bookID starts with one of the valid prefixes ('rr', 'sb', 'fx').
             If not, prepends the given prefix.
             """
-            valid_prefixes = ("rr", "sb", "fx")
+            valid_prefixes = ("rr", "sb", "fx","nb")
             if any(bookID.startswith(p) for p in valid_prefixes):
                 return bookID
             return f"{prefix}{bookID}"
@@ -1711,5 +2115,7 @@ async def main_interface(url, cookie):
     except ValueError as e:
         logging.error(f"Error: {e}")
 #logging.warning(asyncio.run (x.RoyalRoad_Fetch_Novel_Data("https://www.royalroad.com/fiction/100326/into-the-unown-pokemon-fanfiction-oc")))
-cookie="cf_clearance=qB5azQudNBAwl2a3pUimPAmySGMv2kh1tL60Nasatsg-1749482842-1.2.1.1-VnM7Q_EY4GXi8_nsrH9dT7lZEPvD_xr8eTqzCDy39Yfmh3InBR2DlTDngmeVy0ZYT1KJCior8jDtXr5xLf.0POez02DiOvBuz7lIYMZFuA5ZPm.zzpX74Axm.hhtLjxCLeKz69QI.MHUSr0EINzHyA66XYKygh.X.Cc2I.6n7hLWJaa2aAFm.lfJnlDDs_YBmftEq4zEJc9d6zYNJN83X8PLEQnG_rQutLbDvzMHaegWmV889Y8Ulcmj4hWdGwWqkYRkEwkripGo5xEz4pynIl3qrsqAPpaUSQg.EgvfbaFKeLX0dmMpyRorfy84TzmrsP7h.bMSM.ami4AvPHmV7yDox68sEJPlAWGXl65MTt8"
-logging.warning(asyncio.run (main_interface("https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/", cookie or None)))
+cookie="cf_clearance=4YNHzi6yQ9hGxpibli5x.Gz6iZ5HO78TvmjYgbXRwaM-1749503301-1.2.1.1-xCTfyddFqJIvgB9vWQ_H.t9qcdeyo_83iQVimjkpEPymUFbXWEqfNVUGEpmYyWb6nGc09DCoXYoDW0MjhHqyiNjYsMYpy51B3m5pjBLwTtCvkhfriZK0Hl2L0WX8gUQiyc1MXwwOxYBPhNjzKnL0XvYhQ7L0RhL86pXtRuNOljMyRFMugA8zDbJYTmhGLPwV4_Pq96hFpbk5vduZJJkrsYjj0inCAKpTbtQgkBQNW.dbqSba9HJrvdG8F6bwQzT90paRM.Fc_yVCAVBU2SuHnYFuPFUftQDHqGuA6OLjgVeMVZvI5XRF0BzufIkC42tE_t6wV8ERlcsy_XEJ1BhTN.3k6_At0SKbVU.jom268.Y"
+#logging.warning(asyncio.run (main_interface("https://novelbin.me/novel-book/raising-orphans-not-assassins", cookie or None)))
+x=NovelBinScraper()
+logging.warning(asyncio.run (x.fetch_novel_data("https://novelbin.me/novel-book/raising-orphans-not-assassins")))
