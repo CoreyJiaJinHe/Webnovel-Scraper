@@ -133,6 +133,7 @@ def check_existing_book(bookID):
         logging.warning(f"Checking for bookID: {results['bookID']} ({type(results['bookID'])})")
         logging.warning(f"Checking for bookName: {results['bookName']} ({type(results['bookName'])})")
         return True
+    
 def check_existing_book_Title(bookTitle):
     db=Database.get_instance()
     savedBooks=db["Books"]
@@ -191,6 +192,7 @@ def check_recently_scraped(bookID):
     logging.warning(f"Time difference in days: {time_difference.days}")
     if time_difference.days < 1:
         #Less than 24 hours since it was last scraped.
+        logging.warning("Book was recently scraped. We are not scraping again.")
         return True
     return False
 
@@ -271,7 +273,7 @@ def create_latest(**kwargs):
         }
         db=Database.get_instance()
         savedBooks=db["Books"]
-        if (check_existing_book(-1)):
+        if (check_existing_book("-1")):
             savedBooks.replace_one({"bookID": "-1"}, book)
         else:
             savedBooks.insert_one(book)

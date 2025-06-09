@@ -26,16 +26,17 @@ basicHeaders={
     "Accept-Encoding": "gzip, deflate, br",
 }
 
-cloudflare_cookie=''
 
-
+cookie =''
 
 
 def setCookie(newCookie):
     global cookie
     cookie=newCookie
 
+cloudflare_cookie=cookie
 def interception (request):
+    global cookie
     del request.headers['User-Agent']
     del request.headers['Accept']
     del request.headers['Accept-Language']
@@ -46,7 +47,7 @@ def interception (request):
     request.headers['Accept']=basicHeaders["Accept"]
     request.headers['Accept-Language']=basicHeaders["Accept-Language"]
     request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
-    request.headers['Cookie']=cloudflare_cookie["Cookie"]
+    request.headers['Cookie']=cookie
 
 
 
