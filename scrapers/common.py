@@ -103,12 +103,21 @@ def remove_non_english_characters(text):
     #logging.warning(result)
     if not result:
         return text
-    return result.group() 
+    return result.group()
+
+
+import unicodedata
+
+def strip_accents(s):
+    return ''.join(c for c in unicodedata.normalize('NFD',s) if unicodedata.category(c) !='Mn')
+
 
 def remove_invalid_characters(inputString):
     invalid_chars = '.-<>:;"\'/\\|?*()'
     for char in invalid_chars:
         inputString=inputString.replace(char,' ')
+    
+    inputString=strip_accents(inputString)
 #    inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
     inputString=remove_non_english_characters(inputString)
     return inputString.strip()

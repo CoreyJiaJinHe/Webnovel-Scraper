@@ -19,7 +19,7 @@ logging.basicConfig(
 #logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
 
 
-import scrape
+from scrapers.common import (write_to_logs)
 
 from passlib.context import CryptContext
 
@@ -32,7 +32,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from pydantic import BaseModel
-#import scrape
+
 import mongodb
 
 #from pymongo import MongoClient
@@ -174,6 +174,16 @@ async def verifyUser(request: Request):
 
 
 
+
+
+
+
+
+
+
+
+
+
 #DONE: Write hashing function for passwords
 #DONE:Create user login function
 #DONE:Create user registration function
@@ -302,21 +312,21 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
         if not username or not password:
             raise credentials_exception
             #return JSONResponse(content={"error": "Missing username or password"}, status_code=400)
-        #scrape.write_to_logs(username + " " + password)
+        #write_to_logs(username + " " + password)
         hashed_password=mongodb.get_hashed_password(username)
         if (hashed_password):
-            scrape.write_to_logs(hashed_password + " " + password)
+            write_to_logs(hashed_password + " " + password)
             logging.error(f"Verifying password for user: {username}")
 
             if (authenticate_user(password,hashed_password)):
                 logging.error(f"User {username} authenticated successfully")
-                scrape.write_to_logs("User authenticated")
+                write_to_logs("User authenticated")
                 userID=mongodb.get_userID(username)
                 access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
                 if(mongodb.check_developer(username)):
                     isDeveloper=True
                 access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
-                scrape.write_to_logs("Access Token: "+access_token)
+                write_to_logs("Access Token: "+access_token)
                 verifiedStatus=mongodb.is_verified_user(userID,username)
                 response=JSONResponse(content={"username":username, "verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper or False},status_code=200)
                 response.set_cookie(
@@ -337,7 +347,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
         else:
             return {"message": "Invalid Credentials"}
     except Exception as e:
-        scrape.write_to_logs("FastApi Login Error: "+str(e))
+        write_to_logs("FastApi Login Error: "+str(e))
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
 
 @app.post("/api/logout/")
@@ -362,7 +372,7 @@ async def register (request: Request):
             return JSONResponse(content={"error": "Missing username or password"}, status_code=400)
         
         password=get_password_hash(password)
-        #scrape.write_to_logs(username + " " + password)
+        #write_to_logs(username + " " + password)
         
         if (mongodb.create_new_user(username,password)):
             return {True}
@@ -389,7 +399,7 @@ async def changePassword(request: Request):
                 if (mongodb.update_password(username,newPassword)):
                     access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
                     access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
-                    scrape.write_to_logs("Access Token: "+access_token)
+                    write_to_logs("Access Token: "+access_token)
                     response=JSONResponse(content={"message":"Login successful"},status_code=200)
                     response.set_cookie(
                         key="access_token",
@@ -402,13 +412,13 @@ async def changePassword(request: Request):
                     )
                     return response
                 else:
-                    scrape.write_to_logs("How the fuck did you get here. This should not be possible. We check username multiple times before this")
+                    write_to_logs("How the fuck did you get here. This should not be possible. We check username multiple times before this")
             except Exception as e:
-                scrape.write_to_logs("FastAPI Change Password Error: "+str(e))
+                write_to_logs("FastAPI Change Password Error: "+str(e))
         else:
             return {"message": "Invalid Credentials"}
     except Exception as e:
-        scrape.write_to_logs("FastApi Change Password Error: "+str(e))
+        write_to_logs("FastApi Change Password Error: "+str(e))
         return JSONResponse(content={"error": "FastApi Change Password Error"}, status_code=400)
     
 @app.get("/", tags=["root"])
