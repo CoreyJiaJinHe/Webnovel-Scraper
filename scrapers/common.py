@@ -10,6 +10,10 @@ env_path = find_dotenv()
 load_dotenv(env_path, override=True)
 
 
+from utils import (
+    write_to_logs,
+    )
+
 from mongodb import (
     check_existing_book_Title,
     get_Entry_Via_Title,
@@ -50,30 +54,6 @@ def interception (request):
     request.headers['Cookie']=cookie
 
 
-
-def write_to_logs(log):
-    logLocation=os.getenv("LOGS",
-        #os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
-    )
-    #Debugging purposes.
-    # logging.warning(f"Log location: {logLocation}")
-    
-    # print("CWD:", os.getcwd())
-    # print("LOGS env:", os.getenv("LOGS"))
-    # print("logLocation:", logLocation)
-    
-    
-    
-    todayDate=datetime.datetime.today().strftime('%Y-%m-%d')
-    log = datetime.datetime.now().strftime('%c') +" "+log+"\n"
-    fileLocation=f"{logLocation}/{todayDate}.txt"
-    logging.warning(f"Writing to log file: {fileLocation}")
-    if (check_directory_exists(fileLocation)):
-        f=open(fileLocation,"a")
-    else:
-        f=open(fileLocation,'w')
-    f.write(log)
-    f.close()
 
 
 

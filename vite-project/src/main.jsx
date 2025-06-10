@@ -13,6 +13,9 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+import NavBar from './components/NavBar.jsx'
+import {UserContext, UserProvider} from './components/UserContext.jsx'
+
 import App from './App.jsx'
 import HomePage from './Pages/HomePage'
 import LoginPage from './Pages/LoginPage'
@@ -20,8 +23,7 @@ import DownloadPage from './Pages/DownloadPage'
 import UserPage from './Pages/UserPage'
 import FollowListPage from './Pages/FollowListPage'
 import DeveloperPage from './Pages/DeveloperPage'
-import NavBar from './components/NavBar.jsx'
-import {UserContext, UserProvider} from './components/UserContext.jsx'
+import BooksPage from './Pages/BooksPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -51,8 +53,11 @@ const router = createBrowserRouter([
   {
     path: "/react/DeveloperPage/",
     element: <DeveloperPage />,
-  }
-,
+  },
+  {
+    path: "/react/BooksPage/",
+    element: <BooksPage />,
+  },
   {
     path: "/react/NavBar/",
     element: <NavBar />,
