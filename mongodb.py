@@ -501,15 +501,6 @@ def check_developer(username):
     return False
     
 
-# def check_login_credentials(userID,password):
-#     db=Database.get_instance()
-#     verifiedUsers=db["VerifiedUsers"]
-#     results=verifiedUsers.find_one({"userID":userID})
-#     if (results!=None):
-#         result=str(verifiedUsers.update_one({"userID":userID},{"$set":{"lastLogin":datetime.datetime.now()}}))
-#         write_to_logs(result)
-#         return results["password"]
-#     return False
 
 #create_user_reading_list(userID=2,followList=[1,2,3,4,5])
 

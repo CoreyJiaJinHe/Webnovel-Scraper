@@ -1,3 +1,62 @@
+
+
+#TODO: Create a epub function that generates from links, and existing file retrievals if link isn't available
+
+#https://github.com/aerkalov/ebooklib/issues/194
+#Do this to embed images into the epub.
+#Will need to have a counter as the html files are being stored.
+#So that image_01 -> image_02 -> image_03
+#DONE #Will also need to replace the src="link here" to src="images/image_01.png" while chapters are being stored.
+#DONE #Will need to store the images into the raw epub folder.
+#DONE #Will need to add_item(image_01) into the epub each time.
+
+#DONE Will need to write a css sheet for tables.
+#DONE Set base text to black
+#DONE Set table text to white
+
+
+
+
+
+
+
+#: DONE Fuzzy search for if input is not link. If input is Title, send query, get results.
+#API:https://www.royalroad.com/fictions/search?globalFilters=false&title=test&orderBy=popularity
+#https://www.royalroad.com/fictions/search?globalFilters=false&title=test
+#Two versions. Popularity, and Relevance.
+#Relevance to get best possible match.
+#Popularity for when results have similar names.
+
+
+#div class="fiction-list"
+#div class= "row fiction-list-item"
+#h2 class="fiction-title"
+#a href format="/fiction/#####/title"
+
+
+#TODO: Create new database to save a person's follow list on the scrapable sites
+#TODO: Create a function to scrape that person's follow list
+#TODO: Add a button to the developer page to scrape the follow list
+
+
+#TODO: Royalroad Followlist Scraper
+#TODO: Aside from Royalroad, write scrape functions for Spacebattles (Done), Novelbin(Done), Lightnovelpub, Foxaholic (Done), Fanfiction.net, NovelCool(Aggregators)
+
+#TODO:Also scrape from raw websites, feed into google translate or AI translate api, then store.
+#Spacebattles: https://github.com/imgurbot12/pypub/blob/master/examples/spacebattles.py
+
+
+# TODO: Available Books Page. Display all books on this page in their categories. When clicked on, show pop-up panel containing the books details and the button to add to user follow list. Button should be replaced with an unfollow button afterwards if it is followed.
+# TODO: Follow List Database Schema
+# TODO: Function: Add book to user follow list
+# TODO: Add to UserPage to show Follow List
+# TODO: Add to DeveloperPage the fields to insert, delete and modify existing books
+# TODO: Create the SearchPage, to search existing scrape sites for books to scrape. If we search Royalroad, searchpage should display the top results and allow the user to select which one to scrape.
+# TODO: Scrape more sites. Including raw websites like uukanshu
+# TODO: Translate the raw text. Create a glossary for terms to use in translation to ensure consistent term translations
+
+
+
 import bs4
 import re
 import os, errno
@@ -326,7 +385,6 @@ class RoyalRoadScraper():
         
         currentImageCount=image_count
         # Process images
-        # TODO: This needs modifying. 
         images=chapter_content.find_all('img')
         images=[image['src'] for image in images]
         logging.warning(images)
@@ -509,7 +567,6 @@ class RoyalRoadEpubProducer():
             logging.warning(chapter_title)
             chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
             
-            #TODO: THIS NEEDS MODIFYING
             images=chapter_content_soup.find_all('img')
             images=[image['src'] for image in images]
             image_dir = f"./books/raw/{book_title}/"
@@ -1473,7 +1530,6 @@ class FoxaholicEpubProducer():
             logging.warning(chapter_title)
             chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
             
-            #TODO: THIS NEEDS MODIFYING
             images=chapter_content_soup.find_all('img')
             images=[image['src'] for image in images]
             image_dir = f"./books/raw/{book_title}/"
@@ -2025,16 +2081,23 @@ async def main_interface(url, cookie):
             
         bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle= await scraper.fetch_novel_data(url)
         
-        
-        
-        new_epub=epub.EpubBook()
-        new_epub.set_identifier(bookID)
-        new_epub.set_title(bookTitle)
-        new_epub.set_language('en')
-        new_epub.add_author(bookAuthor)
         style=open("style.css","r").read()
         default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
-        new_epub.add_item(default_css)
+        async def instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css):
+            try:
+                new_epub=epub.EpubBook()
+                new_epub.set_identifier(bookID)
+                new_epub.set_title(bookTitle)
+                new_epub.set_language('en')
+                new_epub.add_author(bookAuthor)
+                new_epub.add_item(default_css)
+                return new_epub
+            except Exception as e:
+                errorText=f"Failed to create new_epub object. Error: {e}"
+                write_to_logs(errorText)
+                return
+        
+        new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
         
         bookID=remove_invalid_characters(bookID)
         
@@ -2070,7 +2133,7 @@ async def main_interface(url, cookie):
         
         #TODO: DONE I also need to modify SpacebattlesEpubProducer. Currently, the latest chapter is considered the last page of spacebattles reader mode.
         #Due to how spacebattles works, it does not check for new chapters added to the page. Meaning, I can store 5 threadmarks on last page, and the sixth won't be detected.
-        #TODO: I also need to modify all the EpubProducers to handle broken images so that it won't break the epub generation.
+        #TODO: DONE I also need to modify all the EpubProducers to handle broken images so that it won't break the epub generation.
         
         await epub_producer.produce_epub(bookTitle,default_css,new_epub)
         rooturl=""
@@ -2117,5 +2180,73 @@ async def main_interface(url, cookie):
 #logging.warning(asyncio.run (x.RoyalRoad_Fetch_Novel_Data("https://www.royalroad.com/fiction/100326/into-the-unown-pokemon-fanfiction-oc")))
 cookie="cf_clearance=4YNHzi6yQ9hGxpibli5x.Gz6iZ5HO78TvmjYgbXRwaM-1749503301-1.2.1.1-xCTfyddFqJIvgB9vWQ_H.t9qcdeyo_83iQVimjkpEPymUFbXWEqfNVUGEpmYyWb6nGc09DCoXYoDW0MjhHqyiNjYsMYpy51B3m5pjBLwTtCvkhfriZK0Hl2L0WX8gUQiyc1MXwwOxYBPhNjzKnL0XvYhQ7L0RhL86pXtRuNOljMyRFMugA8zDbJYTmhGLPwV4_Pq96hFpbk5vduZJJkrsYjj0inCAKpTbtQgkBQNW.dbqSba9HJrvdG8F6bwQzT90paRM.Fc_yVCAVBU2SuHnYFuPFUftQDHqGuA6OLjgVeMVZvI5XRF0BzufIkC42tE_t6wV8ERlcsy_XEJ1BhTN.3k6_At0SKbVU.jom268.Y"
 #logging.warning(asyncio.run (main_interface("https://novelbin.me/novel-book/raising-orphans-not-assassins", cookie or None)))
-x=NovelBinScraper()
-logging.warning(asyncio.run (x.fetch_novel_data("https://novelbin.me/novel-book/raising-orphans-not-assassins")))
+# x=NovelBinScraper()
+# logging.warning(asyncio.run (x.fetch_novel_data("https://novelbin.me/novel-book/raising-orphans-not-assassins")))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#royalroad cookie: .AspNetCore.Identity.Application
+rrcookie=os.getenv("ROYALROAD_ACCOUNT_COOKIE")
+
+specialHeaders={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    "cookie":rrcookie
+}
+
+async def royalroad_follow_list_soup(url, specialHeaders):
+    async with aiohttp.ClientSession(headers = specialHeaders) as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    html = await response.text()
+                    soup = bs4.BeautifulSoup(html, 'html.parser')
+                    return soup
+                
+async def retrieve_from_royalroad_follow_list():
+    soup=await royalroad_follow_list_soup("https://www.royalroad.com/my/follows", specialHeaders)
+    bookTitles=soup.find_all("h2",{"class":"fiction-title"})
+    bookLinks=[]
+    for title in bookTitles:
+        a_tag = title.find("a")
+        if a_tag and "href" in a_tag.attrs:
+            bookLinks.append(f"https://www.royalroad.com{a_tag["href"]}")
+    logging.warning(bookLinks)
+    for link in bookLinks:
+        logging.warning(await main_interface(link))
+    
+#option takes two values 0 or 1. 0 for relevance. 1 for popularity.
+async def query_royalroad(title, option):
+    if (title.isspace() or title==""):
+        return "Invalid Title"
+        
+    if (option ==0):
+        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}"
+    elif (option==1):
+        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}&orderBy=popularity"
+    else:
+        return ("Invalid Option")
+
+    soup=await RoyalRoadScraper.getSoup(querylink)
+    resultTable=soup.find("div",{"class":"fiction-list"})
+    bookTable=resultTable.find("h2",{"class":"fiction-title"})
+    bookRows=bookTable.find_all("a")
+    firstResult=bookRows[0]['href']
+    #formatting
+    resultLink=f"https://www.royalroad.com{firstResult}"
+    return resultLink

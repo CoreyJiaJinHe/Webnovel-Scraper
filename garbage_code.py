@@ -38,6 +38,44 @@ test()
 
 
 
+async def updateEpub(novelURL,bookTitle):
+    already_saved_chapters=get_existing_order_of_contents(bookTitle)
+    chapterMetaData=list()
+    imageCount=0
+    logging.warning("Finding chapters not stored")
+    logging.warning(await RoyalRoad_Fetch_Chapter_List(novelURL))
+    for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
+        chapterID=extract_chapter_ID(url)
+        if not (check_if_chapter_exists(chapterID,already_saved_chapters)):
+            soup=await getSoup(url)
+            chapterTitle=await fetch_Chapter_Title(soup)
+            logging.warning(url)
+            fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+            chapterContent=await RoyalRoad_Fetch_Chapter(soup)
+            if chapterContent:
+                images=chapterContent.find_all('img')
+                images=[image['src'] for image in images]
+                imageDir=f"./books/raw/{bookTitle}/images/"
+                currentImageCount=imageCount
+                #logging.warning(images)
+                if (images):
+                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+                    for img,image in zip(chapterContent.find_all('img'),images):
+                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+                else:
+                    logging.warning("Chapter has no images")
+            else:
+                logging.warning("chapterContent is None")
+            
+            
+
+            chapterContent=chapterContent.encode('ascii')
+            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+            await asyncio.sleep(0.5)
+    append_order_of_contents(bookTitle, chapterMetaData)
+
+
 # def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
 #     already_saved_chapters=get_existing_order_of_contents(bookTitle)
     
