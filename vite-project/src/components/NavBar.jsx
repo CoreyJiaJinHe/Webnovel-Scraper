@@ -31,6 +31,9 @@ function Navbar(){
                     <li>
                         <Link to="/react/DownloadPage">Downloads</Link>
                     </li>
+                    <li>
+                        <Link to="/react/BooksPage">Books</Link>
+                    </li>
 
 
                 </ul>

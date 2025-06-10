@@ -13,7 +13,7 @@ MONGODB_URL=os.getenv('MONGODB_URI')
 myclient=MongoClient(MONGODB_URL)
 mydb=myclient["BotServers"]
 botServers=mydb["Servers"]
-from scrape import write_to_logs 
+from utils import write_to_logs
 
 class Database:
     _instance = None
@@ -60,7 +60,7 @@ def get_all_books():
     db=Database.get_instance()
     savedBooks=db["Books"]
     result = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}}).to_list(length=None).sort('bookName',1)
-    result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapter"]] for result in result]
+    result=[[result["bookID"],result["bookName"],(result["lastScraped"]).strftime('%m/%d/%Y'),result["lastChapterTitle"], result["bookDescription"]] for result in result]
     return result
 
 def get_organized_books():
@@ -71,56 +71,11 @@ def get_organized_books():
     all_books=[]
     for result in results:
         books=savedBooks.find({"bookID":{"$nin":["-1", "0"]}, "websiteHost":result}).sort('bookName',1).to_list(length=None)
-        books=[[book["bookID"],book["bookName"],(book["lastScraped"]).strftime('%m/%d/%Y'),book["lastChapter"]] for book in books]
+        books=[[book["bookID"],book["bookName"],(book["lastScraped"]).strftime('%m/%d/%Y'),book["lastChapterTitle"], book["bookDescription"]] for book in books]
         if (books):
             all_books.append([result, books])
     return all_books
 #logging.warning(get_organized_books())
-
-def remove_excess_spaces():
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find({"bookID":{"$ne":"-1"}})
-    for result in results:
-        bookDescription=result["bookDescription"]
-        if ("\n" in bookDescription):
-            bookDescription=bookDescription.replace("\n","")
-        while ("  " in bookDescription):
-            bookDescription=bookDescription.replace("  "," ")
-        bookDescription=bookDescription.strip()
-        bookAuthor=result["bookAuthor"]
-        #logging.warning(bookAuthor)
-        if ("\n" in bookAuthor):
-            bookAuthor=bookAuthor.replace("\n","")
-        while ("  " in bookAuthor):
-            bookAuthor=bookAuthor.replace("  "," ")
-        if ("Author:" in bookAuthor):
-            bookAuthor=bookAuthor.replace("Author:","")
-        bookAuthor=bookAuthor.strip()
-        savedBooks.update_one({"bookID":result["bookID"]},{"$set":{'bookDescription':bookDescription, 'bookAuthor':bookAuthor}})
-#remove_excess_spaces()
-
-
-
-import re
-def fix_websiteHost_links():
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find({"bookID":{"$ne":"0"}})
-    for result in results:
-        websiteHost=result["websiteHost"]
-        if re.match(r"^[A-Za-z0-9.-]+$", websiteHost):
-            logging.warning(f"WebsiteHost already in correct format: {websiteHost}")
-            continue  # Skip processing if it's already a root domain
-        match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", websiteHost)
-
-        if match:
-            newURL=match.group(1)
-            savedBooks.update_one({"bookID":result["bookID"]},{"$set":{'websiteHost':newURL}})
-            logging.warning(f"Updated websiteHost: {newURL}")
-        else:
-            logging.warning(f"Failed to process websiteHost: {websiteHost}")
-#fix_websiteHost_links()
 
 
 def check_existing_book(bookID):
@@ -278,11 +233,164 @@ def create_latest(**kwargs):
         else:
             savedBooks.insert_one(book)
 
+
+
+
+
+
+def remove_excess_spaces():
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results=savedBooks.find({"bookID":{"$ne":"-1"}})
+    for result in results:
+        bookDescription=result["bookDescription"]
+        if ("\n" in bookDescription):
+            bookDescription=bookDescription.replace("\n","")
+        while ("  " in bookDescription):
+            bookDescription=bookDescription.replace("  "," ")
+        bookDescription=bookDescription.strip()
+        bookAuthor=result["bookAuthor"]
+        #logging.warning(bookAuthor)
+        if ("\n" in bookAuthor):
+            bookAuthor=bookAuthor.replace("\n","")
+        while ("  " in bookAuthor):
+            bookAuthor=bookAuthor.replace("  "," ")
+        if ("Author:" in bookAuthor):
+            bookAuthor=bookAuthor.replace("Author:","")
+        bookAuthor=bookAuthor.strip()
+        logging.warning(savedBooks.update_one({"bookID":result["bookID"]},{"$set":{'bookDescription':bookDescription, 'bookAuthor':bookAuthor}}))
+#remove_excess_spaces()
+
+
+
+import re
+def fix_websiteHost_links():
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results=savedBooks.find({"bookID":{"$ne":"0"}})
+    for result in results:
+        websiteHost=result["websiteHost"]
+        if re.match(r"^[A-Za-z0-9.-]+$", websiteHost):
+            logging.warning(f"WebsiteHost already in correct format: {websiteHost}")
+            continue  # Skip processing if it's already a root domain
+        match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", websiteHost)
+
+        if match:
+            newURL=match.group(1)
+            savedBooks.update_one({"bookID":result["bookID"]},{"$set":{'websiteHost':newURL}})
+            logging.warning(f"Updated websiteHost: {newURL}")
+        else:
+            logging.warning(f"Failed to process websiteHost: {websiteHost}")
+#fix_websiteHost_links()
+
+def fill_existing_records():
+    db = Database.get_instance()
+    savedBooks = db["Books"]
+    results = list(savedBooks.find({"bookID": {"$nin": ["-1", "0"]}}).sort('bookName', 1))
+    for result in results:
+        book = {
+            "bookID": result["bookID"],
+            "bookName": result["bookName"],
+            "bookAuthor":result["bookAuthor"],
+            "bookDescription": result["bookDescription"],
+            "websiteHost": result["websiteHost"],
+            "firstChapter": result["firstChapter"],
+            "lastChapterID": result.get("lastChapterID", "N/A"),
+            "lastChapterTitle": result.get("lastChapterTitle", "N/A"),
+            "lastScraped": result["lastScraped"],
+            "totalChapters": result["totalChapters"],
+            "directory": result["directory"]
+        }
+        if "lastChapter" in results:
+            if not (str(result["lastChapter"]).isdigit()):
+                book["lastChapterID"] = -1
+            else:
+                book["lastChapterID"] = int(results["lastChapter"])
+        
+        
+        
+        logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
+
+#fill_existing_records()
+
+def fix_existing_record_data_types():
+    db = Database.get_instance()
+    savedBooks = db["Books"]
+    results = list(savedBooks.find({"bookID": {"$nin": ["-1", "0"]}}).sort('bookName', 1))
+    for result in results:
+        
+        if not (str(result["firstChapter"])).isdigit():
+            result["firstChapter"] = -1
+        if not (str(result["lastChapterID"])).isdigit():
+            result["lastChapterID"] = -1
+            
+        book = {
+            "bookID": str(result["bookID"]),
+            "bookName": str(result["bookName"]),
+            "bookAuthor":str(result["bookAuthor"]),
+            "bookDescription": result["bookDescription"],
+            "websiteHost": result["websiteHost"],
+            "firstChapter": int(result["firstChapter"]),
+            "lastChapterID": int(result["lastChapterID"]),
+            "lastChapterTitle": result["lastChapterTitle"],
+            "lastScraped": result["lastScraped"],
+            "totalChapters": int(result["totalChapters"]),
+            "directory": result["directory"]
+        }
+        logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
+
+fix_existing_record_data_types()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def generate_userID():
     db=Database.get_instance()
     verifiedUsers=db["VerifiedUsers"]
     userID=verifiedUsers.count_documents({})+1
     return userID
+
 
 def create_new_user(userName, passWord):
     db=Database.get_instance()
