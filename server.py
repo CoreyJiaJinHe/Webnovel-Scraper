@@ -94,7 +94,6 @@ def getFiles():
     fileLocation=latestBook["directory"]
     fileName=latestBook["bookName"]
     
-    
     #Consider improving fileName to include Ch1- Latest chapter
     #logging.warning(fileName)
     
@@ -109,8 +108,6 @@ async def getBook(id):
 
     fileLocation=book["directory"]
     fileName=book["bookName"]
-    
-    
     #Consider improving fileName to include Ch1- Latest chapter
     #logging.warning(fileName)
     
@@ -249,9 +246,9 @@ async def verifyUser(request: Request):
 #DONE:Create user login function
 #DONE:Create user registration function
 #Create user profile function
-#Create user book list return function
-#Create user book list add function
-#Create user book list remove function
+#DONE: Create user book list return function
+#DONE: Create user book list add function
+#DONE: Create user book list remove function
 #Create Cookies to store user login information and session data
 
 #Learn how to use JWT Tokens/Cookies
