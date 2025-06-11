@@ -1,0 +1,36 @@
+.books-page-heading {
+    text-align: center;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.875rem; /* text-3xl */
+    font-weight: bold;
+}
+
+.books-page-content {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.books-page-content-left {
+    width: 14rem; /* w-56 */
+    min-width: 12rem;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 6rem; /* top-24 */
+    margin-right: 1rem;
+}
+
+.books-page-content-main {
+    flex: 1 1 0%;
+    max-width: 72rem; /* max-w-6xl */
+    height: 80vh;
+    overflow-y: auto;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    padding: 1.5rem;
+    color: #000;
+}

@@ -8,6 +8,8 @@ import './CSS/index.css'
 import './CSS/NavBar.css'
 import './CSS/UserCard.css'
 import './CSS/UserPage.css'
+import './CSS/BookPopUpPanel.css'
+import './CSS/BooksPage.css'
 
 import {
   createBrowserRouter,

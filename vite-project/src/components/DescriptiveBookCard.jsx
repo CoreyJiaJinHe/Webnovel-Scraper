@@ -3,7 +3,7 @@ import axios from "axios";
 //import "../BookCard.css"
 
 
-function descriptiveBookCard({data:{_id, bookName,lastScraped,latestChapter,description}}){
+function descriptiveBookCard({data:{_id, bookName,bookAuthor,description,lastScraped,latestChapter}}){
     return(
         <div className="descriptive-BookCard">
             <div className="descriptive-BookCard-content">

@@ -153,10 +153,16 @@ function DownloadPage() {
                 <BookCard
                 key={book[0]} // Assuming book[0] is the bookID
                 data={{
+                    // _id: book[0],
+                    // bookName: book[1],
+                    // bookAuthor: book[2],
+                    // description: book[3],
+                    // lastScraped: book[5],
+                    // latestChapter: book[6],
                     _id: book[0], // bookID
                     bookName: book[1], // bookName
-                    lastScraped: book[2], // lastScraped date
-                    latestChapter: book[3], // latestChapter
+                    lastScraped: book[5], // lastScraped date
+                    latestChapter: book[6], // latestChapter
                 }}
                 getBook={grabBook}
                 />
