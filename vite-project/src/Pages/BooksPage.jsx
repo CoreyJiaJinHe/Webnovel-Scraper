@@ -5,6 +5,7 @@ import axios from "axios";
 const API_URL = "http://localhost:8000/api";
 const api = axios.create({ baseURL: API_URL });
 import BookPopup from '../components/BookPopupPanel.jsx';
+import { useUser } from "../components/UserContext";
 
 
 function BooksPage() {
@@ -12,6 +13,12 @@ function BooksPage() {
     const [doOnce, setDoOnce] = useState(false);
     const [bookList, setBookList]=useState(['']);
     const [popupBook, setPopupBook] = useState(null); // For popup panel
+    const {
+        isLoggedIn, setIsLoggedIn,
+        username, setUsername,
+        verifiedState, setVerifiedState,
+        logout
+    } = useUser();
 
     const sectionRefs = useRef({});
     useEffect(()=>{
@@ -92,6 +99,31 @@ function BooksPage() {
         </div>
     );
     
+    const addToFollowList = async (bookID) => {
+        try {
+            const response = await api.post('/followBook', {"bookID":bookID },{ withCredentials: true });
+            if (response.status === 200) {
+                console.log("Book added to follow list successfully.");
+            } else {
+                console.error("Failed to add book to follow list.");
+            }
+        } catch (error) {
+            console.error("Error adding book to follow list:", error);
+        }
+    };
+
+    const removeFromFollowList = async (bookID) => {
+    try {
+            const response = await api.post('/unfollowBook', {"bookID":bookID },{ withCredentials: true });
+            if (response.status === 200) {
+                console.log("Book removed fromfollow list successfully.");
+            } else {
+                console.error("Failed to remove book to follow list.");
+            }
+        } catch (error) {
+            console.error("Error removing book to follow list:", error);
+        }
+    };
     // Pop-up close handler
     const closePopup = () => setPopupBook(null);
     return (
@@ -110,7 +142,11 @@ function BooksPage() {
             </div>
         </main>
         {/* Popup Panel */}
-        <BookPopup book={popupBook} onClose={closePopup} />
+        <BookPopup book={popupBook} onClose={closePopup} 
+        isLoggedIn={isLoggedIn} 
+        // <-- pass your login state here
+        addToFollowList={addToFollowList}
+        removeFromFollowList={removeFromFollowList}/>
     </>
     )
     }

@@ -132,7 +132,7 @@ async def getFollowedBooks(request: Request):
     if not received_access_token:
         raise credentials_exception  # 401 Unauthorized
     try:
-        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         logging.error(f"New Access Token: {new_access_token}")
         if (new_access_token):
             followedBooks = mongodb.get_Followed_Books(str(username))
@@ -152,7 +152,68 @@ async def getFollowedBooks(request: Request):
     except Exception as e:
         logging.error(f"Token authentication failed: {e}")
         raise credentials_exception  # 401 Unauthorized
-    
+
+@app.post("/api/followBook/")
+async def followBook(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    logging.error(f"New Access Token: {received_access_token}")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        data = await request.json()
+        bookID = data.get("bookID")
+        if (new_access_token):
+            if(mongodb.add_to_user_reading_list(userID,bookID)):
+                response=JSONResponse(content={"message": "Book followed successfully"}, status_code=200)
+                response.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    samesite="lax",
+                    secure=False,
+                    max_age=60 * 60 * 24,  # 1 day in seconds
+                    expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+                )
+                return response
+            else:
+                logging.error("Failed to follow book")
+                return JSONResponse(content={"error": "Failed to follow book"}, status_code=400)
+    except Exception as e:
+        logging.error(f"Token authentication failed: {e}")
+        raise credentials_exception  # 401 Unauthorized
+
+
+@app.post("/api/unfollowBook/")
+async def unfollowBook(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    logging.error(f"New Access Token: {received_access_token}")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        data = await request.json()
+        bookID = data.get("bookID")
+        if (new_access_token):
+            if(mongodb.remove_from_user_reading_list(userID,bookID)):
+                response=JSONResponse(content={"message": "Book removed successfully"}, status_code=200)
+                response.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    samesite="lax",
+                    secure=False,
+                    max_age=60 * 60 * 24,  # 1 day in seconds
+                    expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+                )
+                return response
+            else:
+                logging.error("Failed to remove book")
+                return JSONResponse(content={"error": "Failed to remove book"}, status_code=400)
+    except Exception as e:
+        logging.error(f"Token authentication failed: {e}")
+        raise credentials_exception  # 401 Unauthorized
+
 @app.get("/api/dev_get_unverified/")
 async def getUnverifiedUsers():
     users=mongodb.get_unverified_users()
@@ -257,7 +318,7 @@ async def authenticate_token(token):
                 data={"userid": str(userID), "username": username},
                 expires_delta=access_token_expires
             )
-            return new_access_token, username, verifiedStatus
+            return new_access_token, username, userID, verifiedStatus
         return False
     except jwt.ExpiredSignatureError:
         raise credentials_exception        
@@ -269,7 +330,7 @@ async def developerLogin(request: Request, response: Response):
     logging.error("Checking to see if you are a developer")
     received_access_token=request.cookies.get("access_token")
     if (received_access_token):
-        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         if(mongodb.check_developer(username)):
             return True
     else:
@@ -281,7 +342,7 @@ async def login (request: Request, response: Response):
     received_access_token=request.cookies.get("access_token")
     logging.error(f"New Access Token: {received_access_token}")
     if (received_access_token):
-        new_access_token,username,verifiedStatus=await authenticate_token(received_access_token)
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         logging.error(f"New Access Token: {new_access_token}")
         if (new_access_token):
             if(mongodb.check_developer(username)):
