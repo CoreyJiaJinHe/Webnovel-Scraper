@@ -606,22 +606,48 @@ def create_user_reading_list(**kwargs):
     else:
         write_to_logs("Function: create_user_reading_list. Error: User does not exist; Therefore we cannot make a reading list.")
 
-def remove_from_user_reading_list(**kwargs):
+def remove_from_user_reading_list(userID, bookID):
     db=Database.get_instance()
     savedBooks=db["UserLists"]
-    results=check_existing_reading_list(kwargs["userID"])
-    if (results):
-        for i in kwargs["removeList"]:
-            if (i in results["followList"]):
-                results["followList"].remove(i)
-        result=savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
-        write_to_logs("Function: remove_from_user_reading_list. Sucess: Removed from user reading list:"+result)
-        return True
+    results=check_existing_reading_list(int(userID))
+    if (results):            
+        if (bookID in results["followList"]):
+            results["followList"] = [b for b in results["followList"] if b != str(bookID)]
+            savedBooks.update_one(
+                {"userID": results["userID"]},
+                {"$set": {"followList": results["followList"]}}
+            )
+            logText="Function: remove_from_user_reading_list. Sucess: Removed from user reading list:"+str(results)
+            logging.warning(logText)
+            write_to_logs(logText)
+            return True
     else:
+        logText="Function: remove_from_user_reading_list. Error: User does not exist."
+        logging.warning(logText)
         write_to_logs("Function: remove_from_user_reading_list. Error: User does not exist.")
         return False
 
-
+def add_to_user_reading_list(userID, bookID):
+    db=Database.get_instance()
+    savedBooks=db["UserLists"]
+    results=check_existing_reading_list(int(userID))
+    
+    if (results):
+        if (bookID not in results["followList"]):
+            results["followList"].append(str(bookID))
+            result=savedBooks.update_one({"userID":results["userID"]},{"$set":{"followList":results["followList"]}})
+            logText="Function: add_to_user_reading_list. Sucess: Added to user reading list:"+str(result)
+            write_to_logs(logText)
+            logging.warning(logText)
+            return True
+    else:
+        logText="Function: add_to_user_reading_list. Error: User does not exist."
+        logging.warning(logText)
+        write_to_logs("Function: add_to_user_reading_list. Error: User does not exist.")
+        return False
+    
+#add_to_user_reading_list(userID=1,addList=[1,2,3,4,5])
+    
 def check_developer(username):
     db=Database.get_instance()
     savedBooks=db["VerifiedUsers"]

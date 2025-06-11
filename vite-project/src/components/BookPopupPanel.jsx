@@ -1,7 +1,19 @@
-import React from "react";
-
-const BookPopup = ({ book, onClose }) => {
+import React, { useState } from "react";
+const BookPopup = ({ book, onClose,isLoggedIn, addToFollowList ,removeFromFollowList}) => {
     if (!book) return null;
+    const [isFollowed, setIsFollowed] = useState(false);
+
+    
+    const handleFollow = () => {
+        addToFollowList(book[0]);
+        setIsFollowed(true);
+    };
+
+    const handleUnfollow = () => {
+        removeFromFollowList(book[0]);
+        setIsFollowed(false);
+    };
+
 
     // _id: book[0],
     // bookName: book[1],
@@ -28,6 +40,19 @@ const BookPopup = ({ book, onClose }) => {
                 <div className="pop-up-book-description" style={{ maxHeight: "80vh" }}>
                     {book[3] ? book[3] : "No description available."}
                 </div>
+                {isLoggedIn && (
+                    isFollowed ? (
+                        <button className="book-big-follow-button"  style={{background: "#ef4444", // Red for unfollow 
+                            }}onClick={handleUnfollow}>
+                            Unfollow Book
+                        </button>
+                    ) : (
+                        <button className="book-big-follow-button" style={{background: "#10b981", // Green for unfollow 
+                            }}onClick={handleFollow}>
+                            Follow Book
+                        </button>
+                    )
+                )}
                 <button className="book-big-close-button" onClick={onClose}>
                     Close
                 </button>
