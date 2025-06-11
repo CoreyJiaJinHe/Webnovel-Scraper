@@ -28,30 +28,19 @@ export function FollowListPage() {
     authenticateAndPopulate();
   }, []);
 
-
+  //Cookie is not accessible to JS which is why this and the userpage is broken
   async function authenticateAndPopulate() {
-    if (document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='))) {
-      try {
-        const response = await axios.get(`${API_URL}/token/`, { withCredentials: true });
-        if (response.status === 200) {
-          setUserName(response.data.username);
-          setVerifiedState(response.data.verified);
-          console.log("User authenticated:", response.data.username);
-          setIsLoggedIn(true);
-        } else {
-          navigate("/react/LoginPage/");
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          //await logout();
-          //navigate("/react/LoginPage/");
-        }
+    try {
+      const response = await axios.get(`${API_URL}/token/`, { withCredentials: true });
+      if (response.status === 200) {
+        setIsLoggedIn(true);
+        setUsername(response.data.username);
+        setVerifiedState(response.data.verified);
       }
+    } catch (error) {
+      setIsLoggedIn(false);
+      navigate("/react/LoginPage/");
     }
-    else{
-      //navigate("/react/LoginPage/");
-    }
-
 
     try{
       const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });

@@ -11,28 +11,18 @@ const api = axios.create({ baseURL: API_URL });
 
 export function UserPage() {
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const navigate = useNavigate();
   const formRef = useRef(null);
   const {
     isLoggedIn, setIsLoggedIn,
     username, setUsername,
     verifiedState, setVerifiedState
-  } = useUser();
-
-  function hasAccessTokenCookie() {
-    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='));
-  }
+  } = useUser(); 
 
   useEffect(() => {
-    // Only try tokenLogin if we have an access_token cookie
-    if (hasAccessTokenCookie()) {
       tokenLogin();
-    }
-    else {
-    navigate("/react/LoginPage/");
-    }
   }, []);
 
-  const navigate = useNavigate();
   async function tokenLogin(){
       try {
           const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
