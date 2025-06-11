@@ -32,24 +32,37 @@ export function FollowListPage() {
   async function authenticateAndPopulate() {
     if (document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='))) {
       try {
-        const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });
+        const response = await axios.get(`${API_URL}/token/`, { withCredentials: true });
         if (response.status === 200) {
           setUserName(response.data.username);
           setVerifiedState(response.data.verified);
-          setBookList(response.data.allbooks);
-
+          console.log("User authenticated:", response.data.username);
+          setIsLoggedIn(true);
         } else {
           navigate("/react/LoginPage/");
         }
       } catch (error) {
         if (error.response && error.response.status === 401) {
-          await logout();
-          navigate("/react/LoginPage/");
+          //await logout();
+          //navigate("/react/LoginPage/");
         }
       }
     }
     else{
-      navigate("/react/LoginPage/");
+      //navigate("/react/LoginPage/");
+    }
+
+
+    try{
+      const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });
+        if (response.status !== 200) {
+          console.error("Error fetching followed books:", response.statusText);
+          return;
+        }
+        setBookList(response.data.allbooks);
+    }
+    catch(error){
+      console.error("Error fetching followed books:", error);
     }
   }
 
@@ -72,11 +85,13 @@ export function FollowListPage() {
             {booksArray.map((book) => (
               <BookCard
                 key={book[0]} // Assuming book[0] is the bookID
+                //function bookCard({data:{_id, bookName,lastScraped,latestChapter},getBook}){
                 data={{
-                  _id: book[0], // bookID
-                  bookName: book[1], // bookName
-                  lastScraped: book[2], // lastScraped date
-                  latestChapter: book[3], // latestChapter
+                  _id: book[0],
+                  bookName: book[1],
+                  description: book[3],
+                  lastScraped: book[5],
+                  latestChapter: book[6],
                 }}
                 getBook={grabBook}
               />

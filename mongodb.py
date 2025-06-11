@@ -70,8 +70,20 @@ def get_organized_books():
     #logging.warning(results)
     all_books=[]
     for result in results:
-        books=savedBooks.find({"bookID":{"$nin":["-1", "0"]}, "websiteHost":result}).sort('bookName',1).to_list(length=None)
-        books=[[book["bookID"],book["bookName"],(book["lastScraped"]).strftime('%m/%d/%Y'),book["lastChapterTitle"], book["bookDescription"]] for book in books]
+        books=savedBooks.find({"bookID":{"$nin":["-1", "0"]}, "websiteHost":result}).sort('bookName',1).to_list(length=None)  
+        books = [
+            [
+                book["bookID"],
+                book["bookName"],
+                book["bookAuthor"],
+                book["bookDescription"],
+                book["websiteHost"],
+                book["lastScraped"].strftime('%m/%d/%Y'),
+                book["lastChapterTitle"]
+            ]
+            for book in books
+        ]        
+        #books=[[book["bookID"],book["bookName"],(book["lastScraped"]).strftime('%m/%d/%Y'),book["lastChapterTitle"], book["bookDescription"]] for book in books]
         if (books):
             all_books.append([result, books])
     return all_books
@@ -339,7 +351,7 @@ def fix_existing_record_data_types():
         }
         logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
 
-fix_existing_record_data_types()
+#fix_existing_record_data_types()
 
 
 
@@ -539,7 +551,20 @@ def get_Followed_Books(username):
 
                 bookData=savedBooks.find_one({"bookID":i,"websiteHost":site})
                 if (bookData):
-                    book=[bookData["bookID"],bookData["bookName"],(bookData["lastScraped"]).strftime('%m/%d/%Y'),bookData["lastChapter"]]
+                    book =[
+                        bookData["bookID"],
+                        bookData["bookName"],
+                        bookData["bookAuthor"],
+                        bookData["bookDescription"],
+                        bookData["websiteHost"],
+                        bookData["lastScraped"].strftime('%m/%d/%Y'),
+                        bookData["lastChapterTitle"]
+                    ]
+                    
+                    
+                    
+                    
+                    #book=[bookData["bookID"],bookData["bookName"],(bookData["lastScraped"]).strftime('%m/%d/%Y'),bookData["lastChapterTitle"]]
                     bookList.append(book)
             if (bookList):
                 followListResults.append([site,bookList])

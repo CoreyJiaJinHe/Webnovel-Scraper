@@ -33,6 +33,7 @@ function BooksPage() {
 
         const dataY=await response.data
         setBookList(dataY)
+        console.log(dataY)
     }
     catch(error){
         console.log(error)
@@ -64,9 +65,10 @@ function BooksPage() {
                                     data={{
                                         _id: book[0],
                                         bookName: book[1],
-                                        lastScraped: book[2],
-                                        latestChapter: book[3],
-                                        description: book[4],
+                                        bookAuthor: book[2],
+                                        description: book[3],
+                                        lastScraped: book[5],
+                                        latestChapter: book[6],
                                     }}
                                 />
                             </div>
@@ -95,17 +97,16 @@ function BooksPage() {
     return (
     <>
     <NavBar />
-        <h1 className="text-center my-6 text-3xl font-bold">
+        <h1 className="books-page-heading">
             Here you can find the current selection of books available.
         </h1>
-        <main className="mt-10 flex justify-center">
+        <main className="books-page-content">
             {/* Left panel: jump buttons */}
-            <aside className="w-56 min-w-[12rem] max-h-[80vh] overflow-y-auto sticky top-24 mr-4">
+            <aside className="books-page-content-left">
                 {renderJumpButtons()}
             </aside>
             {/* Center panel: scrollable book cards */}
-            <div className="flex-1 max-w-6xl h-[80vh] overflow-y-auto border border-gray-300 rounded-lg bg-white shadow p-6 text-black">
-                {renderBookSections()}
+            <div className="books-page-content-main">    {renderBookSections()}
             </div>
         </main>
         {/* Popup Panel */}

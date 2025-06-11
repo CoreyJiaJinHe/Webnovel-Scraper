@@ -189,7 +189,7 @@ class RoyalRoadScraper():
                         
                 description=soup.find("div",{"class":"description"}).get_text()
                 if ("\n" in description):
-                    description=description.replace("\n","")
+                    description=description.replace("\n"," ")
                 if ("  " in description):
                     description=description.replace("  "," ")
                 lastScraped=datetime.datetime.now()
