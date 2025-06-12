@@ -10,6 +10,7 @@ import './CSS/UserCard.css'
 import './CSS/UserPage.css'
 import './CSS/BookPopUpPanel.css'
 import './CSS/BooksPage.css'
+import './CSS/FollowListPage.css'
 
 import {
   createBrowserRouter,
