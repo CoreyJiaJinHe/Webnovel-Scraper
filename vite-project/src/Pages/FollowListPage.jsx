@@ -31,28 +31,37 @@ export function FollowListPage() {
   //Cookie is not accessible to JS which is why this and the userpage is broken
   async function authenticateAndPopulate() {
     try {
-      const response = await axios.get(`${API_URL}/token/`, { withCredentials: true });
+      const response = await axios.post(`${API_URL}/token/`, {}, {withCredentials:true});
       if (response.status === 200) {
+        console.log("User is authenticated:", response.data);
         setIsLoggedIn(true);
         setUsername(response.data.username);
         setVerifiedState(response.data.verified);
+        try{
+          const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });
+          if (response.status !== 200) {
+            console.error("Error fetching followed books:", response.statusText);
+            return;
+          }
+          if (response.data && response.data.allbooks) {
+          setBookList(response.data.allbooks);
+          } else {
+          // Handle case where no data is returned
+          setBookList([]);
+          console.warn("No followed books data returned from backend.");
+        }
+        }
+        catch(error){
+          console.error("Error fetching followed books:", error);
+        }
       }
     } catch (error) {
-      setIsLoggedIn(false);
+      console.log("User is not authenticated, redirecting to login:", error);
+      //setIsLoggedIn(false);
       navigate("/react/LoginPage/");
     }
-
-    try{
-      const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });
-        if (response.status !== 200) {
-          console.error("Error fetching followed books:", response.statusText);
-          return;
-        }
-        setBookList(response.data.allbooks);
-    }
-    catch(error){
-      console.error("Error fetching followed books:", error);
-    }
+    
+    
   }
 
   const renderBookSections = () => {
@@ -66,11 +75,9 @@ export function FollowListPage() {
         return null; // Skip rendering this section
       }
       return (
-        <section key={index} className="book-section mb-8">
-          {/* Section Header */}
-          <h2 className="text-2xl font-bold mb-4">{websiteHost}</h2>
-          {/* Grid of BookCards */}
-          <article className="grid grid-cols-4 gap-6 rounded-lg">
+        <section key={index} className="book-section">
+        <h2 className="book-section-header">{websiteHost}</h2>
+        <article className="book-section-article">
             {booksArray.map((book) => (
               <BookCard
                 key={book[0]} // Assuming book[0] is the bookID
@@ -95,16 +102,25 @@ export function FollowListPage() {
     getBook(id)
   }
 
+//flex flex-col gap-10 h-full mx-50 text-center  className='text-4xl mt-10'
   return (
     <>
       <NavBar />
-      <div className='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
-        <header className='flex flex-col gap-10 h-full mx-50 text-center '>
-          <h1 className='text-4xl mt-10'>Your followed books</h1>
-        </header>
-        <main className='mt-20'>
-          {renderBookSections()}
-        </main>
+      <div className="follow-list-page-bg">
+        <div className='follow-list-page-main'>
+          <header className='follow-list-page-header'>
+            <h1 >Your followed books</h1>
+          </header>
+          <main className='mt-20'>
+            {bookList.length === 0 ? (
+            <h2 className="no-books-heading">
+              You are not following any books yet!
+            </h2>
+          ) : (
+            renderBookSections()
+          )}
+          </main>
+        </div>
       </div>
     </>
   )

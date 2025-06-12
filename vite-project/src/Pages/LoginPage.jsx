@@ -39,8 +39,8 @@ export function LoginPage() {
           console.log(response.data.isDeveloper);
           setIsDeveloper(response.data.isDeveloper);
           setIsLoggedIn(true);
-          setUsername(response.data.username); // <-- add this
-          setVerifiedState(response.data.verifiedStatus); // <-- add this (or correct field name)
+          setUsername(response.data.username);
+          setVerifiedState(response.data.verifiedStatus);
 
         }
         else
@@ -76,6 +76,10 @@ export function LoginPage() {
     const params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
+
+    console.log("Submitting login with params:", params.toString());
+    console.log("API URL:", `${API_URL}/login/`);
+
     try {
         const response=await axios.post(`${API_URL}/login/`, params, {
         withCredentials: true,

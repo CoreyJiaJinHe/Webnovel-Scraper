@@ -123,16 +123,20 @@ def getAllBooks():
     return JSONResponse(content=allBooks)
 
 @app.get("/api/followedBooks/")
-async def getFollowedBooks(request: Request):
+async def getFollowedBooks(request: Request,response: Response):
     received_access_token=request.cookies.get("access_token")
-    logging.error(f"New Access Token: {received_access_token}")
+    logging.error(f"Current Access Token: {received_access_token}")
     if not received_access_token:
         raise credentials_exception  # 401 Unauthorized
     try:
         new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         logging.error(f"New Access Token: {new_access_token}")
         if (new_access_token):
-            followedBooks = mongodb.get_Followed_Books(str(username))
+            try:
+                followedBooks = mongodb.get_Followed_Books(str(username))
+            except Exception as e:
+                logging.error(f"Error retrieving followed books: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve followed books"}, status_code=500)
             logging.error(followedBooks)
             response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus, "allbooks":followedBooks}, status_code=200)
             response.set_cookie(
@@ -322,29 +326,21 @@ async def authenticate_token(token):
     except InvalidTokenError:
         raise credentials_exception
 
-@app.post("/api/developer/")
-async def developerLogin(request: Request, response: Response):
-    logging.error("Checking to see if you are a developer")
-    received_access_token=request.cookies.get("access_token")
-    if (received_access_token):
-        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
-        if(mongodb.check_developer(username)):
-            return True
-    else:
-        
-        raise credentials_exception
+
+    
 
 @app.post("/api/token/")
 async def login (request: Request, response: Response):
     received_access_token=request.cookies.get("access_token")
-    logging.error(f"New Access Token: {received_access_token}")
+    logging.error(f"Current Access Token: {received_access_token}")
     if (received_access_token):
         new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         logging.error(f"New Access Token: {new_access_token}")
         if (new_access_token):
+            isDeveloper=False
             if(mongodb.check_developer(username)):
                 isDeveloper=True
-            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper or False}, status_code=200)
+            response=JSONResponse(content={"username":username,"verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper}, status_code=200)
             response.set_cookie(
                 key="access_token",
                 value=new_access_token,
@@ -354,6 +350,8 @@ async def login (request: Request, response: Response):
                 max_age=60 * 60 * 24,  # 1 day in seconds
                 expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
             )
+            logging.warning("Returning response with access token cookie")
+            logging.error(response)
             return response
     else:
         
@@ -372,6 +370,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
             #return JSONResponse(content={"error": "Missing username or password"}, status_code=400)
         #write_to_logs(username + " " + password)
         hashed_password=mongodb.get_hashed_password(username)
+        logging.error(f"Hashed Password: {hashed_password}")
         if (hashed_password):
             write_to_logs(hashed_password + " " + password)
             logging.error(f"Verifying password for user: {username}")
@@ -380,13 +379,14 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
                 logging.error(f"User {username} authenticated successfully")
                 write_to_logs("User authenticated")
                 userID=mongodb.get_userID(username)
-                access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
+                access_token_expires=timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))                    
+                isDeveloper=False
                 if(mongodb.check_developer(username)):
                     isDeveloper=True
                 access_token=create_access_token(data={"userid": userID, "username":username},expires_delta=access_token_expires)
                 write_to_logs("Access Token: "+access_token)
                 verifiedStatus=mongodb.is_verified_user(userID,username)
-                response=JSONResponse(content={"username":username, "verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper or False},status_code=200)
+                response=JSONResponse(content={"username":username, "verifiedStatus":verifiedStatus, "isDeveloper":isDeveloper},status_code=200)
                 response.set_cookie(
                     key="access_token",
                     value=access_token,
@@ -403,7 +403,8 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
                 logging.error(f"Invalid credentials for user: {username}")
                 return JSONResponse(content={"message": "Invalid Credentials"}, status_code=401)
         else:
-            return {"message": "Invalid Credentials"}
+            logging.error(f"Invalid credentials for user: {username}")
+            return JSONResponse(content={"message": "Invalid Credentials"}, status_code=401)
     except Exception as e:
         write_to_logs("FastApi Login Error: "+str(e))
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
@@ -479,6 +480,71 @@ async def changePassword(request: Request):
         write_to_logs("FastApi Change Password Error: "+str(e))
         return JSONResponse(content={"error": "FastApi Change Password Error"}, status_code=400)
     
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+@app.post
+
+@app.post("/api/verifydeveloper/")
+async def developerLogin(request: Request, response: Response):
+    logging.error("Checking to see if you are a developer")
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if(mongodb.check_developer(username)):
+            return True
+    else:
+        
+        raise credentials_exception
+
+@app.post("/api/dev/rrfollows/")
+async def dev_get_reading_list(request: Request, response: Response):
+
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.get("/", tags=["root"])
 async def read_root() -> dict:
     return {"message": "Welcome to FAST API."}

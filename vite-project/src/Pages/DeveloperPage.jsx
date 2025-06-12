@@ -146,7 +146,14 @@ export function DeveloperPage() {
     }
   }
 
-  
+  async function royalroad_retrieveFollowedList(){
+    try{
+      const response = await axios.post(`${API_URL}/dev/rrfollows/`, { withCredentials: true });
+    }
+    catch (error){
+      console.error("Failed to retrieve followed list from RoyalRoad:", error);
+    }
+  }
 
 
   return (
