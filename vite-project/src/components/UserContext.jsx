@@ -9,7 +9,7 @@ const api = axios.create({ baseURL: API_URL });
 export function UserProvider({ children }) {
     const [isDeveloper, setIsDeveloper] = useState(false);
     const [isLoggedIn, setIsLoggedIn]=useState(false);
-    const [username, setUsername] = useState("");
+    const [username, setUserName] = useState("");
     const [verifiedState, setVerifiedState] = useState(false);
 
 
@@ -36,6 +36,11 @@ export function UserProvider({ children }) {
     async function logout() {
         setIsLoggedIn(false);
         setIsDeveloper(false);
+        setUserName("");
+        setVerifiedState(false);
+        localStorage.removeItem("username");
+        localStorage.removeItem("verifiedStatus");
+        localStorage.removeItem("isDeveloper");
         localStorage.removeItem("loginTime");
         localStorage.removeItem("access_token"); // If you store it here
 
@@ -43,17 +48,15 @@ export function UserProvider({ children }) {
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-
-        if (document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='))){
-            try{
-                const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
-                console.log("Logout response:",response);
-            }
-            catch (error){
-            }
-
-
+        try{
+            const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
+            console.log("Logout response:",response);
         }
+        catch (error){
+        }
+
+
+        
 
 
     }
@@ -62,7 +65,7 @@ export function UserProvider({ children }) {
         <UserContext.Provider value={{ 
             isDeveloper, setIsDeveloper, 
             isLoggedIn, setIsLoggedIn, logout,
-            username, setUsername,
+            username, setUserName,
             verifiedState, setVerifiedState
             }}>
             {children}

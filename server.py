@@ -412,7 +412,6 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], resp
 @app.post("/api/logout/")
 async def logout(response: Response):
     try:
-        
         response=JSONResponse(content={"message": "Logout successful"}, status_code=200)
         response.delete_cookie("access_token")
         logging.warning("User logged out successfully")

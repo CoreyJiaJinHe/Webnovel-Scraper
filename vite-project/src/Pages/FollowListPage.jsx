@@ -16,7 +16,7 @@ export function FollowListPage() {
 
   const {
     isLoggedIn, setIsLoggedIn,
-    username, setUsername,
+    username, setUserName,
     verifiedState, setVerifiedState,
     logout
   } = useUser();
@@ -35,7 +35,7 @@ export function FollowListPage() {
       if (response.status === 200) {
         console.log("User is authenticated:", response.data);
         setIsLoggedIn(true);
-        setUsername(response.data.username);
+        setUserName(response.data.username);
         setVerifiedState(response.data.verified);
         try{
           const response = await axios.get(`${API_URL}/followedBooks`, { withCredentials: true });

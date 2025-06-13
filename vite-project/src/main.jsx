@@ -11,6 +11,8 @@ import './CSS/UserPage.css'
 import './CSS/BookPopUpPanel.css'
 import './CSS/BooksPage.css'
 import './CSS/FollowListPage.css'
+import './CSS/LoginPage.css'
+import './CSS/DownloadPage.css'
 
 import {
   createBrowserRouter,
