@@ -15,46 +15,59 @@ export function LoginPage() {
   const [password, setPassword]=useState("");
   const [confirmPassword, setConfirmPassword]=useState("");
   const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn} = useUser();
+  const [redirectCountdown, setRedirectCountdown] = useState(2);
   
-  
-  function hasAccessTokenCookie() {
-    return document.cookie.split(';').some(cookie => cookie.trim().startsWith('access_token='));
-  }
-
   useEffect(() => {
-    // Only try tokenLogin if we have an access_token cookie
-    if (hasAccessTokenCookie()) {
       tokenLogin();
-    }
   }, []);
 
   const navigate = useNavigate();
   
   async function tokenLogin(){
     if (!isLoggedIn){
-        const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
-        console.log(response)
-        if (response.status===200){
-          navigate("/react/HomePage/");
-          console.log(response.data.isDeveloper);
-          setIsDeveloper(response.data.isDeveloper);
-          setIsLoggedIn(true);
-          setUsername(response.data.username);
-          setVerifiedState(response.data.verifiedStatus);
-
-        }
-        else
-        {
-          console.log("Not logged in")
-          setIsDeveloper(False);
+        try{
+            const response=await axios.post(`${API_URL}/token/`,{}, {withCredentials:true});
+            console.log(response)
+            if (response.status===200){
+              navigate("/react/HomePage/");
+              console.log(response.data.isDeveloper);
+              setIsDeveloper(response.data.isDeveloper);
+              setIsLoggedIn(true);
+              setUserName(response.data.username);
+              setVerifiedState(response.data.verifiedStatus);
+            }
+            else
+            {
+              console.log("Not logged in")
+              setIsDeveloper(False);
+            }
+          }
+        catch (error){
+            setIsLoggedIn(false);
+            setIsDeveloper(false);
         }
       }
-    
     else{
-      
       navigate("/react/HomePage/");
     }
   }
+
+  useEffect(() => {
+    let timer;
+    if (isLoggedIn) {
+      setRedirectCountdown(2); // reset countdown
+      timer = setInterval(() => {
+        setRedirectCountdown((prev) => prev - 1);
+      }, 1000);
+      const navTimeout = setTimeout(() => {
+        navigate("/react/HomePage/");
+      }, 2000);
+      return () => {
+        clearInterval(timer);
+        clearTimeout(navTimeout);
+      };
+    }
+  }, [isLoggedIn, navigate]);
 
   async function handleLoginSubmit(e){
     e.preventDefault();
@@ -94,11 +107,8 @@ export function LoginPage() {
           
           setIsDeveloper(response.data.isDeveloper);
           setIsLoggedIn(true);
-          setUsername(response.data.username);
+          setUserName(response.data.username);
           setVerifiedState(response.data.verifiedStatus);
-          setTimeout(() => {
-            navigate("/react/HomePage/");
-          }, 5000); // Redirect after 5 seconds
         }
       } catch (error) {
         if (error.response && error.response.status === 401) {
@@ -145,53 +155,63 @@ export function LoginPage() {
   }
 
   return (
-    <>
+  <>
     <NavBar/>
-      <div className="centered-container">
-        {showAccountCreation ? (
-          <div className="login-content">
-            <h1>Create Account</h1>
-            <p>Fill out the form to create a new account.</p>
-            <form className="login-form" onSubmit={handleAccountCreation}>
-              <p>Username</p>
-              <label>
-                <input name="username"/>
-              </label>
-              <p>Password</p>
-              <input type="password" name="password"/>
-              <p>Confirm Password</p>
-              <input name="confirmPassWord"/>
-              <button className="block mt-6 mx-auto" type="submit">Create Account</button>
-              
-            </form>
-            <button type="button" onClick={() => setShowAccountCreation(false)}>
-              Back to Login
-            </button>
-          </div>
-        ) : (
-          <div className="login-content">
-            <h1>Welcome.</h1>
-            <p>Login below to get access to the rest of the site.</p>
-            <form className="login-form" onSubmit={handleLoginSubmit}>
-              <p>Username</p>
-              <label>
-                <input name="username"/>
-              </label>
-              <p>Password</p>
-              <input type="password" name="password"/>
-              <button className="block mt-6 mx-auto"type="submit">Login</button>
-              
-              
-            </form>
-            <p>Don't have an account?</p>
-            <button type="button" onClick={() => setShowAccountCreation(true)}>
+    <div className="centered-container">
+      <div className="login-content">
+        {!isLoggedIn ? (
+          showAccountCreation ? (
+            <>
+              <h1>Create Account</h1>
+              <p>Fill out the form to create a new account.</p>
+              <form className="login-form" onSubmit={handleAccountCreation}>
+                <p>Username</p>
+                <label>
+                  <input name="username"/>
+                </label>
+                <p>Password</p>
+                <input type="password" name="password"/>
+                <p>Confirm Password</p>
+                <input name="confirmPassWord" type="password"/>
+                <button className="block mt-6 mx-auto" type="submit">Create Account</button>
+              </form>
+              <button type="button" onClick={() => setShowAccountCreation(false)}>
+                Back to Login
+              </button>
+            </>
+          ) : (
+            <>
+              <h1>Welcome.</h1>
+              <p>Login below to get access to the rest of the site.</p>
+              <form className="login-form" onSubmit={handleLoginSubmit}>
+                <p>Username</p>
+                <label>
+                  <input name="username"/>
+                </label>
+                <p>Password</p>
+                <input type="password" name="password"/>
+                <button className="block mt-6 mx-auto" type="submit">Login</button>
+              </form>
+              <p>Don't have an account?</p>
+              <button type="button" onClick={() => setShowAccountCreation(true)}>
                 Create Account
               </button>
+            </>
+          )
+        ) : (
+          <div className="login-success-message">
+            <h2>Login successful!</h2>
+            <br></br>
+            <p>You are now logged in as {username}</p>
+            <br></br>
+            <p>Redirecting in {redirectCountdown} second{redirectCountdown !== 1 ? "s" : ""}...</p>
+
           </div>
         )}
       </div>
-    </>
-  )
+    </div>
+  </>
+)
 }
 
 export default LoginPage

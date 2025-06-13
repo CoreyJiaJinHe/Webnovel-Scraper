@@ -177,14 +177,25 @@ function DownloadPage() {
     getBook(id)
     }
     //DONE: Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
+    // mx-50  max-w-full text-white h-full w-[calc(100%-400)] 
+    //flex flex-col gap-10 h-full mx-50 text-center 
     return (
     <>
     <NavBar/>
-    <div className='h-full mx-50 w-[calc(100%-100)] max-w-full text-white'>
-        <header className='flex flex-col gap-10 h-full mx-50 text-center '>
-            <h1 className='text-4xl mt-10'>Rudimentary File Hosting</h1>
-            <p>Get your files below</p>
-            <button onClick={getFiles}>Get File</button>
+    <div className='download-page-main '>
+        <header className='download-page-header'>
+            <div className="download-page-header-content">
+                <h1>Rudimentary File Hosting</h1>
+                <p>Get your files below</p>
+                <div className="download-header-row">
+                    <button className="get-file-btn" onClick={getFiles}>Get File</button>
+                    <div className="download-page-panel">
+                        <h1>Read Me!</h1>
+                        <p>This Get File button grabs the latest generated epub.</p>
+                        <p>This is not guaranteed to be the epub you generated if there are multiple users present. </p>
+                </div>
+            </div>
+            </div>
         </header>
         <main className='mt-20'>
             {renderBookSections()}

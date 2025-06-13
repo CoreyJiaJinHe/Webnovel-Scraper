@@ -1,0 +1,101 @@
+.download-page-main {
+    min-height: 100vh;
+    width: calc(100% - 400px);
+    color: #fff;
+    background: #18181b;
+    padding-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    margin-left: 12.5rem;
+    margin-right: 12.5rem;
+    box-sizing: border-box;
+}
+
+.download-page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 300px;
+}
+
+.download-page-header-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* keep column centering */
+    justify-content: flex-start;
+    padding-left: 1rem; /* small shift to the right */
+    gap: 2.5rem;           /* gap-10 */
+    height: 100%;
+    margin-left: auto;     /* centers horizontally if width is set */
+    margin-right: auto;
+}
+
+
+.download-page-header-content h1 {
+    font-size: 4rem;    /* text-4xl */
+    line-height: 2.5rem;
+    margin-top: 2.5rem;    /* mt-10 */
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+}
+
+
+.get-file-btn {
+    border: 2px solid #fff;
+    border-radius: 6px;
+    background: #222;
+    color: #fff;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    width: auto;
+    display: inline-block;
+    margin-top: 1rem;
+}
+
+
+.download-header-row {
+    position: relative;
+    width: fit-content;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+
+.download-page-panel {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateX(calc(100% + 100px)) translateY(-50%);
+    width: 320px;
+    max-width: 500px;
+    min-width: 200px;
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1.5rem 1rem;
+    box-sizing: border-box;
+    color: #fff;
+    z-index: 2;
+    text-align: center;
+}
+
+.download-page-panel h1 {
+    font-size: 2rem;    /* text-4xl */
+    line-height: 2.5rem;
+    margin-top: 0.5rem;    /* mt-10 */
+    margin-bottom:1rem;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+}
+
+.download-page-panel p + p {
+  margin-top: 1em;
+}
