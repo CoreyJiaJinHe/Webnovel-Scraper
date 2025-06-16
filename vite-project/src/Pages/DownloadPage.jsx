@@ -16,13 +16,8 @@ function DownloadPage() {
     if (!doOnce){
         setDoOnce(true);
         populateTable();
-    //        console.log(bookList)
         }
     })
-
-    useEffect(()=>{
-    //getBookCards()
-    },[bookList])
 
     async function getFiles()
     {
@@ -177,8 +172,6 @@ function DownloadPage() {
     getBook(id)
     }
     //DONE: Make categories for saved books. One for royalroad, one for novelbin, one for foxaholic, etc.
-    // mx-50  max-w-full text-white h-full w-[calc(100%-400)] 
-    //flex flex-col gap-10 h-full mx-50 text-center 
     return (
     <>
     <NavBar/>
