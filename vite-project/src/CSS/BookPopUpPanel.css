@@ -59,18 +59,64 @@
     max-height: 40vh;
 }
 
+
+.book-popup-panel-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+
+.book-big-follow-button,
+.read-book-btn,
 .book-big-close-button {
-    margin-top: 1.5rem;
-    background: #2563eb;
-    color: #fff;
-    font-weight: bold;
-    padding: 0.5rem 1.5rem;
-    border-radius: 0.375rem;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;           /* or your preferred fixed height */
+  min-width: 140px;
+  max-width: 200px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s, border 0.2s;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+
+
+/* Example colors for each button */
+.book-big-follow-button {
+  border-color: #10b981;
+  background: #10b981;
+  color: #fff;
+}
+.book-big-follow-button.unfollow {
+  border-color: #ef4444;
+  background: #ef4444;
+}
+
+.read-book-btn {
+  border-color: #6366f1;
+  background: #6366f1;
+  color: #fff;
+}
+
+.book-big-close-button {
+  border-color: #888;
+  background: #23232b;
+  color: #fff;
+transition: background 0.2s;
 }
 .book-big-close-button:hover {
     background: #1e40af;
 }
-

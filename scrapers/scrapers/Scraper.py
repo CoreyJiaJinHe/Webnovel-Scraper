@@ -19,6 +19,8 @@ class Scraper:
                     if response.status == 200:
                         html = await response.text()
                         soup = bs4.BeautifulSoup(html, 'html.parser')
+                        for script in soup(["script", "style"]):
+                            script.decompose()    # rip it out
                         return soup
                     else:
                         errorText=f"Failed to get soup. Function get_soup Error: {response.status}"

@@ -34,6 +34,8 @@ class FoxaholicScraper(Scraper):
             driver.get(url)
             soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
             driver.close()
+            for script in soup(["script", "style"]):
+                script.decompose()    # rip it out
             return soup
         except Exception as error:
             errorText=f"Failed to get soup Function foxaholic_get_soup Error: {error}"

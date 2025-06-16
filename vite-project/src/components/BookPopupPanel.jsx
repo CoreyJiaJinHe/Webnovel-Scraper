@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-const BookPopup = ({ book, onClose,isLoggedIn, addToFollowList ,removeFromFollowList}) => {
+import { useNavigate } from "react-router-dom";
+const BookPopup = ({ book, currentFollowStatus, onClose,isLoggedIn, addToFollowList ,removeFromFollowList}) => {
     if (!book) return null;
-    const [isFollowed, setIsFollowed] = useState(false);
+    const [isFollowed, setIsFollowed] = useState(currentFollowStatus);
 
     
     const handleFollow = () => {
@@ -14,6 +15,13 @@ const BookPopup = ({ book, onClose,isLoggedIn, addToFollowList ,removeFromFollow
         setIsFollowed(false);
     };
 
+    const navigate = useNavigate();
+    const readBook=()=>{
+        // Implement the logic to read the book
+        console.log(`Reading book: ${book[1]}`);
+        navigate("/react/OnlineReaderPage", { state: { book } });
+
+    }
 
     // _id: book[0],
     // bookName: book[1],
@@ -40,6 +48,7 @@ const BookPopup = ({ book, onClose,isLoggedIn, addToFollowList ,removeFromFollow
                 <div className="pop-up-book-description" style={{ maxHeight: "80vh" }}>
                     {book[3] ? book[3] : "No description available."}
                 </div>
+                <div className="book-popup-panel-actions">
                 {isLoggedIn && (
                     isFollowed ? (
                         <button className="book-big-follow-button"  style={{background: "#ef4444", // Red for unfollow 
@@ -53,9 +62,12 @@ const BookPopup = ({ book, onClose,isLoggedIn, addToFollowList ,removeFromFollow
                         </button>
                     )
                 )}
-                <button className="book-big-close-button" onClick={onClose}>
-                    Close
-                </button>
+                    <button className="read-book-btn" onClick={readBook}>Read Book</button>
+
+                    <button className="book-big-close-button" onClick={onClose}>
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
     );

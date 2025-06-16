@@ -13,6 +13,9 @@ function BooksPage() {
     const [doOnce, setDoOnce] = useState(false);
     const [bookList, setBookList]=useState(['']);
     const [popupBook, setPopupBook] = useState(null); // For popup panel
+
+    const [followedBookList, setFollowedBookList] = useState([]); // For followed books
+
     const {
         isLoggedIn, setIsLoggedIn,
         username, setUsername,
@@ -25,8 +28,34 @@ function BooksPage() {
     if (!doOnce){
         setDoOnce(true);
         populateTable();
+        if (isLoggedIn){
+            getFollowedBooks();
         }
+    }
     })
+    //Implement to grab a list of followed books if logged in.
+    //Use that list to highlight the books that are followed.
+    //Use that list to make the buttons be unfollow or follow depending on the state of the book.
+    async function getFollowedBooks(){
+        try{
+            const response= await axios.get(`${API_URL}/followedBooks/`, { withCredentials: true });
+            if (response.statusText!=="OK"){
+                console.log("Error getting followed books")
+            }
+            else if (response.data.Response==="False"){
+                console.log("Error getting followed books")
+            }
+            else{
+                const dataY=await response.data
+                const allBooks = response.data.allbooks;
+                setFollowedBookList(allBooks)
+                console.log(allBooks)
+            }
+        }catch (error){
+            console.log("Error fetching followed books:", error);
+        }
+    }
+
 
     async function populateTable(){
     try{
@@ -124,6 +153,24 @@ function BooksPage() {
             console.error("Error removing book to follow list:", error);
         }
     };
+
+    function isBookFollowed(followedBookList, popupBook) {
+    if (!popupBook) return false;
+    // Flatten all book IDs from followedBookList
+    const followedIds = [];
+    for (const [, booksArray] of followedBookList) {
+        if (Array.isArray(booksArray)) {
+            for (const book of booksArray) {
+                followedIds.push(String(book[0]));
+            }
+        }
+    }
+    // console.log("Followed IDs:", followedIds);
+    // console.log("Popup Book ID:", popupBook[0]);
+    // console.log("Is Book Followed:", followedIds.includes(String(popupBook[0])));
+    return followedIds.includes(String(popupBook[0]));
+    }
+
     // Pop-up close handler
     const closePopup = () => setPopupBook(null);
     return (
@@ -142,11 +189,16 @@ function BooksPage() {
             </div>
         </main>
         {/* Popup Panel */}
-        <BookPopup book={popupBook} onClose={closePopup} 
-        isLoggedIn={isLoggedIn} 
-        // <-- pass your login state here
-        addToFollowList={addToFollowList}
-        removeFromFollowList={removeFromFollowList}/>
+        {popupBook && (
+        <BookPopup
+            book={popupBook}
+            onClose={closePopup}
+            currentFollowStatus={isBookFollowed(followedBookList, popupBook)}
+            isLoggedIn={isLoggedIn}
+            addToFollowList={addToFollowList}
+            removeFromFollowList={removeFromFollowList}
+        />
+        )}
     </>
     )
     }

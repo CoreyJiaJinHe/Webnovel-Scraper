@@ -496,9 +496,6 @@ async def changePassword(request: Request):
 
 
 
-
-@app.post
-
 @app.post("/api/verifydeveloper/")
 async def developerLogin(request: Request, response: Response):
     logging.error("Checking to see if you are a developer")
@@ -517,16 +514,34 @@ async def dev_get_reading_list(request: Request, response: Response):
     pass
 
 
+@app.get("/api/getBookChapterList/")
+async def getBookChapterList(id: str):
+    try:
+        book=mongodb.getEpub(id)
+        if book:
+            chapters = mongodb.get_chapter_list(id)
+            if chapters:
+                return JSONResponse(content=chapters, status_code=200)
+            else:
+                return JSONResponse(content={"error": "No chapters found"}, status_code=404)
+        else:
+            return JSONResponse(content={"error": "Book not found"}, status_code=404)
+    except Exception as e:
+        logging.error(f"Error retrieving chapter list: {e}")
+        return JSONResponse(content={"error": "Failed to retrieve chapter list"}, status_code=500)
+
+
+
+@app.get("/api/getBookChapter/")
+async def getBookChapter(id: str, chapter: str):
+    
 
 
 
 
 
 
-
-
-
-
+    pass
 
 
 

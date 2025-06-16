@@ -22,13 +22,14 @@ import NavBar from './components/NavBar.jsx'
 import {UserContext, UserProvider} from './components/UserContext.jsx'
 
 import App from './App.jsx'
-import HomePage from './Pages/HomePage'
-import LoginPage from './Pages/LoginPage'
-import DownloadPage from './Pages/DownloadPage'
-import UserPage from './Pages/UserPage'
-import FollowListPage from './Pages/FollowListPage'
-import DeveloperPage from './Pages/DeveloperPage'
+import HomePage from './Pages/HomePage.jsx'
+import LoginPage from './Pages/LoginPage.jsx'
+import DownloadPage from './Pages/DownloadPage.jsx'
+import UserPage from './Pages/UserPage.jsx'
+import FollowListPage from './Pages/FollowListPage.jsx'
+import DeveloperPage from './Pages/DeveloperPage.jsx'
 import BooksPage from './Pages/BooksPage.jsx'
+import OnlineReaderPage from './Pages/OnlineReaderPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -66,7 +67,11 @@ const router = createBrowserRouter([
   {
     path: "/react/NavBar/",
     element: <NavBar />,
-  }
+  },
+  {
+    path: "/react/OnlineReaderPage/",
+    element: <OnlineReaderPage />,
+  },
 ]);
 
 createRoot(document.getElementById('root')).render(

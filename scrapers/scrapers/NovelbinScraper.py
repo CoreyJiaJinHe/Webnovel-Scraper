@@ -2,7 +2,6 @@ import bs4
 import re
 import os, errno
 import datetime
-from novel_template import NovelTemplate
 import logging
 import asyncio
 import io
@@ -42,6 +41,8 @@ class NovelBinScraper(Scraper):
             await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
             soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
             driver.close()
+            for script in soup(["script", "style"]):
+                script.decompose()    # rip it out
             return soup
         except Exception as error:
             errorText=f"Failed to get soup from url. Function novelbin_get_soup Error: {error}"
