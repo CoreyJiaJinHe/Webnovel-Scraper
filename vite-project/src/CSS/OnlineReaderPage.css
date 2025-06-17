@@ -1,0 +1,72 @@
+.reader-main-container {
+    margin-left: 120px;
+    margin-right: 120px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+}
+
+.reader-left-panel {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+
+.reader-book-details-panel {
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+}
+
+
+
+.reader-book-details-panel-description {
+    max-height: 100px;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+    background: #18181b;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.reader-book-main-panel {
+    width: 500px;
+    margin: 1.5rem auto;
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    text-align: center;
+}
+
+.reader-book-main-panel-chapter-content {
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: #fff;
+    margin-top: 2rem;
+    min-height: 300px;
+}
+
+.reader-book-right-panel {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.reader-book-right-panel-chapter-list-panel {
+    background: #18181b;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    min-height: 200px;
+    flex: 1;
+}

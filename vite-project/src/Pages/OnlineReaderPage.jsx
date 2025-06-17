@@ -20,25 +20,66 @@ function OnlineReaderPage() {
     const book = state?.book;
 
     const [chapterHTML, setChapterHTML]=useState('');
+    const [chapterLoaded, setChapterLoaded] = useState(false);
 
     const [currentChapter, setCurrentChapter] = useState(0);
     const [currentChapterTitle, setCurrentChapterTitle] = useState('');
     const [chapterList, setChapterList]=useState([]);
+
     async function grabBookChapter(){
         try {
-            const response = await axios.get(`${API_URL}/getBookChapter`);
+            const response = await axios.get(`${API_URL}/getBookChapterList/${book[0]}`, { withCredentials: true });
             if (response.statusText !== "OK") {
                 console.log("Error getting book chapter");
             } else if (response.data.Response === "False") {
                 console.log("Error getting book chapter");
-            } else {
-                console.log(response.data);
             }
+            console.log(response.data);
+            
         } catch (error) {
             console.log(error);
         }
         console.log(book);
     }
+    //TODO: If it spacebattles, we need to do some extra processing to get the chapter list
+    //Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
+    //I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
+    //The former is more efficient for the server but the latter is more efficient for the client in terms of memory usage.
+    //Though it shouldn't be that bad since images won't be loaded until after react dom renders the chapter content.
+
+    //TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
+    //Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
+    //Also make it so that the user can use the arrow keys to navigate through the chapters.
+    //TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
+
+
+
+    async function grabChapterContent(chapterId) {
+        try {
+            const response = await axios.get(`${API_URL}/getBookChapterContent/${book[0]}/${chapterId}`, { withCredentials: true });
+            if (response.statusText !== "OK") {
+                console.log("Error getting chapter content");
+            } else if (response.data.Response === "False") {
+                console.log("Error getting chapter content");
+            }
+            setChapterHTML(response.data.chapterContent);
+            setCurrentChapterTitle(response.data.chapterTitle);
+            setChapterLoaded(true);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+    // useEffect(() => {
+    //     if (book) {
+    //         grabBookChapter();
+    //     }
+    // }, [book]);
+    // useEffect(() => {
+    //     if (chapterList.length > 0) {
+    //         grabChapterContent(chapterList[currentChapter]);
+    //     }
+    // }, [currentChapter, chapterList]);
+
 
 return (
     <>
@@ -55,34 +96,16 @@ return (
             }}
         >
             {/* Left Panel */}
-            <div style={{ width: "250px", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            <div className="reader-left-panel" >
                 {/* Book Details Panel */}
-                <div
-                    style={{
-                        background: "#23232b",
-                        borderRadius: "8px",
-                        padding: "1rem",
-                        color: "#fff",
-                        marginBottom: "1rem",
-                        marginTop: "2.5rem"
-                    }}
-                >
+                <div className="reader-book-details-panel">
                     <h3 style={{ marginTop: 0 }}>Book Details</h3>
                     {book ? (
                         <ul style={{ listStyle: "none", padding: 0 }}>
                             <li><strong>Title:</strong> {book[1]}</li>
                             <li><strong>Author:</strong> {book[2]}</li>
                             <li><strong>Description:</strong>
-                                <div
-                                    style={{
-                                        maxHeight: "100px",
-                                        overflowY: "auto",
-                                        marginTop: "0.25rem",
-                                        background: "#18181b",
-                                        padding: "0.5rem",
-                                        borderRadius: "4px"
-                                    }}
-                                >
+                                <div className="reader-book-details-panel-description">
                                     {book[3]}
                                 </div>
                             </li>
@@ -99,51 +122,20 @@ return (
                 {/* Centered h1 */}
                 <h1 style={{ textAlign: "center", marginTop: "2.5rem" }}>Online Reader</h1>
                 {/* 500px wide div under h1 */}
-                <div
-                    style={{
-                        width: "500px",
-                        margin: "1.5rem auto",
-                        background: "#23232b",
-                        borderRadius: "8px",
-                        padding: "1rem",
-                        color: "#fff",
-                        textAlign: "center"
-                    }}
-                >
-                    <button onClick={grabBookChapter}>Grab Book Chapter</button>
+                <div className ="reader-book-main-panel">
+                {!chapterLoaded ? (
+                        <button onClick={grabBookChapter}>Grab Book Chapter</button>
+                    ) : (
+                        <h2 style={{ margin: 0 }}>{currentChapterTitle}</h2>
+                    )}
                 </div>
                 {/* Chapter Content */}
-                <div
-                    className="chapter-content"
-                    style={{
-                        background: "#23232b",
-                        borderRadius: "8px",
-                        padding: "1.5rem",
-                        color: "#fff",
-                        marginTop: "2rem",
-                        minHeight: "300px"
-                    }}
-                    dangerouslySetInnerHTML={{ __html: chapterHTML }}
-                />
+                <div className="reader-book-main-panel-chapter-content"
+                    dangerouslySetInnerHTML={{ __html: chapterHTML }}/>
             </div>
             {/* Right Panel (Long Panel) */}
-            <div style={{
-                width: "250px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1.5rem",
-                marginTop: "2.5rem"
-            }}>
-                <div
-                    style={{
-                        background: "#18181b",
-                        borderRadius: "8px",
-                        padding: "1rem",
-                        color: "#fff",
-                        minHeight: "200px",
-                        flex: 1
-                    }}
-                >
+            <div className="reader-book-right-panel">
+                <div className="reader-book-right-panel-chapter-list-panel">
                     <h4>Extra Panel</h4>
                     <p>Additional content or controls can go here.</p>
                 </div>

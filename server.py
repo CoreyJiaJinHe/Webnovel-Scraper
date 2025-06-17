@@ -514,18 +514,15 @@ async def dev_get_reading_list(request: Request, response: Response):
     pass
 
 
-@app.get("/api/getBookChapterList/")
-async def getBookChapterList(id: str):
+@app.get("/api/getBookChapterList/{book_id}")
+async def getBookChapterList(book_id: str):
     try:
-        book=mongodb.getEpub(id)
-        if book:
-            chapters = mongodb.get_chapter_list(id)
-            if chapters:
-                return JSONResponse(content=chapters, status_code=200)
-            else:
-                return JSONResponse(content={"error": "No chapters found"}, status_code=404)
+        
+        chapters = mongodb.get_chapter_list(book_id)
+        if chapters:
+            return JSONResponse(content=chapters, status_code=200)
         else:
-            return JSONResponse(content={"error": "Book not found"}, status_code=404)
+            return JSONResponse(content={"error": "No chapters found"}, status_code=404)
     except Exception as e:
         logging.error(f"Error retrieving chapter list: {e}")
         return JSONResponse(content={"error": "Failed to retrieve chapter list"}, status_code=500)

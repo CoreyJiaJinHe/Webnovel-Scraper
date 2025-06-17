@@ -13,6 +13,7 @@ import './CSS/BooksPage.css'
 import './CSS/FollowListPage.css'
 import './CSS/LoginPage.css'
 import './CSS/DownloadPage.css'
+import './CSS/OnlineReaderPage.css'
 
 import {
   createBrowserRouter,

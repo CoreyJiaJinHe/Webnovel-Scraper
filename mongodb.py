@@ -736,7 +736,7 @@ def get_chapter_list(bookID):
     if results:
         
         
-        def get_existing_order_of_contents(self, book_title):
+        def get_existing_order_of_contents(book_title):
             # Default implementation
             dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
             if os.path.exists(dir_location):
