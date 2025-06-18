@@ -25,6 +25,42 @@ function OnlineReaderPage() {
     const [currentChapter, setCurrentChapter] = useState(0);
     const [currentChapterTitle, setCurrentChapterTitle] = useState('');
     const [chapterList, setChapterList]=useState([]);
+    const [chapterDir, setChapterDir]=useState([]);
+
+    function extractChapterNames(dataArray) {
+    return dataArray.map(str => {
+        const [, , filePathRaw = ''] = str.split(';');
+        const fileName = filePathRaw.trim().split('/').pop() || '';
+        let name = fileName
+        .replace(book[1], '')
+        .replace('.html', '')
+        .replace(/^[-_\s]+/, '')
+        .trim();
+
+        const extraMatch = name.match(/(?:^|\s)-?\s*(?:Chapter\s*)?\d+\s*-\s*(Extra.*)$/i);
+        if (extraMatch) {
+            return extraMatch[1].trim();
+        }
+
+        // Remove leading number and dash if followed by "Chapter"
+        name = name.replace(/^\d+\s*-\s*(?=Chapter\s*\d+)/i, '');
+
+        // Ensure only one "Chapter" at the start
+        const chapterMatch = name.match(/(Chapter\s*\d+.*)/i);
+        if (chapterMatch) {
+            name = chapterMatch[1].trim();
+        } else if (!/^Chapter/i.test(name)) {
+            name = "Chapter " + name;
+        }
+        
+
+        return name;
+    });
+}
+
+    function extractChapterDir(dataArray){
+        return dataArray.map(str => str.split(';')[2]?.trim());
+    }
 
     async function grabBookChapter(){
         try {
@@ -35,17 +71,37 @@ function OnlineReaderPage() {
                 console.log("Error getting book chapter");
             }
             console.log(response.data);
+            const chapterNames=extractChapterNames(response.data);
+            setChapterList(chapterNames);
+            const chapterLinks=extractChapterDir(response.data);
+            setChapterDir(chapterLinks);
+            console.log(chapterDir);
             
         } catch (error) {
             console.log(error);
         }
-        console.log(book);
+        //console.log(book);
     }
+
+    function renderChapterList(grabChapterContent) {
+    return (
+        <ul style={{ listStyle: "none", padding: 0 }}>
+        {chapterList.map((chapter, index) => (
+            <li key={index} onClick={() => grabChapterContent(chapter)}>
+            {chapter}
+            </li>
+        ))}
+        </ul>
+    );
+    }
+
     //TODO: If it spacebattles, we need to do some extra processing to get the chapter list
     //Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
     //I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
     //The former is more efficient for the server but the latter is more efficient for the client in terms of memory usage.
     //Though it shouldn't be that bad since images won't be loaded until after react dom renders the chapter content.
+    //DO THIS ON SERVER SIDE, so that the client doesn't have to do any processing.
+
 
     //TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
     //Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
@@ -135,9 +191,11 @@ return (
             </div>
             {/* Right Panel (Long Panel) */}
             <div className="reader-book-right-panel">
-                <div className="reader-book-right-panel-chapter-list-panel">
-                    <h4>Extra Panel</h4>
-                    <p>Additional content or controls can go here.</p>
+                <div className="reader-book-right-panel-chapters-panel">
+                    <h4 className="sticky-chapter-header">Available Chapters</h4>
+                    <div className="chapter-list-scroll">
+                        {renderChapterList({ grabChapterContent })}
+                    </div>
                 </div>
             </div>
         </div>

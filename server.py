@@ -529,8 +529,8 @@ async def getBookChapterList(book_id: str):
 
 
 
-@app.get("/api/getBookChapter/")
-async def getBookChapter(id: str, chapter: str):
+@app.get("/api/getBookChapters/")
+async def getBookChapters(id: str, chapter: str):
     
 
 
