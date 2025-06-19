@@ -20,6 +20,7 @@ logging.basicConfig(
 
 
 from scrapers.common import (write_to_logs)
+import OnlineReader
 
 from passlib.context import CryptContext
 
@@ -517,8 +518,10 @@ async def dev_get_reading_list(request: Request, response: Response):
 @app.get("/api/getBookChapterList/{book_id}")
 async def getBookChapterList(book_id: str):
     try:
-        
-        chapters = mongodb.get_chapter_list(book_id)
+        if ("sb" in book_id):
+            chapters = OnlineReader.get_chapter_list_spacebattles(book_id)
+        else:
+            chapters = OnlineReader.get_chapter_list(book_id)
         if chapters:
             return JSONResponse(content=chapters, status_code=200)
         else:
@@ -529,16 +532,24 @@ async def getBookChapterList(book_id: str):
 
 
 
-@app.get("/api/getBookChapters/")
-async def getBookChapters(id: str, chapter: str):
-    
+@app.get("/api/getBookChapterContent")
+async def getBookChapters(bookID: str, chapterID: str, chapterTitle: str):
+    #logging.error(f"Getting chapter content for bookID: {bookID}, chapterID: {chapterID}, chapterTitle: {chapterTitle}")
 
-
-
-
-
-
-    pass
+    try:
+        if "sb" in bookID:
+            chapter_content = OnlineReader.get_stored_chapter_spacebattles(bookID, chapterID, chapterTitle)
+        else:
+            chapter_content = OnlineReader.get_stored_chapter(bookID, chapterID)
+        # Ensure the content is a string with HTML tags included
+        if hasattr(chapter_content, 'prettify'):
+            chapter_content = str(chapter_content)
+        elif not isinstance(chapter_content, str):
+            chapter_content = str(chapter_content)
+        return JSONResponse(content={"chapterContent": chapter_content, "chapterTitle": chapterTitle}, status_code=200)
+    except Exception as e:
+        logging.error(f"Error retrieving chapter content: {e}")
+        return JSONResponse(content={"error": "Failed to retrieve chapter content"}, status_code=500)
 
 
 

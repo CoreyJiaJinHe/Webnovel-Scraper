@@ -25,7 +25,9 @@ function OnlineReaderPage() {
     const [currentChapter, setCurrentChapter] = useState(0);
     const [currentChapterTitle, setCurrentChapterTitle] = useState('');
     const [chapterList, setChapterList]=useState([]);
+    const [chapterNames, setChapterNames] = useState([]);
     const [chapterDir, setChapterDir]=useState([]);
+    const [chapterIDList, setChapterIDList] = useState([]);
 
     function extractChapterNames(dataArray) {
     return dataArray.map(str => {
@@ -45,7 +47,7 @@ function OnlineReaderPage() {
         // Remove leading number and dash if followed by "Chapter"
         name = name.replace(/^\d+\s*-\s*(?=Chapter\s*\d+)/i, '');
 
-        // Ensure only one "Chapter" at the start
+        //Ensure only one "Chapter" at the start
         const chapterMatch = name.match(/(Chapter\s*\d+.*)/i);
         if (chapterMatch) {
             name = chapterMatch[1].trim();
@@ -61,6 +63,10 @@ function OnlineReaderPage() {
     function extractChapterDir(dataArray){
         return dataArray.map(str => str.split(';')[2]?.trim());
     }
+    function extractChapterIDs(dataArray) {
+        return dataArray.map(str => {
+            const parts = str.split(';')[0]?.trim()});
+        }
 
     async function grabBookChapter(){
         try {
@@ -70,12 +76,14 @@ function OnlineReaderPage() {
             } else if (response.data.Response === "False") {
                 console.log("Error getting book chapter");
             }
-            console.log(response.data);
-            const chapterNames=extractChapterNames(response.data);
-            setChapterList(chapterNames);
-            const chapterLinks=extractChapterDir(response.data);
-            setChapterDir(chapterLinks);
-            console.log(chapterDir);
+            console.log(response.data)
+            setChapterList(response.data);
+            
+            //const chapterNames=extractChapterNames(response.data);
+            // setChapterNames(chapterNames);
+            // const chapterLinks=extractChapterDir(response.data);
+            // setChapterDir(chapterLinks);
+            // setChapterIDList(extractChapterIDs(response.data));
             
         } catch (error) {
             console.log(error);
@@ -83,19 +91,27 @@ function OnlineReaderPage() {
         //console.log(book);
     }
 
-    function renderChapterList(grabChapterContent) {
+    function renderChapterList({ grabChapterContent }) {
     return (
         <ul style={{ listStyle: "none", padding: 0 }}>
-        {chapterList.map((chapter, index) => (
-            <li key={index} onClick={() => grabChapterContent(chapter)}>
-            {chapter}
+        {chapterList.map((chapterStr, index) => {
+            const parts = chapterStr.split(';');
+            const chapterID = parts[0]?.trim() || index;
+            const chapterTitle = parts[2]?.trim() || '';
+            return (
+            <li
+                key={chapterID + '-' + index} // Use both for uniqueness if IDs repeat
+                onClick={() => grabChapterContent(chapterID, chapterTitle)}
+            >
+                {chapterTitle}
             </li>
-        ))}
+            );
+        })}
         </ul>
     );
     }
-
-    //TODO: If it spacebattles, we need to do some extra processing to get the chapter list
+    
+    //DONE TODO: If it spacebattles, we need to do some extra processing to get the chapter list
     //Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
     //I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
     //The former is more efficient for the server but the latter is more efficient for the client in terms of memory usage.
@@ -103,54 +119,42 @@ function OnlineReaderPage() {
     //DO THIS ON SERVER SIDE, so that the client doesn't have to do any processing.
 
 
-    //TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
-    //Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
-    //Also make it so that the user can use the arrow keys to navigate through the chapters.
+    //DONE TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
+    //TODO: Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
+    //TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
     //TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
 
 
 
-    async function grabChapterContent(chapterId) {
+    async function grabChapterContent(chapterID, chapterTitle) {
+        console.log("Grab chapter content for: ", book[0], chapterID, chapterTitle);
         try {
-            const response = await axios.get(`${API_URL}/getBookChapterContent/${book[0]}/${chapterId}`, { withCredentials: true });
-            if (response.statusText !== "OK") {
-                console.log("Error getting chapter content");
-            } else if (response.data.Response === "False") {
+            // Send bookID, chapterID, and chapterTitle as query parameters
+            const response = await axios.get(`${API_URL}/getBookChapterContent`, {
+                params: {
+                    bookID: book[0],
+                    chapterID: chapterID,
+                    chapterTitle: chapterTitle
+                },
+                withCredentials: true
+            });
+            if (response.status===200){
+                setChapterHTML(response.data.chapterContent);
+                setCurrentChapterTitle(response.data.chapterTitle);
+                setChapterLoaded(true);
+            }
+            if (response.statusText !== "OK" || response.data.Response === "False") {
                 console.log("Error getting chapter content");
             }
-            setChapterHTML(response.data.chapterContent);
-            setCurrentChapterTitle(response.data.chapterTitle);
-            setChapterLoaded(true);
         } catch (error) {
             console.log(error);
         }
     }
-    // useEffect(() => {
-    //     if (book) {
-    //         grabBookChapter();
-    //     }
-    // }, [book]);
-    // useEffect(() => {
-    //     if (chapterList.length > 0) {
-    //         grabChapterContent(chapterList[currentChapter]);
-    //     }
-    // }, [currentChapter, chapterList]);
-
 
 return (
     <>
         <NavBar />
-        <div
-            className="reader-main-container"
-            style={{
-                marginLeft: "120px",
-                marginRight: "120px",
-                minHeight: "100vh",
-                display: "flex",
-                flexDirection: "row",
-                gap: "2rem"
-            }}
-        >
+        <div className="reader-main-container">
             {/* Left Panel */}
             <div className="reader-left-panel" >
                 {/* Book Details Panel */}

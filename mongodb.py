@@ -725,32 +725,3 @@ def check_already_allowed(serverID,channelID):
 
 
 
-
-
-
-
-def get_chapter_list(bookID):
-    db=Database.get_instance()
-    savedBooks=db["Books"]
-    results=savedBooks.find_one({"bookID": bookID})
-    if results:
-        
-        
-        def get_existing_order_of_contents(book_title):
-            # Default implementation
-            dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
-            if os.path.exists(dir_location):
-                with open(dir_location, "r") as f:
-                    return f.readlines()
-            return []
-
-        order_of_contents= get_existing_order_of_contents(book_title=results["bookName"])
-        return order_of_contents
-    else:
-        logging.warning(f"Book with ID {bookID} not found in the database.")
-        return None
-
-
-def get_stored_chapter(bookID,chapterID):
-    
-    pass

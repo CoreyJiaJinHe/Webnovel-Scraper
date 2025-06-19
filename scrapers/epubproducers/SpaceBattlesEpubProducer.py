@@ -9,7 +9,7 @@ from PIL import Image
 import aiohttp
 
 import EpubProducer
-from scrapers.SpacebattlesScraper import SpaceBattlesScraper
+from scrapers.SpaceBattlesScraper import SpaceBattlesScraper
 
 from common import(
     write_to_logs,
