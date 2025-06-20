@@ -36,6 +36,9 @@
 }
 
 .reader-book-main-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 500px;
     margin: 1.5rem auto;
     background: #23232b;
@@ -43,6 +46,22 @@
     padding: 1rem;
     color: #fff;
     text-align: center;
+    min-width: 0;
+}
+
+.reader-book-main-panel-heading {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+}
+
+    .reader-book-main-panel-heading h2 {
+    margin: 0;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    width: 100%;
 }
 
 .reader-book-main-panel-chapter-content {

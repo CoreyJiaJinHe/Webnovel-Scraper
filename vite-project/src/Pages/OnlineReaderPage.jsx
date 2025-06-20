@@ -22,7 +22,7 @@ function OnlineReaderPage() {
     const [chapterHTML, setChapterHTML]=useState('');
     const [chapterLoaded, setChapterLoaded] = useState(false);
 
-    const [currentChapter, setCurrentChapter] = useState(0);
+    const [currentChapterID, setCurrentChapterID] = useState("");
     const [currentChapterTitle, setCurrentChapterTitle] = useState('');
     const [chapterList, setChapterList]=useState([]);
     const [chapterNames, setChapterNames] = useState([]);
@@ -65,8 +65,10 @@ function OnlineReaderPage() {
     }
     function extractChapterIDs(dataArray) {
         return dataArray.map(str => {
-            const parts = str.split(';')[0]?.trim()});
-        }
+            return str.split(';')[0]?.trim();
+        });
+    }
+    
 
     async function grabBookChapter(){
         try {
@@ -83,7 +85,9 @@ function OnlineReaderPage() {
             // setChapterNames(chapterNames);
             // const chapterLinks=extractChapterDir(response.data);
             // setChapterDir(chapterLinks);
-            // setChapterIDList(extractChapterIDs(response.data));
+            const chapterIDs= extractChapterIDs(response.data);
+            setChapterIDList(chapterIDs);
+            //console.log("Chapter ID List: ", chapterIDList);
             
         } catch (error) {
             console.log(error);
@@ -110,7 +114,59 @@ function OnlineReaderPage() {
         </ul>
     );
     }
-    
+    function goToPreviousChapter() {
+        // Find the index of the current chapter in chapterList
+        const currentIndex = chapterList.findIndex(str => {
+            const parts = str.split(';');
+            return parts[0]?.trim() === currentChapterID && (parts[2]?.trim() === currentChapterTitle);
+        });
+        if (currentIndex > 0) {
+            const prevChapterStr = chapterList[currentIndex - 1];
+            const prevParts = prevChapterStr.split(';');
+            const prevChapterID = prevParts[0]?.trim();
+            const prevChapterTitle = prevParts[2]?.trim() || '';
+            console.log("Previous Chapter ID: ", prevChapterID, "Title: ", prevChapterTitle);
+            grabChapterContent(prevChapterID, prevChapterTitle);
+        }
+    }
+
+    function goToNextChapter() {
+        // Find the index of the current chapter in chapterList
+        const currentIndex = chapterList.findIndex(str => {
+            const parts = str.split(';');
+            return parts[0]?.trim() === currentChapterID && (parts[2]?.trim() === currentChapterTitle);
+        });
+        if (currentIndex !== -1 && currentIndex < chapterList.length - 1) {
+            const nextChapterStr = chapterList[currentIndex + 1];
+            const nextParts = nextChapterStr.split(';');
+            const nextChapterID = nextParts[0]?.trim();
+            const nextChapterTitle = nextParts[2]?.trim() || '';
+            console.log("Next Chapter ID: ", nextChapterID, "Title: ", nextChapterTitle);
+            grabChapterContent(nextChapterID, nextChapterTitle);
+        }
+    }
+
+    // Add key press listener for chapter navigation
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (
+                e.key === 'ArrowLeft' ||
+                e.key === 'a' ||
+                e.key === 'A'
+            ) {
+                goToPreviousChapter();
+            } else if (
+                e.key === 'ArrowRight' ||
+                e.key === 'd' ||
+                e.key === 'D'
+            ) {
+                goToNextChapter();
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentChapterID, currentChapterTitle, chapterList]);
+
     //DONE TODO: If it spacebattles, we need to do some extra processing to get the chapter list
     //Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
     //I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
@@ -120,8 +176,8 @@ function OnlineReaderPage() {
 
 
     //DONE TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
-    //TODO: Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
-    //TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
+    //DONE TODO: Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
+    //DONE TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
     //TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
 
 
@@ -142,6 +198,7 @@ function OnlineReaderPage() {
                 setChapterHTML(response.data.chapterContent);
                 setCurrentChapterTitle(response.data.chapterTitle);
                 setChapterLoaded(true);
+                setCurrentChapterID(chapterID);
             }
             if (response.statusText !== "OK" || response.data.Response === "False") {
                 console.log("Error getting chapter content");
@@ -183,11 +240,16 @@ return (
                 <h1 style={{ textAlign: "center", marginTop: "2.5rem" }}>Online Reader</h1>
                 {/* 500px wide div under h1 */}
                 <div className ="reader-book-main-panel">
+                <button onClick={goToPreviousChapter}>&lt;</button>
+                <div className="reader-book-main-panel-heading">
                 {!chapterLoaded ? (
-                        <button onClick={grabBookChapter}>Grab Book Chapter</button>
-                    ) : (
-                        <h2 style={{ margin: 0 }}>{currentChapterTitle}</h2>
-                    )}
+                    <button onClick={grabBookChapter}>Grab Book Chapter</button>
+                ) : (
+                    <h2 style={{ margin: 0 }}>{currentChapterTitle}</h2>
+                )}
+                </div>
+                <button onClick={goToNextChapter}>&gt;</button>
+
                 </div>
                 {/* Chapter Content */}
                 <div className="reader-book-main-panel-chapter-content"

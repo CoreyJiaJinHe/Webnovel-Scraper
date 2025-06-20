@@ -2,19 +2,25 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts:["delicate-generally-gelding.ngrok-free.app"],
+    allowedHosts: ["delicate-generally-gelding.ngrok-free.app"],
     proxy: {
       '/api': {
-        target: "http://localhost:8080",
+        target: "http://localhost:8000",
         secure: false,
         changeOrigin: true,
-        //rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/react/static': {
+        target: 'http://127.0.0.1:8000',
+        secure: false,
+        changeOrigin: true,
+        // Ensure the path is not rewritten, so backend sees /react/static/...
+        // If you ever need to rewrite, use the line below:
+        // rewrite: (path) => path.replace(/^\/react\/static/, '/react/static'),
+      }
     },
   },
-  base:"/react/"
+  base: "/react/"
 })

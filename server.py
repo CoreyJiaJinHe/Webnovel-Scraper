@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi import Request
 from fastapi import FastAPI, File, UploadFile
+from fastapi.staticfiles import StaticFiles
+
 import logging
 logging.basicConfig(
     level=logging.INFO,
@@ -20,6 +22,7 @@ logging.basicConfig(
 
 
 from scrapers.common import (write_to_logs)
+import refactor
 import OnlineReader
 
 from passlib.context import CryptContext
@@ -43,7 +46,7 @@ import os
 # myclient=MongoClient(MONGODB_URL)
 # mydb=myclient["Webnovels"]
 # savedBooks=mydb["Books"]
-port = os.getenv("PORT") or 8080
+port = os.getenv("PORT") or 8000 #8080
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
@@ -54,8 +57,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
 app=FastAPI()
 
+app.mount("/react/static", StaticFiles(directory="books/raw"), name="static")
+
 origins = [
     "http://localhost",
+    "http://localhost:8000",
     "http://localhost:8080",
     "http://localhost:5173",
     "http://127.0.0.1",
@@ -511,8 +517,18 @@ async def developerLogin(request: Request, response: Response):
 
 @app.post("/api/dev/rrfollows/")
 async def dev_get_reading_list(request: Request, response: Response):
-
-    pass
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if(mongodb.check_developer(username)):
+            try:
+                bookLinks=await refactor.retrieve_from_royalroad_follow_list()
+                return JSONResponse(content={"message":"Successfully retrieved Royalroad follow list"}, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving Royal Road follow list: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve Royal Road follow list"}, status_code=500)
+    else:
+        raise credentials_exception
 
 
 @app.get("/api/getBookChapterList/{book_id}")

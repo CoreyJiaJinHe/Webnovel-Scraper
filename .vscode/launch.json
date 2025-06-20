@@ -24,12 +24,12 @@
             "request": "launch",
             "module": "uvicorn", // Use uvicorn to run the FastAPI app
             "args": [
-                "server:app", // Replace "server:app" with the correct path to your FastAPI app instance
+                "server:app",
                 "--host",
-                "127.0.0.1", // Host to run the server
+                "0.0.0.0",
                 "--port",
-                "8000", // Port to run the server
-                "--reload" // Enable auto-reload for development
+                "8000",
+                "--reload"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

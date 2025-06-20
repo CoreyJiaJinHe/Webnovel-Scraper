@@ -129,9 +129,20 @@ def get_stored_chapter(bookID,chapterID):
     
     chapter_id,dirLocation=get_chapter_from_saved(chapterID,already_saved_chapters)
 
-    page_content=get_chapter_contents_from_saved(dirLocation)
+    page_content = get_chapter_contents_from_saved(dirLocation)
+    soup = bs4.BeautifulSoup(page_content, 'html.parser')
+    for img in soup.find_all('img'):
+        src = img.get('src', '')
+        if not src.lower().startswith('http'):
+            if not ('/' in src or '\\' in src):
+                img['src'] = f"/react/static/{bookTitle}/{src}"
+            else:
+                # If src is already a relative path, just prepend /static/
+                # Remove leading './' or '/' from src
+                clean_src = src.lstrip('./').lstrip('/')
+                img['src'] = f"/react/static/{bookTitle}/{clean_src}"
     
-    return page_content
+    return str(soup)
     
 
 
@@ -150,6 +161,17 @@ def get_stored_chapter_spacebattles(bookID,pageID, chapterTitle):
     page_content=get_chapter_contents_from_saved(dirLocation)
     
     page_soup=bs4.BeautifulSoup(page_content,'html.parser')
+    for img in page_soup.find_all('img'):
+        src = img.get('src', '')
+        if not src.lower().startswith('http'):
+            if not ('/' in src or '\\' in src):
+                img['src'] = f"/react/static/{bookTitle}/{src}"
+            else:
+                # If src is already a relative path, just prepend /static/
+                # Remove leading './' or '/' from src
+                clean_src = src.lstrip('./').lstrip('/')
+                img['src'] = f"/react/static/{bookTitle}/{clean_src}"
+    
     all_chapters=page_soup.find_all('div',{'id':'chapter-start'})
     
     #logging.warning(type(all_chapters))

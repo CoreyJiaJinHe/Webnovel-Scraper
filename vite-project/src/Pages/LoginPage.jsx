@@ -4,6 +4,10 @@ import NavBar from '../components/NavBar'
 import { useUser } from "../components/UserContext";
 
 
+// import axios from "axios";
+// const API_URL = `${import.meta.env.BACKEND_LOCAL_HOST}/api`;
+// const api = axios.create({ baseURL: API_URL });
+
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
