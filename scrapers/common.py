@@ -75,15 +75,13 @@ def make_directory(path):
 
 
 def remove_non_english_characters(text):
-    invalid_chars='【】'
+    invalid_chars = '【】'
     for char in invalid_chars:
-        text=text.replace(char,'')
+        text = text.replace(char, '')
     text = re.sub(r'\s+', ' ', text)
-    result = re.search(r'([A-Za-z0-9,!\'\-]+( [A-Za-z0-9,!\'\-]+)+)', text)
-    #logging.warning(result)
-    if not result:
-        return text
-    return result.group()
+    # Replace any character that is NOT A-Za-z0-9 ,!'- with ''
+    text = re.sub(r"[^A-Za-z0-9,!'\-\s]", '', text)
+    return text.strip()
 
 
 import unicodedata
@@ -93,7 +91,7 @@ def strip_accents(s):
 
 
 def remove_invalid_characters(inputString):
-    invalid_chars = '.-<>:;"\'/\\|?*()'
+    invalid_chars = '—.-<>:;"\'/\\|?*()'
     for char in invalid_chars:
         inputString=inputString.replace(char,' ')
     

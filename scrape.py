@@ -182,8 +182,3 @@ link="https://www.novelcool.com/novel/If-You-Could-Hear-My-Heart.html"
 
 
 
-
-
-
-
-

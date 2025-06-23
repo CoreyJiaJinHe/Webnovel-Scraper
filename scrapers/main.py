@@ -61,12 +61,6 @@ async def main_interface(url, cookie):
         default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
         new_epub.add_item(default_css)
         
-        #TODO: If the book already exists, we should check if the latest chapter is the same as the one in the database.
-        #To do this, I need to change the way latest chapters are stored in the database. I need to store the latest chapter's name and ID
-        #and make the name be the one that is displayed on the front end, while using the ID to compare latest chapters
-        #TODO: I also need to modify SpacebattlesEpubProducer. Currently, the latest chapter is considered the last page of spacebattles reader mode.
-        #Due to how spacebattles works, it does not check for new chapters added to the page. Meaning, I can store 5 threadmarks on last page, and the sixth won't be detected.
-        #TODO: I also need to modify all the EpubProducers to handle broken images so that it won't break the epub generation.
         
         #if (check_existing_book(bookID) or check_existing_book_Title(bookTitle)):
             #if not (check_latest_chapter(bookID,bookTitle,latestChapter)):

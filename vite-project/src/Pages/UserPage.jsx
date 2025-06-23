@@ -82,12 +82,7 @@ export function UserPage() {
 
 
 
-      //TODO: FINISH THIS
-      //I need to make the alert say certain responses. Like if you gave the wrong initial password
-      //const response=await axios.post(`${API_URL}/changepassword/`, { username, password, newPassword:confirmPassword})
-      //console.log(response)
       
-      //alert (response.data);
 
 
       setShowChangePassword(false);

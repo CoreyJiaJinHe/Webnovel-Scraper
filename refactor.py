@@ -34,26 +34,6 @@
 #a href format="/fiction/#####/title"
 
 
-#TODO: Create new database to save a person's follow list on the scrapable sites
-#TODO: Create a function to scrape that person's follow list
-#TODO: Add a button to the developer page to scrape the follow list
-
-
-#TODO: Royalroad Followlist Scraper
-#TODO: Aside from Royalroad, write scrape functions for Spacebattles (Done), Novelbin(Done), Lightnovelpub, Foxaholic (Done), Fanfiction.net, NovelCool(Aggregators)
-
-#TODO:Also scrape from raw websites, feed into google translate or AI translate api, then store.
-#Spacebattles: https://github.com/imgurbot12/pypub/blob/master/examples/spacebattles.py
-
-
-# TODO: Available Books Page. Display all books on this page in their categories. When clicked on, show pop-up panel containing the books details and the button to add to user follow list. Button should be replaced with an unfollow button afterwards if it is followed.
-# TODO: Follow List Database Schema
-# TODO: Function: Add book to user follow list
-# TODO: Add to UserPage to show Follow List
-# TODO: Add to DeveloperPage the fields to insert, delete and modify existing books
-# TODO: Create the SearchPage, to search existing scrape sites for books to scrape. If we search Royalroad, searchpage should display the top results and allow the user to select which one to scrape.
-# TODO: Scrape more sites. Including raw websites like uukanshu
-# TODO: Translate the raw text. Create a glossary for terms to use in translation to ensure consistent term translations
 
 
 
@@ -2250,3 +2230,165 @@ async def query_royalroad(title, option):
     #formatting
     resultLink=f"https://www.royalroad.com{firstResult}"
     return resultLink
+
+
+
+
+
+
+
+
+
+import ebooklib
+import xml.etree.ElementTree as ET
+
+def extract_series_from_epub(book):
+    # 1. Try to find 'series' in book.metadata (all namespaces)
+    for ns, meta_dict in book.metadata.items():
+        for key, values in meta_dict.items():
+            if 'series' in key.lower():
+                for value, attrs in values:
+                    # Try 'content' in attrs first
+                    if isinstance(attrs, dict) and 'content' in attrs and attrs['content']:
+                        return attrs['content']
+                    # Try value itself if it's a string and not None
+                    if value:
+                        return value
+    # 2. Try to find in OPF XML <meta> tags
+    opf_item = None
+    for item in book.get_items():
+        if item.file_name.endswith('.opf'):
+            opf_item = item
+            break
+    if opf_item:
+        opf_xml = opf_item.get_content()
+        root = ET.fromstring(opf_xml)
+        # Find <metadata> element (namespace-agnostic)
+        metadata_elem = None
+        for elem in root.iter():
+            if elem.tag.lower().endswith('metadata'):
+                metadata_elem = elem
+                break
+        if metadata_elem is not None:
+            for meta in metadata_elem.iter():
+                if meta.tag.lower().endswith('meta'):
+                    # Check both 'name' and 'property' attributes for 'series'
+                    for attr in ['name', 'property']:
+                        if attr in meta.attrib and 'series' in meta.attrib[attr].lower():
+                            if 'content' in meta.attrib:
+                                return meta.attrib['content']
+                            elif meta.text:
+                                return meta.text
+    # Not found
+    return ""
+
+# Usage in your import_from_epub:
+fileName="DRR 3 - Fragments of Time - Silver Linings.epub"
+dirLocation= f"./books/imported/{fileName}"
+
+async def import_from_epub(fileName):
+    
+    try:
+        dirLocation= f"./books/imported/{fileName}"
+        logging.warning(f"Importing from epub: {dirLocation}")
+        book = epub.read_epub(dirLocation)
+        logging.warning(book)
+        
+        series = extract_series_from_epub(book)
+        series = remove_invalid_characters(series)
+        if series:
+            bookTitle = series
+        else:
+            # Fallback to dc:title
+            bookTitle = book.get_metadata('DC', 'title') 
+            if bookTitle and isinstance(bookTitle, list) and len(bookTitle) > 0:
+                bookTitle = bookTitle[0][0]
+            else:
+                bookTitle = ""
+        
+        bookAuthor = book.get_metadata('DC', 'creator')
+        if bookAuthor and isinstance(bookAuthor, list) and len(bookAuthor) > 0:
+            bookAuthor = bookAuthor[0][0]
+        else:
+            bookAuthor = ""
+
+            
+        bookDescription = book.get_metadata('DC', 'description') if book.get_metadata('DC', 'description') else ""
+        
+        for item in book.get_items():
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                print('==================================')
+                print('NAME : ', item.get_name())
+                print('----------------------------------')
+                #print(item.get_content())
+                #print('==================================')
+                
+                soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
+                
+                title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
+                if title=="":
+                    title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
+                if title=="":
+                    title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
+                if title=="":
+                    continue
+
+                chapterContent=soup
+                logging.warning(f"Chapter Title: {title}")
+                
+                fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
+                logging.warning(f"File Title: {fileTitle}")
+                
+                bookDirLocation = "./books/imported/" + bookTitle+"/"
+                if not check_directory_exists(bookDirLocation):
+                    make_directory(bookDirLocation)
+
+                # Check if the chapter already exists
+                dirLocation = f"./books/imported/{bookTitle}/{fileTitle}.html"
+                if check_directory_exists(dirLocation):
+                    return
+
+                # Write the chapter content to the file with UTF-8 encoding
+                chapterDirLocation = "./books/imported/" + bookTitle + "/"
+                completeName = os.path.join(chapterDirLocation, f"{fileTitle}.html")
+                if (isinstance(chapterContent,list)):
+                    with open (completeName,"w", encoding="utf-8") as f:
+                        for article in chapterContent:
+                            article=article.encode('ascii')
+                            if (not isinstance(article,str)):
+                                f.write(article.decode('utf-8'))
+                else:
+                    with open (completeName,"w", encoding="utf-8") as f:
+                        chapterContent=chapterContent.encode('ascii')
+                        f.write(chapterContent.decode('utf-8'))
+                f.close()
+            
+            #await save_page_content(soup, bookTitle, title)
+                
+        # Create directory for the book
+        #make_directory(f"./books/raw/{bookTitle}")
+        
+        # Store the epub file
+        #storeEpub(book, bookTitle)
+        
+        return bookTitle, bookAuthor, bookDescription
+    except Exception as e:
+        logging.error(f"Failed to import from epub: {e}")
+        return None, None, None
+
+
+
+def get_files_inside_folder():
+    dirLocation= "./books/imported/epubs"
+    dir_list=os.listdir(dirLocation)
+    print(f"Files in {dirLocation}:")
+    print(dir_list)
+
+get_files_inside_folder()
+
+
+# logging.warning(asyncio.run(import_from_epub("Legendary Shadow Blacksmith Ch1-102.epub")))
+
+    
+
+

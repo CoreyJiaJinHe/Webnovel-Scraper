@@ -167,18 +167,6 @@ function OnlineReaderPage() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentChapterID, currentChapterTitle, chapterList]);
 
-    //DONE TODO: If it spacebattles, we need to do some extra processing to get the chapter list
-    //Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
-    //I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
-    //The former is more efficient for the server but the latter is more efficient for the client in terms of memory usage.
-    //Though it shouldn't be that bad since images won't be loaded until after react dom renders the chapter content.
-    //DO THIS ON SERVER SIDE, so that the client doesn't have to do any processing.
-
-
-    //DONE TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
-    //DONE TODO: Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
-    //DONE TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
-    //TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
 
 
 

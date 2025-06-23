@@ -1,0 +1,71 @@
+TODO:
+//TODO: Extract chapters from an epub file and store them in the database. Then make those chapters accessible
+// so that the user can read them in the online reader.
+//TODO: Web Interface where users can put in a book URL and it will retrieve the book's information before asking the user
+// to confirm if they want to scrape it. If they do, it will scrape the book and store it in the database.
+//TODO: Manga OCR, Extract raw text from manga images, and then translate them to English.
+//TODO: Add a list of terms to substitute terms in the raw text like names and places, before translating
+
+
+refactor.py TODO
+// #DONE TODO: Create new database to save a person's follow list on the scrapable sites
+// #TODO: Create a function to scrape that person's follow list
+// #TODO: Add a button to the developer page to scrape the follow list
+
+
+// #DONE TODO: Royalroad Followlist Scraper
+// #TODO: Aside from Royalroad, write scrape functions for Spacebattles (Done), Novelbin(Done), , Foxaholic (Done),
+//Lightnovelpub, Fanfiction.net, NovelCool(Aggregators)
+// #TODO:Also scrape from raw websites, feed into google translate or AI translate api, then store.
+// #Spacebattles: https://github.com/imgurbot12/pypub/blob/master/examples/spacebattles.py
+
+
+// # DONE TODO: Available Books Page. Display all books on this page in their categories. When clicked on, show pop-up panel containing the books details and the button to add to user follow list. Button should be replaced with an unfollow button afterwards if it is followed.
+// # TODO: Follow List Database Schema
+// # DONE TODO: Function: Add book to user follow list
+// # TODO: Add to UserPage to show Follow List
+// # TODO: Add to DeveloperPage the fields to insert, delete and modify existing books
+// # TODO: Create the SearchPage, to search existing scrape sites for books to scrape. If we search Royalroad, searchpage should display the top results and allow the user to select which one to scrape.
+// # TODO: Scrape more sites. Including raw websites like uukanshu
+// # TODO: Translate the raw text. Create a glossary for terms to use in translation to ensure consistent term translations
+
+
+scrapers folder TODO
+//Move the refactored code in refactor.py over to the appropriate scrapers in the scrapers folder.
+
+
+
+
+UserPage TODO
+//TODO: FINISH THIS
+      //I need to make the alert say certain responses. Like if you gave the wrong initial password
+      //const response=await axios.post(`${API_URL}/changepassword/`, { username, password, newPassword:confirmPassword})
+      //console.log(response)
+      
+      //alert (response.data);
+
+
+OnlineReaderPage TODO
+//DONE TODO: If it spacebattles, we need to do some extra processing to get the chapter list
+//Otherwise, it is straightforward. use the directory saved from the order of contents, and then grab the content of the chapter
+//I am contemplating whether to grab all the chapters at once or just grab the desired chapter when the user clicks on it.
+//The former is more efficient for the server but the latter is more efficient for the client in terms of memory usage.
+//Though it shouldn't be that bad since images won't be loaded until after react dom renders the chapter content.
+//DO THIS ON SERVER SIDE, so that the client doesn't have to do any processing.
+
+
+//DONE TODO: Add in chapter navigation, so the user can click on a chapter in the list and it will load the content of that chapter.
+//DONE TODO: Also make it so that there are two buttons the user can click on to go to the next or previous chapter.
+//DONE TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
+//TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
+
+
+
+
+mainModule.py TODO
+// #DONE TODO: If the book already exists, we should check if the latest chapter is the same as the one in the database.
+// #To do this, I need to change the way latest chapters are stored in the database. I need to store the latest chapter's name and ID
+// #and make the name be the one that is displayed on the front end, while using the ID to compare latest chapters
+// #DONE TODO: I also need to modify SpacebattlesEpubProducer. Currently, the latest chapter is considered the last page of spacebattles reader mode.
+// #Due to how spacebattles works, it does not check for new chapters added to the page. Meaning, I can store 5 threadmarks on last page, and the sixth won't be detected.
+// #DONE TODO: I also need to modify all the EpubProducers to handle broken images so that it won't break the epub generation.

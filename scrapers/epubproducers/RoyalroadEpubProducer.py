@@ -53,7 +53,6 @@ class RoyalRoadEpubProducer(EpubProducer):
         
         currentImageCount=image_count
         # Process images
-        # TODO: This needs modifying. 
         images=chapter_content.find_all('img')
         images=[image['src'] for image in images]
         logging.warning(images)
