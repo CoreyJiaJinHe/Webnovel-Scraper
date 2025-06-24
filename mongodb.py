@@ -664,6 +664,65 @@ def check_developer(username):
 #create_user_reading_list(userID=2,followList=[1,2,3,4,5])
 
 
+
+
+
+def get_all_book_titles():
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results=savedBooks.find({"bookID":{"$nin":["-1","0"]}})
+    bookTitles=[]
+    for result in results:
+        bookTitles.append(result["bookName"])
+    return bookTitles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def template_server_data():
     template_server={
         "serverID":"Template",

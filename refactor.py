@@ -80,7 +80,8 @@ from mongodb import(
     check_latest_chapter,
     check_recently_scraped,
     create_Entry, 
-    create_latest
+    create_latest,
+    get_all_book_titles
 )
 
 #Cut out and insert function
@@ -2233,52 +2234,126 @@ async def query_royalroad(title, option):
 
 
 
+def fuzzy_similarity(newBookTitle, existingBookTitles):
+    """
+    Returns the string from existingBookTitles with the highest similarity to newBookTitle,
+    based on the longest common subsequence ratio.
+    """
+    def normalize_string(s):
+        return re.sub(r'[\W_]+', '', s).lower()  # removes all non-alphanumeric chars and lowercases
+
+    # Dynamic programming approach for LCS
+    def levenshtein_distance(s1, s2):
+        m, n = len(s1), len(s2)
+        # Initialize distance matrix
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = i
+        for j in range(n + 1):
+            dp[0][j] = j
+        # Compute distances
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                cost = 0 if s1[i - 1] == s2[j - 1] else 1
+                dp[i][j] = min(
+                    dp[i - 1][j] + 1,      # Deletion
+                    dp[i][j - 1] + 1,      # Insertion
+                    dp[i - 1][j - 1] + cost  # Substitution
+                )
+        return dp[m][n]
+
+    best_match = None
+    best_score = 0.0
+    newBookTitle = normalize_string(newBookTitle)
+    for book in existingBookTitles:
+        if not newBookTitle or not book:
+            continue
+        book= normalize_string(book)
+        #logging.warning(f"Comparing '{newBookTitle}' with '{book}'")
+        lev_dist = levenshtein_distance(newBookTitle, book)
+        max_len = max(len(newBookTitle), len(book))
+        score = 1 - (lev_dist / max_len) if max_len > 0 else 0.0
+        if score > best_score:
+            best_score = score
+            best_match = book
+    #logging.warning(f"Best match for '{newBookTitle}' is '{best_match}' with score {best_score:.2f}")
+    return best_match, best_score
 
 
 
 
+def store_chapter_version_two(chapterContent,bookTitle,fileTitle):
+    bookDirLocation = "./books/imported/" + bookTitle+"/"
+    if not check_directory_exists(bookDirLocation):
+        make_directory(bookDirLocation)
+
+    # Check if the chapter already exists
+    dirLocation = f"./books/imported/{bookTitle}/{fileTitle}.html"
+    if not check_directory_exists(dirLocation):
+        make_directory(dirLocation)
+
+    # Write the chapter content to the file with UTF-8 encoding
+    chapterDirLocation = "./books/imported/" + bookTitle + "/"
+    completeName = os.path.join(chapterDirLocation, f"{fileTitle}.html")
+    if (isinstance(chapterContent,list)):
+        with open (completeName,"w", encoding="utf-8") as f:
+            for article in chapterContent:
+                article=article.encode('ascii')
+                if (not isinstance(article,str)):
+                    f.write(article.decode('utf-8'))
+    else:
+        with open (completeName,"w", encoding="utf-8") as f:
+            chapterContent=chapterContent.encode('ascii')
+            f.write(chapterContent.decode('utf-8'))
+    f.close()
 
 
 import ebooklib
 import xml.etree.ElementTree as ET
 
 def extract_series_from_epub(book):
-    # 1. Try to find 'series' in book.metadata (all namespaces)
-    for ns, meta_dict in book.metadata.items():
-        for key, values in meta_dict.items():
-            if 'series' in key.lower():
-                for value, attrs in values:
-                    # Try 'content' in attrs first
-                    if isinstance(attrs, dict) and 'content' in attrs and attrs['content']:
-                        return attrs['content']
-                    # Try value itself if it's a string and not None
-                    if value:
-                        return value
-    # 2. Try to find in OPF XML <meta> tags
-    opf_item = None
-    for item in book.get_items():
-        if item.file_name.endswith('.opf'):
-            opf_item = item
-            break
-    if opf_item:
-        opf_xml = opf_item.get_content()
-        root = ET.fromstring(opf_xml)
-        # Find <metadata> element (namespace-agnostic)
-        metadata_elem = None
-        for elem in root.iter():
-            if elem.tag.lower().endswith('metadata'):
-                metadata_elem = elem
+    try:
+        # 1. Try to find 'series' in book.metadata (all namespaces)
+        for ns, meta_dict in book.metadata.items():
+            for key, values in meta_dict.items():
+                if 'series' in key.lower():
+                    for value, attrs in values:
+                        # Try 'content' in attrs first
+                        if isinstance(attrs, dict) and 'content' in attrs and attrs['content']:
+                            return attrs['content']
+                        # Try value itself if it's a string and not None
+                        if value:
+                            return value
+        # 2. Try to find in OPF XML <meta> tags
+        opf_item = None
+        for item in book.get_items():
+            if item.file_name.endswith('.opf'):
+                opf_item = item
                 break
-        if metadata_elem is not None:
-            for meta in metadata_elem.iter():
-                if meta.tag.lower().endswith('meta'):
-                    # Check both 'name' and 'property' attributes for 'series'
-                    for attr in ['name', 'property']:
-                        if attr in meta.attrib and 'series' in meta.attrib[attr].lower():
-                            if 'content' in meta.attrib:
-                                return meta.attrib['content']
-                            elif meta.text:
-                                return meta.text
+        if opf_item:
+            opf_xml = opf_item.get_content()
+            root = ET.fromstring(opf_xml)
+            # Find <metadata> element (namespace-agnostic)
+            metadata_elem = None
+            for elem in root.iter():
+                if elem.tag.lower().endswith('metadata'):
+                    metadata_elem = elem
+                    break
+            if metadata_elem is not None:
+                for meta in metadata_elem.iter():
+                    if meta.tag.lower().endswith('meta'):
+                        # Check both 'name' and 'property' attributes for 'series'
+                        for attr in ['name', 'property']:
+                            if attr in meta.attrib and 'series' in meta.attrib[attr].lower():
+                                if 'content' in meta.attrib:
+                                    return meta.attrib['content']
+                                elif meta.text:
+                                    return meta.text
+    except Exception as e:
+        errorText=f"Failed to extract series from epub. Function extract_series_from_epub Error: {e}, book:{book.get_metadata('DC', 'title')}"
+        #logging.error(errorText)
+        write_to_logs(errorText)
+        
     # Not found
     return ""
 
@@ -2286,23 +2361,31 @@ def extract_series_from_epub(book):
 fileName="DRR 3 - Fragments of Time - Silver Linings.epub"
 dirLocation= f"./books/imported/{fileName}"
 
-async def import_from_epub(fileName):
+def remove_tags_from_inside_brackets(text):
+    """
+    Removes all text inside brackets, including the brackets themselves.
+    """
+    return re.sub(r'[\[\(].*?[\]\)]', '', text)
+
+async def fetch_novel_data_from_epub(fileName):
     
     try:
-        dirLocation= f"./books/imported/{fileName}"
-        logging.warning(f"Importing from epub: {dirLocation}")
+        dirLocation= f"./books/imported/epubs/{fileName}"
+        #logging.warning(f"Importing from epub: {dirLocation}")
         book = epub.read_epub(dirLocation)
-        logging.warning(book)
+        #logging.warning(book)
         
         series = extract_series_from_epub(book)
         series = remove_invalid_characters(series)
-        if series:
+        if series and series !="":
             bookTitle = series
         else:
             # Fallback to dc:title
             bookTitle = book.get_metadata('DC', 'title') 
             if bookTitle and isinstance(bookTitle, list) and len(bookTitle) > 0:
                 bookTitle = bookTitle[0][0]
+                bookTitle= remove_tags_from_inside_brackets(bookTitle)
+                bookTitle=remove_invalid_characters(bookTitle)
             else:
                 bookTitle = ""
         
@@ -2315,65 +2398,42 @@ async def import_from_epub(fileName):
             
         bookDescription = book.get_metadata('DC', 'description') if book.get_metadata('DC', 'description') else ""
         
-        for item in book.get_items():
-            if item.get_type() == ebooklib.ITEM_DOCUMENT:
-                print('==================================')
-                print('NAME : ', item.get_name())
-                print('----------------------------------')
-                #print(item.get_content())
-                #print('==================================')
+        # for item in book.get_items():
+        #     if item.get_type() == ebooklib.ITEM_DOCUMENT:
+        #         print('==================================')
+        #         print('NAME : ', item.get_name())
+        #         print('----------------------------------')
+        #         #print(item.get_content())
+        #         #print('==================================')
                 
-                soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
+        #         soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
                 
-                title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
-                if title=="":
-                    title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
-                if title=="":
-                    title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
-                if title=="":
-                    continue
+        #         title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
+        #         if title=="":
+        #             title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
+        #         if title=="":
+        #             title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
+        #         if title=="":
+        #             continue
 
-                chapterContent=soup
-                logging.warning(f"Chapter Title: {title}")
+        #         chapterContent=soup
+        #         logging.warning(f"Chapter Title: {title}")
                 
-                fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
-                logging.warning(f"File Title: {fileTitle}")
+        #         fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
+        #         logging.warning(f"File Title: {fileTitle}")
                 
-                bookDirLocation = "./books/imported/" + bookTitle+"/"
-                if not check_directory_exists(bookDirLocation):
-                    make_directory(bookDirLocation)
-
-                # Check if the chapter already exists
-                dirLocation = f"./books/imported/{bookTitle}/{fileTitle}.html"
-                if check_directory_exists(dirLocation):
-                    return
-
-                # Write the chapter content to the file with UTF-8 encoding
-                chapterDirLocation = "./books/imported/" + bookTitle + "/"
-                completeName = os.path.join(chapterDirLocation, f"{fileTitle}.html")
-                if (isinstance(chapterContent,list)):
-                    with open (completeName,"w", encoding="utf-8") as f:
-                        for article in chapterContent:
-                            article=article.encode('ascii')
-                            if (not isinstance(article,str)):
-                                f.write(article.decode('utf-8'))
-                else:
-                    with open (completeName,"w", encoding="utf-8") as f:
-                        chapterContent=chapterContent.encode('ascii')
-                        f.write(chapterContent.decode('utf-8'))
-                f.close()
+        #         store_chapter_version_two(chapterContent, bookTitle, fileTitle)
             
             #await save_page_content(soup, bookTitle, title)
                 
         # Create directory for the book
         #make_directory(f"./books/raw/{bookTitle}")
         
-        # Store the epub file
-        #storeEpub(book, bookTitle)
-        
         return bookTitle, bookAuthor, bookDescription
     except Exception as e:
-        logging.error(f"Failed to import from epub: {e}")
+        errorText=f"Failed to import from epub: {e}"
+        logging.error(errorText)
+        write_to_logs(errorText)
         return None, None, None
 
 
@@ -2383,12 +2443,32 @@ def get_files_inside_folder():
     dir_list=os.listdir(dirLocation)
     print(f"Files in {dirLocation}:")
     print(dir_list)
+    return dir_list
 
-get_files_inside_folder()
+dir_list=get_files_inside_folder()
 
 
+def compare_existing_with_import(dir_list):
+    existingBookTitles=get_all_book_titles()
+    matchingBooks=[]
+    
+    for item in dir_list:
+        if item.endswith('.epub'):
+            logging.warning(f"Extracting from file: {item}")
+            bookTitle, bookAuthor, bookDescription = asyncio.run(fetch_novel_data_from_epub(item))
+            if bookTitle:
+                logging.warning(f"Read: {bookTitle} by {bookAuthor}")
+            else:
+                errorText=f"Failed to import from {item}"
+                write_to_logs(errorText)
+                logging.warning(errorText)
+            bookMatch,bookScore=fuzzy_similarity(bookTitle, existingBookTitles)
+            if (bookScore>=0.8):
+                #logging.warning(f"Book {bookTitle} is similar to existing book {bookMatch} with score {bookScore}. Skipping.")
+                matchingBooks.append(bookTitle)
+                continue
+    return matchingBooks
+logging.warning(compare_existing_with_import(dir_list))
 # logging.warning(asyncio.run(import_from_epub("Legendary Shadow Blacksmith Ch1-102.epub")))
 
     
-
-
