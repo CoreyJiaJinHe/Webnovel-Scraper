@@ -2367,27 +2367,29 @@ def remove_tags_from_inside_brackets(text):
     """
     return re.sub(r'[\[\(].*?[\]\)]', '', text)
 
-async def fetch_novel_data_from_epub(fileName):
+async def process_book_title(book):
+    series = extract_series_from_epub(book)
+    series = remove_invalid_characters(series)
+    if series and series !="":
+        bookTitle = series
+    else:
+        # Fallback to dc:title
+        bookTitle = book.get_metadata('DC', 'title') 
+        if bookTitle and isinstance(bookTitle, list) and len(bookTitle) > 0:
+            bookTitle = bookTitle[0][0]
+            bookTitle= remove_tags_from_inside_brackets(bookTitle)
+            bookTitle=remove_invalid_characters(bookTitle)
+        else:
+            bookTitle = ""
+    return bookTitle
+async def fetch_novel_data_from_epub(dirLocation):
     
     try:
-        dirLocation= f"./books/imported/epubs/{fileName}"
         #logging.warning(f"Importing from epub: {dirLocation}")
         book = epub.read_epub(dirLocation)
         #logging.warning(book)
+        bookTitle=await process_book_title(book)
         
-        series = extract_series_from_epub(book)
-        series = remove_invalid_characters(series)
-        if series and series !="":
-            bookTitle = series
-        else:
-            # Fallback to dc:title
-            bookTitle = book.get_metadata('DC', 'title') 
-            if bookTitle and isinstance(bookTitle, list) and len(bookTitle) > 0:
-                bookTitle = bookTitle[0][0]
-                bookTitle= remove_tags_from_inside_brackets(bookTitle)
-                bookTitle=remove_invalid_characters(bookTitle)
-            else:
-                bookTitle = ""
         
         bookAuthor = book.get_metadata('DC', 'creator')
         if bookAuthor and isinstance(bookAuthor, list) and len(bookAuthor) > 0:
@@ -2397,37 +2399,7 @@ async def fetch_novel_data_from_epub(fileName):
 
             
         bookDescription = book.get_metadata('DC', 'description') if book.get_metadata('DC', 'description') else ""
-        
-        # for item in book.get_items():
-        #     if item.get_type() == ebooklib.ITEM_DOCUMENT:
-        #         print('==================================')
-        #         print('NAME : ', item.get_name())
-        #         print('----------------------------------')
-        #         #print(item.get_content())
-        #         #print('==================================')
-                
-        #         soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
-                
-        #         title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
-        #         if title=="":
-        #             title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
-        #         if title=="":
-        #             title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
-        #         if title=="":
-        #             continue
-
-        #         chapterContent=soup
-        #         logging.warning(f"Chapter Title: {title}")
-                
-        #         fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
-        #         logging.warning(f"File Title: {fileTitle}")
-                
-        #         store_chapter_version_two(chapterContent, bookTitle, fileTitle)
-            
-            #await save_page_content(soup, bookTitle, title)
-                
-        # Create directory for the book
-        #make_directory(f"./books/raw/{bookTitle}")
+    
         
         return bookTitle, bookAuthor, bookDescription
     except Exception as e:
@@ -2438,37 +2410,188 @@ async def fetch_novel_data_from_epub(fileName):
 
 
 
-def get_files_inside_folder():
+def get_epubs_to_import():
     dirLocation= "./books/imported/epubs"
     dir_list=os.listdir(dirLocation)
     print(f"Files in {dirLocation}:")
     print(dir_list)
     return dir_list
 
-dir_list=get_files_inside_folder()
+dir_list=get_epubs_to_import()
 
+def get_all_files_in_directory(directory):
+    dir_list=os.listdir(directory)
+    print(f"Files in {directory}:")
+    print(dir_list)
+    return dir_list
+
+def compare_files_in_directory(directory):
+    dir_list=get_all_files_in_directory(directory)
+    with open("{directory}/order_of_chapters.txt", "r") as f:
+        order_of_contents_chapters= f.readlines()
+    file_names = []
+    for line in order_of_contents_chapters:
+        parts = line.strip().split(";")
+        if len(parts) >= 3:
+            file_path = parts[2]
+            file_name = os.path.basename(file_path)
+            file_names.append(file_name)
+    extra_files = [f for f in dir_list if f not in file_names]
+
+    print("Files in directory not listed in order_of_chapters.txt:")
+    for f in extra_files:
+        print(f)
+    
+    
+    
+def get_existing_order_of_contents(book_title):
+        # Default implementation
+        dir_location = f"./books/imported/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
 
 def compare_existing_with_import(dir_list):
     existingBookTitles=get_all_book_titles()
-    matchingBooks=[]
+    matchingBooks = set()  # Use a set for uniqueness
     
     for item in dir_list:
         if item.endswith('.epub'):
             logging.warning(f"Extracting from file: {item}")
-            bookTitle, bookAuthor, bookDescription = asyncio.run(fetch_novel_data_from_epub(item))
+            dirLocation= f"./books/imported/epubs/{fileName}"
+            bookTitle, bookAuthor, bookDescription = asyncio.run(fetch_novel_data_from_epub(dirLocation))
             if bookTitle:
                 logging.warning(f"Read: {bookTitle} by {bookAuthor}")
+                bookMatch,bookScore=fuzzy_similarity(bookTitle, existingBookTitles)
+                if (bookScore>=0.8):
+                    #logging.warning(f"Book {bookTitle} is similar to existing book {bookMatch} with score {bookScore}. Skipping.")
+                    
+                    matchingBooks.add(bookTitle)  # Add to set
+                    continue
             else:
                 errorText=f"Failed to import from {item}"
                 write_to_logs(errorText)
                 logging.warning(errorText)
-            bookMatch,bookScore=fuzzy_similarity(bookTitle, existingBookTitles)
-            if (bookScore>=0.8):
-                #logging.warning(f"Book {bookTitle} is similar to existing book {bookMatch} with score {bookScore}. Skipping.")
-                matchingBooks.append(bookTitle)
-                continue
+            
     return matchingBooks
 logging.warning(compare_existing_with_import(dir_list))
 # logging.warning(asyncio.run(import_from_epub("Legendary Shadow Blacksmith Ch1-102.epub")))
 
+async def extract_chapter_from_book(dirLocation):
     
+    fileName=dirLocation.split("/")[-1]
+    if not fileName.endswith('.epub'):
+        errorText=f"Function extract_chapter_from_book Error: {fileName} is not an epub file."
+        write_to_logs(errorText)
+        return
+    
+    def extract_volume_or_book_number(fileName):
+        """
+        Extracts the volume or book number from a fileName string.
+        Looks for patterns like 'vol5', 'vol_5', 'vol-5', 'book5', 'book_5', 'book-5', case-insensitive.
+        Returns the number as an integer if found, otherwise None.
+        """
+        match = re.search(r'(?:vol|book)[\s\-_]*([0-9]+)', fileName, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+        return None
+    volume_number = extract_volume_or_book_number(fileName)
+    chapterID=0
+    if volume_number:
+        chapterID = volume_number * 10000
+    
+    chapter_metadata = []
+    book = epub.read_epub(dirLocation)
+    bookTitle=await process_book_title(book)
+    def get_existing_order_of_contents(book_title):
+        # Default implementation
+        dir_location = f"./books/imported/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
+    
+    existingChapters = get_existing_order_of_contents(bookTitle)
+    try:
+        currentFileChapterTitle=existingChapters[0].split(";")
+    except:
+        currentFileChapterTitle=None
+        
+        
+        
+    for item in book.get_items():
+        if item.get_type() == ebooklib.ITEM_DOCUMENT:
+            print('==================================')
+            print('NAME : ', item.get_name())
+            print('----------------------------------')
+            #print(item.get_content())
+            #print('==================================')
+            
+            soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
+            
+            title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
+            if title=="":
+                title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
+            if title=="":
+                title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
+            if title=="":
+                continue
+            
+            chapterContent=soup
+            logging.warning(f"Chapter Title: {title}")
+            
+            fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
+            logging.warning(f"File Title: {fileTitle}")
+            
+            store_chapter_version_two(chapterContent, bookTitle, fileTitle)
+            chapter_metadata.append([chapterID,title,f"./books/imported/{bookTitle}/{fileTitle}.html"])
+            chapterID+=1
+            
+            
+    
+    def merge_chapter_lists_preserve_order(list1, list2):
+        """
+        Merge two lists of chapters, preserving order and removing duplicates.
+        Duplicates are detected by chapter title (case-insensitive, stripped).
+        Returns a merged list with unique chapters, order: all from list1, then unique from list2.
+        """
+        def chapter_key(chapter):
+            # chapter_metadata is saved as [ID, Title, FilePath]
+            # We assume the title is always at index 1, and it can be a list
+            if isinstance(chapter, list):
+                return chapter[1].strip().lower()
+            return chapter.strip().lower()
+
+        seen = set()
+        merged = []
+
+        # Add all chapters from list1, marking them as seen
+        for chapter in list1:
+            key = chapter_key(chapter)
+            if key not in seen:
+                merged.append(chapter)
+                seen.add(key)
+
+        # Add only new chapters from list2
+        for chapter in list2:
+            key = chapter_key(chapter)
+            if key not in seen:
+                merged.append(chapter)
+                seen.add(key)
+
+        return merged
+    
+    merged_chapter_metadata=merge_chapter_lists_preserve_order(existingChapters, chapter_metadata)
+    
+    def write_order_of_contents(book_title, chapter_metadata):
+        file_location = f"./books/imported/{book_title}/order_of_chapters.txt"
+        logging.warning(chapter_metadata)
+        with open(file_location, "w") as f:
+            for data in chapter_metadata:
+                logging.warning(data)
+                f.write(";".join(map(str, data))+ "\n")
+    write_order_of_contents(bookTitle, merged_chapter_metadata)
+    
+    #Create directory for the book
+    #make_directory(f"./books/imported/{bookTitle}")
