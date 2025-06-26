@@ -74,7 +74,7 @@ async def main_interface(url, cookie):
             rooturl=match.group(1)
         first,last,total=get_first_last_chapter(bookTitle)
         
-        bookID=int(remove_invalid_characters(bookID))
+        bookID=(remove_invalid_characters(bookID))
         directory = create_epub_directory_url(bookTitle)
         create_Entry(
             bookID=bookID,
@@ -89,7 +89,7 @@ async def main_interface(url, cookie):
         )
         
         create_latest(
-            bookID=int(bookID),
+            bookID=bookID,
             bookName=bookTitle,
             bookAuthor=bookAuthor,
             bookDescription=description,

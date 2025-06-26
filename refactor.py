@@ -81,7 +81,8 @@ from mongodb import(
     check_recently_scraped,
     create_Entry, 
     create_latest,
-    get_all_book_titles
+    get_all_book_titles,
+    get_Entry_Via_Title
 )
 
 #Cut out and insert function
@@ -417,6 +418,8 @@ class RoyalRoadScraper():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
 
@@ -532,6 +535,8 @@ class RoyalRoadEpubProducer():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
 
@@ -874,6 +879,8 @@ class SpaceBattlesScraper():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
 
@@ -1010,6 +1017,8 @@ class SpaceBattlesEpubProducer():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
                 
@@ -1167,6 +1176,9 @@ class FoxaholicScraper():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
     #These four functions appear to be a common function.
@@ -1628,6 +1640,9 @@ class NovelBinScraper():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
     #These four functions appear to be a common function.
@@ -1957,6 +1972,9 @@ class NovelBinEpubProducer():
         logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
+                
+                if isinstance(data, str):
+                    data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
 
@@ -2281,7 +2299,6 @@ def fuzzy_similarity(newBookTitle, existingBookTitles):
 
 
 
-
 def store_chapter_version_two(chapterContent,bookTitle,fileTitle):
     bookDirLocation = "./books/imported/" + bookTitle+"/"
     if not check_directory_exists(bookDirLocation):
@@ -2289,8 +2306,8 @@ def store_chapter_version_two(chapterContent,bookTitle,fileTitle):
 
     # Check if the chapter already exists
     dirLocation = f"./books/imported/{bookTitle}/{fileTitle}.html"
-    if not check_directory_exists(dirLocation):
-        make_directory(dirLocation)
+    if check_directory_exists(dirLocation):
+        return
 
     # Write the chapter content to the file with UTF-8 encoding
     chapterDirLocation = "./books/imported/" + bookTitle + "/"
@@ -2358,8 +2375,8 @@ def extract_series_from_epub(book):
     return ""
 
 # Usage in your import_from_epub:
-fileName="DRR 3 - Fragments of Time - Silver Linings.epub"
-dirLocation= f"./books/imported/{fileName}"
+#fileName="DRR 3 - Fragments of Time - Silver Linings.epub"
+#dirLocation= f"./books/imported/{fileName}"
 
 def remove_tags_from_inside_brackets(text):
     """
@@ -2382,6 +2399,68 @@ async def process_book_title(book):
         else:
             bookTitle = ""
     return bookTitle
+
+
+def detect_epub_source(book):
+    """
+    Attempts to detect the source website of an epub by searching for known domains
+    in the OPF file, stylesheets, and chapter HTML content.
+    Returns the source as a string, or 'Unknown' if not found.
+    """
+
+    # List of known sources and their identifying keywords/domains
+    known_sources = {
+        "royalroad.com": ["royalroad.com"],
+        "scribblehub.com": ["scribblehub.com"],
+        "forums.spacebattles.com": ["spacebattles.com"],
+        "novelbin.me": ["novelbin.me", "novelbin.com"],
+        "foxaholic.com": ["foxaholic.com"],
+        # Add more as needed
+    }
+
+    # Helper to check for keywords in a string
+    def find_source_in_text(text):
+        for source, keywords in known_sources.items():
+            for keyword in keywords:
+                if keyword in text:
+                    return source
+        return None
+
+    # 1. Check OPF file (metadata)
+    opf_item = None
+    for item in book.get_items():
+        if item.file_name.endswith('.opf'):
+            opf_item = item
+            break
+    if opf_item:
+        opf_content = opf_item.get_content().decode(errors="ignore")
+        found = find_source_in_text(opf_content)
+        if found:
+            return found
+
+    # 2. Check all stylesheets
+    for item in book.get_items_of_type(ebooklib.ITEM_STYLE):
+        style_content = item.get_content().decode(errors="ignore")
+        found = find_source_in_text(style_content)
+        if found:
+            return found
+
+    # 3. Check all HTML chapters
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        html_content = item.get_content().decode(errors="ignore")
+        found = find_source_in_text(html_content)
+        if found:
+            return found
+
+    # 4. Check all images (sometimes watermarks or URLs)
+    for item in book.get_items_of_type(ebooklib.ITEM_IMAGE):
+        if hasattr(item, 'file_name') and find_source_in_text(item.file_name):
+            return find_source_in_text(item.file_name)
+
+    # 5. Fallback
+    return "Unknown"
+
+
 async def fetch_novel_data_from_epub(dirLocation):
     
     try:
@@ -2389,7 +2468,6 @@ async def fetch_novel_data_from_epub(dirLocation):
         book = epub.read_epub(dirLocation)
         #logging.warning(book)
         bookTitle=await process_book_title(book)
-        
         
         bookAuthor = book.get_metadata('DC', 'creator')
         if bookAuthor and isinstance(bookAuthor, list) and len(bookAuthor) > 0:
@@ -2399,25 +2477,75 @@ async def fetch_novel_data_from_epub(dirLocation):
 
             
         bookDescription = book.get_metadata('DC', 'description') if book.get_metadata('DC', 'description') else ""
-    
+        bookDescription= bookDescription[0][0] if isinstance(bookDescription, list) and len(bookDescription) > 0 else bookDescription
+        if ("\n" in bookDescription):
+            bookDescription=bookDescription.replace("\n"," ")
+        if ("  " in bookDescription):
+            bookDescription=bookDescription.replace("  "," ")
+                    
+        origin=detect_epub_source(book)
         
-        return bookTitle, bookAuthor, bookDescription
+        bookID=str(generate_new_ID(bookTitle,origin))
+        lastScraped = datetime.datetime.now()
+        latestChapterTitle = ""
+        try:
+            chapters = list(book.get_items())
+            # Find the last non-cover.xhtml document with a valid title
+            idx = len(chapters) - 1
+            latestChapterTitle = ""
+            while idx >= 0:
+                last_chapter = chapters[idx]
+                # Skip if it's a cover.xhtml file
+                if last_chapter.get_name().lower().endswith("cover.xhtml"):
+                    idx -= 1
+                    continue
+                soup = bs4.BeautifulSoup(last_chapter.get_content(), 'html.parser')
+                # Try to find the latest chapter title from headings
+                title = ""
+                for tag in ['h1', 'h2', 'h3']:
+                    heading = soup.find(tag)
+                    if heading and heading.get_text(strip=True):
+                        title = heading.get_text(strip=True)
+                        break
+                if title:
+                    latestChapterTitle = remove_invalid_characters(title)
+                    break  # Found a valid title, exit loop
+                idx -= 1
+            if not latestChapterTitle:
+                latestChapterTitle = "N/A"
+        except Exception as e:
+            errorText=f"Failed to extract latest chapter title from epub. Function fetch_novel_data_from_epub Error: {e}, file: {dirLocation}"
+            logging.error(errorText)
+            write_to_logs(errorText)
+            # Fallback if not found
+            latestChapterTitle="N/A"
+
+        
+        
+        #Regular Format: bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle
+        return bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle
+
+
+
     except Exception as e:
         errorText=f"Failed to import from epub: {e}"
         logging.error(errorText)
         write_to_logs(errorText)
-        return None, None, None
+        return None, None, None,None,None,None,None
 
 
 
 def get_epubs_to_import():
     dirLocation= "./books/imported/epubs"
     dir_list=os.listdir(dirLocation)
-    print(f"Files in {dirLocation}:")
-    print(dir_list)
+    #print(f"Files in {dirLocation}:")
+    #print(dir_list)
+    override=True
+    if (override):
+        return sorted(dir_list)[:10]
     return dir_list
 
-dir_list=get_epubs_to_import()
+#dir_list=get_epubs_to_import()
 
 def get_all_files_in_directory(directory):
     dir_list=os.listdir(directory)
@@ -2452,30 +2580,35 @@ def get_existing_order_of_contents(book_title):
                 return f.readlines()
         return []
 
-def compare_existing_with_import(dir_list):
+async def compare_existing_with_import(dir_list,condition):
     existingBookTitles=get_all_book_titles()
     matchingBooks = set()  # Use a set for uniqueness
     
     for item in dir_list:
         if item.endswith('.epub'):
-            logging.warning(f"Extracting from file: {item}")
-            dirLocation= f"./books/imported/epubs/{fileName}"
-            bookTitle, bookAuthor, bookDescription = asyncio.run(fetch_novel_data_from_epub(dirLocation))
+            #logging.warning(f"Extracting from file: {item}")
+            dirLocation= f"./books/imported/epubs/{item}"
+            bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle = await fetch_novel_data_from_epub(dirLocation)
             if bookTitle:
-                logging.warning(f"Read: {bookTitle} by {bookAuthor}")
+                #logging.warning(f"Read: {bookTitle} by {bookAuthor}")
                 bookMatch,bookScore=fuzzy_similarity(bookTitle, existingBookTitles)
-                if (bookScore>=0.8):
-                    #logging.warning(f"Book {bookTitle} is similar to existing book {bookMatch} with score {bookScore}. Skipping.")
-                    
-                    matchingBooks.add(bookTitle)  # Add to set
-                    continue
+                if (condition):
+                    if (bookScore>=0.8):
+                        #logging.warning(f"Book {bookTitle} is similar to existing book {bookMatch} with score {bookScore}. Skipping.")
+                        
+                        matchingBooks.add(bookTitle)  # Add to set
+                else:
+                    if (bookScore<0.8):
+                        #logging.warning(f"Book {bookTitle} is not similar to existing book {bookMatch} with score {bookScore}. Adding to matching books.")
+                        matchingBooks.add(bookTitle)
+                
             else:
                 errorText=f"Failed to import from {item}"
                 write_to_logs(errorText)
                 logging.warning(errorText)
             
     return matchingBooks
-logging.warning(compare_existing_with_import(dir_list))
+#logging.warning(asyncio.run(compare_existing_with_import(dir_list)))
 # logging.warning(asyncio.run(import_from_epub("Legendary Shadow Blacksmith Ch1-102.epub")))
 
 async def extract_chapter_from_book(dirLocation):
@@ -2513,13 +2646,33 @@ async def extract_chapter_from_book(dirLocation):
         return []
     
     existingChapters = get_existing_order_of_contents(bookTitle)
-    try:
-        currentFileChapterTitle=existingChapters[0].split(";")
-    except:
-        currentFileChapterTitle=None
-        
-        
-        
+    existingChapters = [line.strip().split(";") for line in existingChapters if line.strip()]
+    
+    
+    
+    
+    currentImageCounter=0
+    
+    images = book.get_items_of_type(ebooklib.ITEM_IMAGE)
+    if images:
+        image_dir = f"./books/imported/{bookTitle}/images/"
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        for image in images:
+            if ("cover_image" in image.file_name):
+                image_path = f"{image_dir}cover_image.png"
+                currentImageCounter-=1  # Adjust counter for cover image
+            else:
+                image_path=f"{image_dir}image_{currentImageCounter}.png"
+            if not os.path.exists(image_path):
+                with open(image_path, "wb") as f:
+                    f.write(image.get_content())
+                currentImageCounter += 1
+            else:
+                logging.warning(f"Image already exists in {image_dir}. Skipping.")
+    
+    
+    currentImageCounter=0
     for item in book.get_items():
         if item.get_type() == ebooklib.ITEM_DOCUMENT:
             print('==================================')
@@ -2543,7 +2696,16 @@ async def extract_chapter_from_book(dirLocation):
             
             fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
             logging.warning(f"File Title: {fileTitle}")
+            images=chapterContent.find_all('img')
             
+            images=[image['src'] for image in images]
+            logging.warning(images)
+            image_dir = f"./books/raw/{bookTitle}/images/"
+            if images:
+                for img,image in zip(chapterContent.find_all('img'),images):
+                    img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                    currentImageCount+=1
+                    
             store_chapter_version_two(chapterContent, bookTitle, fileTitle)
             chapter_metadata.append([chapterID,title,f"./books/imported/{bookTitle}/{fileTitle}.html"])
             chapterID+=1
@@ -2565,33 +2727,150 @@ async def extract_chapter_from_book(dirLocation):
 
         seen = set()
         merged = []
-
+        chapterID=0
         # Add all chapters from list1, marking them as seen
         for chapter in list1:
             key = chapter_key(chapter)
             if key not in seen:
                 merged.append(chapter)
                 seen.add(key)
+                chapterID+=1
 
         # Add only new chapters from list2
         for chapter in list2:
             key = chapter_key(chapter)
             if key not in seen:
+                chapter=[chapterID,chapter[1],chapter[2]]
                 merged.append(chapter)
                 seen.add(key)
-
+                chapterID+=1
+        logging.warning(merged)
         return merged
     
     merged_chapter_metadata=merge_chapter_lists_preserve_order(existingChapters, chapter_metadata)
-    
+    #logging.warning(merged_chapter_metadata)
     def write_order_of_contents(book_title, chapter_metadata):
         file_location = f"./books/imported/{book_title}/order_of_chapters.txt"
-        logging.warning(chapter_metadata)
+        #logging.warning(chapter_metadata)
         with open(file_location, "w") as f:
             for data in chapter_metadata:
-                logging.warning(data)
+                if isinstance(data, str):
+                    data = data.strip().split(";")
+                #logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
     write_order_of_contents(bookTitle, merged_chapter_metadata)
     
     #Create directory for the book
     #make_directory(f"./books/imported/{bookTitle}")
+
+
+async def importing_main_interface():
+    dir_list=get_epubs_to_import()
+    logging.warning(f"Files to import: {dir_list}")
+    matches=await compare_existing_with_import(dir_list, True) 
+    #Second parameter dictates whether we receive a list of matching books
+    #or a list of non-matching books, with matching being with existing books in the database.
+    for fileName in dir_list:
+        logging.warning(f"Processing file: {fileName}")
+        logging.warning(await fetch_novel_data_from_epub(f"./books/imported/epubs/{fileName}"))
+        bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle=await fetch_novel_data_from_epub(f"./books/imported/epubs/{fileName}")
+        
+        
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        directory = create_epub_directory_url(bookTitle)
+        
+        def get_prefix_from_origin(origin):
+            """
+            Returns the correct prefix for a given origin.
+            """
+            origin_prefix_map = {
+                "royalroad.com": "rr",
+                "scribblehub.com": "sb",
+                "forums.spacebattles.com": "sb",
+                "novelbin.me": "nb",
+                "foxaholic.com": "fx",
+                "Unknown": "un"
+            }
+            # Normalize origin to lower-case for matching
+            return origin_prefix_map.get(str(origin).lower(), "un")
+        prefix=get_prefix_from_origin(origin)
+        
+        
+        def ensure_bookid_prefix(bookID, prefix):
+            """
+            Ensures the bookID starts with one of the valid prefixes ('rr', 'sb', 'fx').
+            If not, prepends the given prefix.
+            """
+            valid_prefixes = ("rr", "sb", "fx","nb","un")
+            if any(bookID.startswith(p) for p in valid_prefixes):
+                return bookID
+            return f"{prefix}{bookID}"
+        
+        bookID=ensure_bookid_prefix(bookID, prefix)
+        
+        def merge_book_entries(existing, new):
+            """
+            Merge two book records (dicts), preferring valid data from 'existing'.
+            If 'existing' has an empty string, None, "N/A", or "Unknown", use the value from 'new'.
+            """
+            merged = {}
+            invalid_values = ("", None, "N/A", "Unknown")
+            for key in set(existing.keys()).union(new.keys()):
+                old_val = existing.get(key, "")
+                new_val = new.get(key, "")
+                # Special handling for bookID
+                if key == "bookID":
+                # If old is 'un...' and new is not, use new
+                    if str(old_val).startswith("un") and not str(new_val).startswith("un") and new_val:
+                        merged[key] = new_val
+                    else:
+                        merged[key] = old_val if old_val not in invalid_values else new_val
+                else:
+                    merged[key] = old_val if old_val not in invalid_values else new_val
+                # Use old value if it's not in invalid_values, otherwise use new value
+                merged[key] = old_val if old_val not in invalid_values else new_val
+            return merged
+
+        existing_entry= get_Entry_Via_Title(bookTitle)
+        
+        new_entry = {
+            "bookID": bookID,
+            "bookName": bookTitle,
+            "bookAuthor": bookAuthor,
+            "bookDescription": bookDescription,
+            "websiteHost": origin,
+            "firstChapter": first,
+            "lastChapterID": last,
+            "lastChapterTitle": latestChapterTitle,
+            "lastScraped": lastScraped,
+            "totalChapters": total,
+            "directory": directory
+        }
+        
+        
+        if existing_entry:
+            merged_entry = merge_book_entries(existing_entry, new_entry)
+        else:
+            merged_entry = new_entry
+        create_Entry(
+            bookID=merged_entry["bookID"],
+            bookName=merged_entry["bookName"],
+            bookAuthor=merged_entry["bookAuthor"],
+            bookDescription=merged_entry["bookDescription"],
+            websiteHost=merged_entry["websiteHost"],
+            firstChapter=merged_entry["firstChapter"],
+            lastChapterID=merged_entry["lastChapterID"],
+            lastChapterTitle=merged_entry["lastChapterTitle"],
+            lastScraped=merged_entry["lastScraped"],
+            totalChapters=merged_entry["totalChapters"],
+            directory=merged_entry["directory"]
+        )
+        # if fileName.endswith('.epub'):
+        #     dirLocation= f"./books/imported/epubs/{fileName}"
+        #     logging.warning(f"Extracting from file: {fileName}")
+        #     await extract_chapter_from_book(dirLocation)
+        # else:
+        #     logging.warning(f"Skipping non-epub file: {fileName}")
+asyncio.run(importing_main_interface())
+#asyncio.run(extract_chapter_from_book("./books/imported/epubs/DRR 4 - Paradoxical Ties - Silver Linings.epub"))
