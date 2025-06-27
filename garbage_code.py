@@ -1,9 +1,37 @@
 
-
+import os
+from PIL import Image, ImageChops
 import aiohttp
 import asyncio
 import logging
 import re
+
+
+
+def test_compare_images():
+    img1_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image.png')
+    img2_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image - Copy.png')
+
+    if not os.path.exists(img1_path):
+        print(f"File not found: {img1_path}")
+        return
+    if not os.path.exists(img2_path):
+        print(f"File not found: {img2_path}")
+        return
+
+    try:
+        img1 = Image.open(img1_path)
+        img2 = Image.open(img2_path)
+        diff = ImageChops.difference(img1, img2)
+        if not diff.getbbox():
+            #logging.warning("Images are the same.")
+            return True
+        else:
+            #logging.warning("Images are different.")
+            return False
+    except Exception as e:
+        #logging.warning(f"Images are different (exception occurred: {e})")
+        return False
 
 async def download_file(url, filename):
     async with aiohttp.ClientSession(headers = {

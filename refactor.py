@@ -45,7 +45,7 @@ import logging
 import asyncio
 import io
 from ebooklib import epub 
-from PIL import Image
+from PIL import Image, ImageChops
 import aiohttp
 from dotenv import load_dotenv, find_dotenv
 
@@ -2542,7 +2542,10 @@ def get_epubs_to_import():
     #print(dir_list)
     override=True
     if (override):
-        return sorted(dir_list)[:10]
+        filtered_list = [f for f in dir_list if "Beneath the Dragoneye Moons" in f]
+        return filtered_list
+        
+        #return sorted(dir_list)[:10]
     return dir_list
 
 #dir_list=get_epubs_to_import()
@@ -2649,30 +2652,36 @@ async def extract_chapter_from_book(dirLocation):
     existingChapters = [line.strip().split(";") for line in existingChapters if line.strip()]
     
     
+    image_dir = f"./books/imported/{bookTitle}/images/"
+    cover_dir=f"./books/imported/{bookTitle}/"
+    try:
+        numberofImages=os.listdir(image_dir)
+        currentImageCounter=len(numberofImages)-1 if numberofImages else 0
+    except Exception as e:
+        errorText=f"Failed to get number of images in {image_dir}. Function extract_chapter_from_book Error: {e}"
+        logging.error(errorText)
+        write_to_logs(errorText)
+        currentImageCounter=0
+        numberofImages=[]
+                
     
-    
-    currentImageCounter=0
-    
+    #Cover Image Only
     images = book.get_items_of_type(ebooklib.ITEM_IMAGE)
     if images:
-        image_dir = f"./books/imported/{bookTitle}/images/"
         if not os.path.exists(image_dir):
             os.makedirs(image_dir)
         for image in images:
+            image_bytes = image.get_content()
             if ("cover_image" in image.file_name):
-                image_path = f"{image_dir}cover_image.png"
-                currentImageCounter-=1  # Adjust counter for cover image
-            else:
-                image_path=f"{image_dir}image_{currentImageCounter}.png"
-            if not os.path.exists(image_path):
-                with open(image_path, "wb") as f:
-                    f.write(image.get_content())
-                currentImageCounter += 1
-            else:
-                logging.warning(f"Image already exists in {image_dir}. Skipping.")
+                image_path = f"{cover_dir}cover_image.png"
+                if not os.path.exists(cover_dir) and not is_image_duplicate(image_bytes,image_dir):
+                    with open(image_path, "wb") as f:
+                        f.write(image.get_content())
+                else:
+                    logging.warning(f"Cover Image already exists in {image_dir}. Skipping.")
     
-    
-    currentImageCounter=0
+    #reset counter
+    currentImageCounter=len(numberofImages)-1 if numberofImages else 0
     for item in book.get_items():
         if item.get_type() == ebooklib.ITEM_DOCUMENT:
             print('==================================')
@@ -2691,21 +2700,102 @@ async def extract_chapter_from_book(dirLocation):
             if title=="":
                 continue
             
-            chapterContent=soup
-            logging.warning(f"Chapter Title: {title}")
+            chapterContent = soup
+            img_tags = chapterContent.find_all('img')
+            image_dir = f"./books/imported/{bookTitle}/images/"
+            if not os.path.exists(image_dir):
+                os.makedirs(image_dir)
+            images = [img['src'] for img in img_tags if img.has_attr('src')]
+            logging.warning(images)
+
+            # Get all image items in the book for matching
+            image_items = {img_item.file_name: img_item for img_item in book.get_items_of_type(ebooklib.ITEM_IMAGE)}
+
+            for img in img_tags:
+                img_src = img['src']
+                # Try to find the corresponding image item in the epub
+                matched_item = None
+                for file_name, img_item in image_items.items():
+                    if img_src in file_name or file_name in img_src:
+                        matched_item = img_item
+                        break
+                if not matched_item:
+                    continue  # Skip if not found in epub
+
+                image_bytes = matched_item.get_content()
+                image_path = f"{image_dir}image_{currentImageCounter}.png"
+
+                # Check for duplicate in directory
+                if not is_image_duplicate(image_bytes, image_dir):
+                    # try:
+                    #     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                    #                     if not isinstance(img_url,str):
+                    #                         img_url=img_url["src"]
+                    #                     async with session.get(img_url) as response:
+                    #                         if response.status == 200:
+                    #                             response=await response.content.read()
+                    #                             with open(image_path, "wb") as f:
+                    #                                 f.write(response)
+                    
+                    
+                    
+                    # async def save_images_in_chapter(self, img_urls, save_directory, image_count):
+                    #     if not os.path.exists(save_directory):
+                    #         os.makedirs(save_directory)
+                    #     #logging.warning(img_urls)
+                    #     try:
+                    #         for img_url in img_urls:
+                    #             image_path = f"{save_directory}image_{image_count}.png"
+                    #             if not os.path.exists(image_path):
+                    #                 async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                    #                     if not isinstance(img_url,str):
+                    #                         img_url=img_url["src"]
+                    #                     async with session.get(img_url) as response:
+                    #                         if response.status == 200:
+                    #                             response=await response.content.read()
+                    #                             with open(image_path, "wb") as f:
+                    #                                 f.write(response)
+                    #                     image_count += 1
+                    #             await asyncio.sleep(0.5)
+                    #         return image_count
+                    #     except Exception as e:
+                    #         errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
+                    #         write_to_logs(errorText)
+                    
+                    
+                    
+                    # Save new image and update src
+                    with open(image_path, "wb") as f:
+                        logging.warning(f"Saving image {currentImageCounter} to {image_path}")
+                        try:
+                            f.write(image_bytes)
+                            img['src'] = f"images/image_{currentImageCounter}.png"
+                            currentImageCounter += 1
+
+                        except Exception as e:
+                            errorText=f"Failed to write image bytes to file. Function extract_chapter_from_book Error: {e}"
+                            write_to_logs(errorText)
+                            continue
+                else:
+                    # If duplicate, find the existing image index to point to
+                    # Loop through files to find the match and set src accordingly
+                    for idx, file in enumerate(sorted(os.listdir(image_dir))):
+                        file_path = os.path.join(image_dir, file)
+                        epub_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        existing_img = Image.open(file_path).convert("RGB")
+                        try:
+                            if epub_img.size == existing_img.size:
+                                diff = ImageChops.difference(epub_img, existing_img)
+                                if not diff.getbbox():
+                                    img['src'] = f"images/{file}"
+                                    break
+                        except Exception:
+                            continue
             
+            
+            #logging.warning(f"Chapter Title: {title}")
             fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
             logging.warning(f"File Title: {fileTitle}")
-            images=chapterContent.find_all('img')
-            
-            images=[image['src'] for image in images]
-            logging.warning(images)
-            image_dir = f"./books/raw/{bookTitle}/images/"
-            if images:
-                for img,image in zip(chapterContent.find_all('img'),images):
-                    img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
-                    currentImageCount+=1
-                    
             store_chapter_version_two(chapterContent, bookTitle, fileTitle)
             chapter_metadata.append([chapterID,title,f"./books/imported/{bookTitle}/{fileTitle}.html"])
             chapterID+=1
@@ -2775,6 +2865,7 @@ async def importing_main_interface():
         logging.warning(await fetch_novel_data_from_epub(f"./books/imported/epubs/{fileName}"))
         bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle=await fetch_novel_data_from_epub(f"./books/imported/epubs/{fileName}")
         
+        await extract_chapter_from_book(f"./books/imported/epubs/{fileName}")
         
         first,last,total=get_first_last_chapter(bookTitle)
         
@@ -2872,5 +2963,38 @@ async def importing_main_interface():
         #     await extract_chapter_from_book(dirLocation)
         # else:
         #     logging.warning(f"Skipping non-epub file: {fileName}")
+
+
+def is_image_duplicate(epub_image_bytes, directory):
+    """
+    Compare the given image bytes with all images in the directory.
+    Returns True if a duplicate is found, False otherwise.
+    """
+    try:
+        epub_img = Image.open(io.BytesIO(epub_image_bytes)).convert("RGB")
+    except Exception as e:
+        # If the image can't be opened, treat as new
+        return False
+    try:
+        for file in os.listdir(directory):
+            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
+                file_path = os.path.join(directory, file)
+                try:
+                    dir_img = Image.open(file_path).convert("RGB")
+                    # Compare size first for speed
+                    if epub_img.size != dir_img.size:
+                        continue
+                    diff = ImageChops.difference(epub_img, dir_img)
+                    if not diff.getbbox():
+                        return True  # Duplicate found
+                except Exception:
+                    continue
+    except Exception as e:
+        errorText=f"Failed to compare images in directory {directory}. Function is_image_duplicate Error: {e}"
+        logging.error(errorText)
+        write_to_logs(errorText)
+        return False # No duplicate found
+
 asyncio.run(importing_main_interface())
+#compare_images()
 #asyncio.run(extract_chapter_from_book("./books/imported/epubs/DRR 4 - Paradoxical Ties - Silver Linings.epub"))
