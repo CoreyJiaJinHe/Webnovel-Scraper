@@ -1,0 +1,154 @@
+/* Full page dark background */
+.scrape-background {
+    min-height: 100vh;
+    background: #181a1b;
+    width: 99vw;
+}
+
+/* Pop-up overlay */
+.book-scraper-pop-up {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pop-up inner card */
+.book-scraper-pop-up-inner {
+    background: #fff;
+    color: #222;
+    padding: 3rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+/* Pop-up close button */
+.book-scraper-pop-up-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+/* Main container for left panel and main content */
+.scrape-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 2.5rem;
+    gap: 8rem;
+    max-width: 1200px;
+    margin-left: 10vw;
+    margin-right: 10vw;
+}
+
+/* Left panel */
+.scrape-left-panel {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 400px;
+    min-width: 300px;
+    margin: 0;
+}
+
+/* Book details card */
+.scrape-book-details-panel {
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+}
+
+/* Main content container */
+.scrape-container-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 2.5rem;
+}
+
+/* Search card */
+.scrape-main-search-card {
+    background: #fff;
+    border: 2px solid #111;
+    border-radius: 8px;
+    padding: 2rem 2rem 1.5rem 2rem;
+    min-width: 400px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Dropdown */
+.scrape-main-search-select-dropdown {
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    width: 220px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Input row */
+.scrape-main-search-select-input-row {
+    display: flex;
+    justify-content: center;
+}
+
+/* Search input */
+.scrape-main-search-select-input-row input {
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    width: 350px;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Search button */
+.scrape-main-search-select-input-row button {
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    margin-left: 1rem;
+    cursor: pointer;
+}
+

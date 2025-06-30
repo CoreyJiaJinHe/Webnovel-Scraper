@@ -14,6 +14,7 @@ import './CSS/FollowListPage.css'
 import './CSS/LoginPage.css'
 import './CSS/DownloadPage.css'
 import './CSS/OnlineReaderPage.css'
+import './CSS/BookScraperPage.css'
 
 import {
   createBrowserRouter,
@@ -31,6 +32,8 @@ import FollowListPage from './Pages/FollowListPage.jsx'
 import DeveloperPage from './Pages/DeveloperPage.jsx'
 import BooksPage from './Pages/BooksPage.jsx'
 import OnlineReaderPage from './Pages/OnlineReaderPage.jsx'
+import BookScraperPage from './Pages/BookScraperPage.jsx'
+
 
 const router = createBrowserRouter([
   {
@@ -73,6 +76,10 @@ const router = createBrowserRouter([
     path: "/react/OnlineReaderPage/",
     element: <OnlineReaderPage />,
   },
+  {
+    path:"/react/BookScraperPage/",
+    element: <BookScraperPage />,
+  }
 ]);
 
 createRoot(document.getElementById('root')).render(

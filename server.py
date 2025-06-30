@@ -242,11 +242,35 @@ async def verifyUser(request: Request):
         
 
 
+@app.get("/api/query_book/")
+async def queryBook(request: Request):
+    
+    received_access_token=request.cookies.get("access_token")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (new_access_token):
+            input=await request.json()
+            data=await refactor.search_page(input.get("input"))
+            response=JSONResponse(content=data, status_code=200)
+            response.set_cookie(
+                key="access_token",
+                value=new_access_token,
+                httponly=True,
+                samesite="lax",
+                secure=False,
+                max_age=60 * 60 * 24,  # 1 day in seconds
+                expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+            )
+            return response
+            
+        else:
+            return JSONResponse(content={"error": "User verification failed"}, status_code=400)
 
-
-
-
-
+    except Exception as e:
+        logging.error(f"Token authentication failed: {e}")
+        raise credentials_exception  # 401 Unauthorized
 
 
 

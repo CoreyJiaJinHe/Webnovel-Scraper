@@ -2542,7 +2542,7 @@ def get_epubs_to_import():
     #print(dir_list)
     override=True
     if (override):
-        filtered_list = [f for f in dir_list if "Beneath the Dragoneye Moons" in f]
+        filtered_list = [f for f in dir_list if "DIE RESPAWN REPEAT" in f]
         return filtered_list
         
         #return sorted(dir_list)[:10]
@@ -2668,17 +2668,29 @@ async def extract_chapter_from_book(dirLocation):
     #Cover Image Only
     images = book.get_items_of_type(ebooklib.ITEM_IMAGE)
     if images:
-        if not os.path.exists(image_dir):
-            os.makedirs(image_dir)
         for image in images:
-            image_bytes = image.get_content()
-            if ("cover_image" in image.file_name):
+            if ("cover" in image.file_name):
                 image_path = f"{cover_dir}cover_image.png"
-                if not os.path.exists(cover_dir) and not is_image_duplicate(image_bytes,image_dir):
+                if not os.path.exists(cover_dir):
+                    os.makedirs(cover_dir)
+                if not os.path.exists(image_path):
                     with open(image_path, "wb") as f:
                         f.write(image.get_content())
                 else:
-                    logging.warning(f"Cover Image already exists in {image_dir}. Skipping.")
+                    image_bytes = image.get_content()
+                    if not is_image_duplicate(image_bytes,image_dir):
+                        existingImages=get_all_files_in_directory(cover_dir)
+                        cover_image_count = sum(1 for f in existingImages if "cover_image" in f)
+                        image_path = f"{cover_dir}cover_image_{cover_image_count}.png"
+                        try:
+                            with open(image_path, "wb") as f:
+                                f.write(image.get_content())
+                        except Exception as e:
+                            errorText=f"Failed to write cover image bytes to file. Function extract_chapter_from_book Error: {e}, file:{bookTitle}"
+                            write_to_logs(errorText)
+                            continue
+                    else:
+                        logging.warning(f"Cover Image already exists in {image_dir}. Skipping.")
     
     #reset counter
     currentImageCounter=len(numberofImages)-1 if numberofImages else 0
@@ -2706,7 +2718,8 @@ async def extract_chapter_from_book(dirLocation):
             if not os.path.exists(image_dir):
                 os.makedirs(image_dir)
             images = [img['src'] for img in img_tags if img.has_attr('src')]
-            logging.warning(images)
+            if (images):
+                logging.warning(images)
 
             # Get all image items in the book for matching
             image_items = {img_item.file_name: img_item for img_item in book.get_items_of_type(ebooklib.ITEM_IMAGE)}
@@ -2727,43 +2740,6 @@ async def extract_chapter_from_book(dirLocation):
 
                 # Check for duplicate in directory
                 if not is_image_duplicate(image_bytes, image_dir):
-                    # try:
-                    #     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
-                    #                     if not isinstance(img_url,str):
-                    #                         img_url=img_url["src"]
-                    #                     async with session.get(img_url) as response:
-                    #                         if response.status == 200:
-                    #                             response=await response.content.read()
-                    #                             with open(image_path, "wb") as f:
-                    #                                 f.write(response)
-                    
-                    
-                    
-                    # async def save_images_in_chapter(self, img_urls, save_directory, image_count):
-                    #     if not os.path.exists(save_directory):
-                    #         os.makedirs(save_directory)
-                    #     #logging.warning(img_urls)
-                    #     try:
-                    #         for img_url in img_urls:
-                    #             image_path = f"{save_directory}image_{image_count}.png"
-                    #             if not os.path.exists(image_path):
-                    #                 async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
-                    #                     if not isinstance(img_url,str):
-                    #                         img_url=img_url["src"]
-                    #                     async with session.get(img_url) as response:
-                    #                         if response.status == 200:
-                    #                             response=await response.content.read()
-                    #                             with open(image_path, "wb") as f:
-                    #                                 f.write(response)
-                    #                     image_count += 1
-                    #             await asyncio.sleep(0.5)
-                    #         return image_count
-                    #     except Exception as e:
-                    #         errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
-                    #         write_to_logs(errorText)
-                    
-                    
-                    
                     # Save new image and update src
                     with open(image_path, "wb") as f:
                         logging.warning(f"Saving image {currentImageCounter} to {image_path}")
@@ -2800,7 +2776,7 @@ async def extract_chapter_from_book(dirLocation):
             chapter_metadata.append([chapterID,title,f"./books/imported/{bookTitle}/{fileTitle}.html"])
             chapterID+=1
             
-            
+    
     
     def merge_chapter_lists_preserve_order(list1, list2):
         """
@@ -2998,3 +2974,50 @@ def is_image_duplicate(epub_image_bytes, directory):
 asyncio.run(importing_main_interface())
 #compare_images()
 #asyncio.run(extract_chapter_from_book("./books/imported/epubs/DRR 4 - Paradoxical Ties - Silver Linings.epub"))
+
+
+
+async def search_page(input: str, selectedSite: str, cookie):
+    url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
+    if url_pattern.match(input.strip()):
+        if "royalroad.com" in url:
+            scraper=RoyalRoadScraper()
+            prefix="rr"
+        elif "spacebattles.com" in url:
+            scraper=SpaceBattlesScraper()
+            prefix="sb"
+            normalized_url = url if url.endswith('/') else url + '/'
+            if re.search(r'/reader/page-\d+/$',normalized_url):
+                url = re.sub(r'/reader/page-\d+/?$', '/reader/', url)
+            elif not url.rstrip('/').endswith('/reader'):
+                if url.endswith('/'):
+                    url += 'reader/'
+                else:
+                    url += '/reader/'
+        elif "foxaholic.com" in url:
+            scraper=FoxaholicScraper()
+            prefix="fx"
+            if (cookie is None):
+                errorText="Function search_page. Error: Cookie is required for Foxaholic. Please provide a cookie."
+                logging.warning(errorText)
+                write_to_logs(errorText)
+                return None
+        elif "novelbin.com" or "novelbin.me" in url:
+            scraper=NovelBinScraper()
+            prefix="nb"
+            if (cookie is None):
+                errorText="Function search_page. Error: Cookie is required for NovelBin. Please provide a cookie."
+                logging.warning(errorText)
+                write_to_logs(errorText)
+                return None
+        else:
+            raise ValueError("Unsupported website")
+    
+        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle= await scraper.fetch_novel_data(url)
+        return [bookID,bookTitle,bookAuthor,description,latestChapterTitle]
+    
+    else:
+        #If input is not a URL, treat it as a search query
+        #default search query will be Royalroad
+        scraper = RoyalRoadScraper()
+        prefix = "rr"

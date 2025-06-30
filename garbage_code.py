@@ -428,3 +428,41 @@ async def updateEpub(novelURL,bookTitle):
 #https://docs.python.org/3/library/asyncio-task.html#coroutine
 
 #asyncio.create_task(scrape.mainInterface(novelURL))
+
+
+# try:
+                    #     async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                    #                     if not isinstance(img_url,str):
+                    #                         img_url=img_url["src"]
+                    #                     async with session.get(img_url) as response:
+                    #                         if response.status == 200:
+                    #                             response=await response.content.read()
+                    #                             with open(image_path, "wb") as f:
+                    #                                 f.write(response)
+                    
+                    
+                    
+                    # async def save_images_in_chapter(self, img_urls, save_directory, image_count):
+                    #     if not os.path.exists(save_directory):
+                    #         os.makedirs(save_directory)
+                    #     #logging.warning(img_urls)
+                    #     try:
+                    #         for img_url in img_urls:
+                    #             image_path = f"{save_directory}image_{image_count}.png"
+                    #             if not os.path.exists(image_path):
+                    #                 async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                    #                     if not isinstance(img_url,str):
+                    #                         img_url=img_url["src"]
+                    #                     async with session.get(img_url) as response:
+                    #                         if response.status == 200:
+                    #                             response=await response.content.read()
+                    #                             with open(image_path, "wb") as f:
+                    #                                 f.write(response)
+                    #                     image_count += 1
+                    #             await asyncio.sleep(0.5)
+                    #         return image_count
+                    #     except Exception as e:
+                    #         errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
+                    #         write_to_logs(errorText)
+                    
+                    
