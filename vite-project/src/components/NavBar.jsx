@@ -34,7 +34,9 @@ function Navbar(){
                     <li>
                         <Link to="/react/BooksPage">Books</Link>
                     </li>
-
+                    <li>
+                        <Link to="/react/BookScraperPage">Online Api</Link>
+                    </li>
 
                 </ul>
             </navbar>

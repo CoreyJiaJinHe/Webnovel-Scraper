@@ -262,7 +262,20 @@ class RoyalRoadScraper():
             errorText=f"Failed to get soup for processing. Function RoyalRoad_Fetch_Chapter_List Error: {error}"
             write_to_logs(errorText)
     
-        
+    async def fetch_chapter_title_list(self,url):
+        soup=await self.get_soup(url)
+        try:
+            chapterTable=soup.find("table",{"id":"chapters"})
+            rows=chapterTable.find_all("tr")
+            chapterListTitles=list()
+            for row in rows[1:len(rows)]:
+                processChapterURL=row.find("a")
+                #Process into shortened link
+                chapterListTitles=processChapterURL.get_text()
+            return chapterListTitles
+        except Exception as error:
+            errorText=f"Failed to get soup for processing. Function RoyalRoad_fetch_chapter_title_list Error: {error}"
+            write_to_logs(errorText)
 
     
     async def fetch_chapter_content(self, soup):
@@ -668,6 +681,32 @@ class SpaceBattlesScraper():
         except Exception as e:
             errorText=f"Failed to get total number of pages. Function Spacebattles fetch_chapter_list Error: {e}"
             write_to_logs(errorText)
+    
+    
+    async def fetch_chapter_title_list(self, url):
+        soup=await self.get_soup(url)
+        
+        try:
+            #logging.warning(soup)
+            threadmarkBody=soup.find("div",{"class":"threadmarkBody"})
+            chapterTable = threadmarkBody.find("div", {"class": "structItem-title threadmark_depth0"})
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li")
+            
+            chapterListTitles=list()
+            for row in rows[:len(rows)]:
+                processChapterURL=row.find("a")
+                chapterTitle=processChapterURL.get_text()
+                chapterTitle=remove_invalid_characters(chapterTitle)
+                chapterListTitles.append(chapterTitle)
+            #logging.warning(chapterListURL)
+            return chapterListTitles
+        except Exception as error:
+            errorText=f"Failed to get chapter titles from chapter list of page. Function Spacebattles_get_chapter_title_list Error: {error}"
+            write_to_logs(errorText)
+    
+    
+    
     
     async def process_new_book(self, book_url,book_title):
         listofChapters = await self.fetch_chapter_list(book_url)
@@ -1323,6 +1362,28 @@ class FoxaholicScraper():
         except Exception as error:
             errorText=f"Failed to get chapter urls from chapter list of page. Function foxaholic_get_chapter_list Error: {error}"
             write_to_logs(errorText)
+            
+    async def fetch_chapter_title_list(self, url):
+        soup = await self.get_soup(f"{url}#tab-chapters-title")
+        
+        try:
+            #logging.warning(soup)
+            chapterTable = soup.find_all("ul",class_='main version-chap no-volumn')[0]
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li", {"class":"wp-manga-chapter free-chap"})
+            
+            chapterListTitles=list()
+            for row in rows[:len(rows)]:
+                chapterData=row.find("a").contents[0].strip()
+                chapterTitle=chapterData
+                chapterTitle=remove_invalid_characters(chapterTitle)
+                chapterListTitles.append(chapterTitle)
+            #logging.warning(chapterListURL)
+            chapterListTitles=list(reversed(chapterListTitles))
+            return chapterListTitles
+        except Exception as error:
+            errorText=f"Failed to get chapter titles from chapter list of page. Function foxaholic_get_chapter_title_list Error: {error}"
+            write_to_logs(errorText)
     
     async def fetch_chapter_content(self, soup):
         try:
@@ -1790,7 +1851,29 @@ class NovelBinScraper():
         except Exception as error:
             errorText=f"Failed to get chapter urls from chapter list of page. Function novelbin_get_chapter_list Error: {error}"
             write_to_logs(errorText)
+    
+    async def fetch_chapter_title_list(self, url):
+        soup = await self.get_soup(f"{url}#tab-chapters-title")
+        
+        try:
+            #logging.warning(soup)
+            chapterTable = soup.find("div", {"id": "list-chapter"})
+            #logging.warning(chapterTable)
+            rows= chapterTable.find_all("li")
             
+            chapterListTitles=list()
+            for row in rows[:len(rows)]:
+                processChapterURL=row.find("a")["href"]
+                chapterTitle=processChapterURL.get_text()
+                chapterTitle=remove_invalid_characters(chapterTitle)
+                chapterListTitles.append(chapterTitle)
+            #logging.warning(chapterListURL)
+            return chapterListTitles
+        except Exception as error:
+            errorText=f"Failed to get chapter titles from chapter list of page. Function novelbin_get_chapter_title_list Error: {error}"
+            write_to_logs(errorText)
+    
+    
     async def fetch_chapter_content(self, soup):
         try:
             pageContent=soup.find_all("div",{"id":"chr-content"})[0]
@@ -2971,15 +3054,18 @@ def is_image_duplicate(epub_image_bytes, directory):
         write_to_logs(errorText)
         return False # No duplicate found
 
-asyncio.run(importing_main_interface())
+#asyncio.run(importing_main_interface())
 #compare_images()
 #asyncio.run(extract_chapter_from_book("./books/imported/epubs/DRR 4 - Paradoxical Ties - Silver Linings.epub"))
 
 
 
 async def search_page(input: str, selectedSite: str, cookie):
+    
     url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
+    
     if url_pattern.match(input.strip()):
+        url=input
         if "royalroad.com" in url:
             scraper=RoyalRoadScraper()
             prefix="rr"
@@ -3014,10 +3100,16 @@ async def search_page(input: str, selectedSite: str, cookie):
             raise ValueError("Unsupported website")
     
         bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle= await scraper.fetch_novel_data(url)
-        return [bookID,bookTitle,bookAuthor,description,latestChapterTitle]
+        
+        listofChapters=await scraper.fetch_chapter_title_list(url)
+        
+        return [bookID,bookTitle,bookAuthor,description,latestChapterTitle,listofChapters]
     
     else:
         #If input is not a URL, treat it as a search query
         #default search query will be Royalroad
         scraper = RoyalRoadScraper()
         prefix = "rr"
+        
+        
+#NOTE TO SELF. TEST THE NEW FETCH_CHAPTER_TITLE_LIST FUNCTIONS FOR EACH SITE

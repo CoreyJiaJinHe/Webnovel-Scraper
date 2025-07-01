@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/NavBar.jsx';
 
+import axios from "axios";
+const API_URL = "http://localhost:8000/api";
+const api = axios.create({ baseURL: API_URL });
 function BookScraperPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [buttonText, setButtonText] = useState('Search');
@@ -41,16 +44,49 @@ function BookScraperPage() {
         "Example Latest Chapter"
     ];
 
-    const handleSearch = () => {
+    async function handleSearch(){
         if (buttonText === 'Search') {
             // Simulate search and show book details
-            setBook(dummyBook);
-            setButtonText('Scrape');
-        } else if (buttonText === 'Scrape') {
-            // Trigger scrape logic here
-            alert(`Scraping from ${selectedSite}!`);
+            try{
+                console.log("Searching for book:", searchTerm, "on site:", selectedSite);
+                const response = await axios.get(`${API_URL}/query_book`, {
+                    params: {
+                        searchTerm: searchTerm,
+                        siteHost: selectedSite
+                    },
+                    withCredentials: true
+                });
+            if (response.statusText === "OK") {
+                setBook(response.data);
+                setButtonText('Scrape');
+            }
+            else{
+                console.log("Error fetching book data:", error);
+            }
         }
+        catch (error){
+            console.log("Error fetching book data:", error);
+        }
+    }
+    else if (buttonText === 'Scrape') {
+        try{    
+        const response = await axios.post(`${API_URL}/scrape_book`, {
+                params: {
+                    term: searchTerm,
+                    site: selectedSite
+                },
+                withCredentials: true
+            });
+            if (response.statusText !== "OK") {
+            }
+        }
+        catch (error){
+            console.log("Error scraping book data:", error);
+        }
+    }
     };
+
+
 
     return (
         <>
@@ -121,7 +157,25 @@ function BookScraperPage() {
                         </div>
                     </div>
                 </div>
-            </div></div>
+                {/* Right Panel: Chapter List */}
+                    <div className="scrape-right-panel">
+                        <div className="scrape-chapter-list-panel">
+                            <h3 style={{ marginTop: 0 }}>Chapters</h3>
+                            {book && Array.isArray(book[book.length - 1]) ? (
+                                <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+                                    {book[book.length - 1].map((chapter, idx) => (
+                                        <li key={idx} style={{ marginBottom: '0.5rem' }}>
+                                            {chapter}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p style={{ color: "#aaa" }}>No chapters loaded.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </>
     );
 }

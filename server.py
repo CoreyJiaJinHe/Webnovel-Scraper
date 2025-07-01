@@ -243,17 +243,18 @@ async def verifyUser(request: Request):
 
 
 @app.get("/api/query_book/")
-async def queryBook(request: Request):
+async def queryBook(request: Request, searchTerm: str, siteHost:str):
     
     received_access_token=request.cookies.get("access_token")
     if not received_access_token:
         raise credentials_exception  # 401 Unauthorized
     try:
-        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
-        if (new_access_token):
-            input=await request.json()
-            data=await refactor.search_page(input.get("input"))
-            response=JSONResponse(content=data, status_code=200)
+        logging.error(f"queryBook input: {searchTerm}")
+        new_access_token, username, userID, verifiedStatus = await authenticate_token(received_access_token)
+        if new_access_token:
+            # Pass searchTerm and siteHost to your search_page function
+            data = await refactor.search_page(searchTerm, siteHost, None)
+            response = JSONResponse(content=data, status_code=200)
             response.set_cookie(
                 key="access_token",
                 value=new_access_token,
@@ -269,13 +270,18 @@ async def queryBook(request: Request):
             return JSONResponse(content={"error": "User verification failed"}, status_code=400)
 
     except Exception as e:
-        logging.error(f"Token authentication failed: {e}")
+        logging.error(f"Weird error occurred: {e}")
+        
+        return JSONResponse(content={"error": "Weird error"}, status_code=400)
+
+
+@app.post("/api/scrape_book/")
+async def scrapeBook(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if not received_access_token:
         raise credentials_exception  # 401 Unauthorized
 
-
-
-
-
+    return JSONResponse(content={"error": "Weird error"}, status_code=400)
 
 #DONE: Write hashing function for passwords
 #DONE:Create user login function
