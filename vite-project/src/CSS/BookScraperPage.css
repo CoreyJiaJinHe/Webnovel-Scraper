@@ -2,80 +2,32 @@
 .scrape-background {
     min-height: 100vh;
     background: #181a1b;
-    width: 99vw;
-}
-
-/* Pop-up overlay */
-.book-scraper-pop-up {
-    position: fixed;
-    top: 0;
-    left: 0;
     width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.7);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-/* Pop-up inner card */
-.book-scraper-pop-up-inner {
-    background: #fff;
-    color: #222;
-    padding: 3rem 2.5rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    max-width: 90vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 1.5rem;
-    position: relative;
-}
-
-/* Pop-up close button */
-.book-scraper-pop-up-close-button {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: #222;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-}
-
-/* Main container for left panel and main content */
+/* Main container for left panel, main content, and right panel */
 .scrape-container {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
     margin-top: 2.5rem;
-    gap: 8rem;
-    max-width: 1200px;
-    margin-left: 10vw;
-    margin-right: 10vw;
+    gap: 6rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Left panel */
 .scrape-left-panel {
-    width: 250px;
+    width: 320px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     max-width: 400px;
-    min-width: 300px;
+    min-width: 260px;
     margin: 0;
 }
 
@@ -96,6 +48,8 @@
     flex-direction: column;
     align-items: flex-start;
     margin-top: 2.5rem;
+    min-width: 400px;
+    max-width: 500px;
 }
 
 /* Search card */
@@ -104,8 +58,19 @@
     border: 2px solid #111;
     border-radius: 8px;
     padding: 2rem 2rem 1.5rem 2rem;
-    min-width: 400px;
+    min-width: 350px;
+    max-width: 500px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    width: 100%;
+}
+
+/* Top row: dropdown + Search button */
+.scrape-main-dropdown-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1rem;
+    gap: 1rem;
 }
 
 /* Dropdown */
@@ -118,29 +83,21 @@
     width: 220px;
     padding: 0.5rem;
     font-size: 1rem;
-    margin-bottom: 1rem;
+    height: 40px;
 }
 
-/* Input row */
-.scrape-main-search-select-input-row {
+
+
+/* Move Search button to the right, center its text */
+.scrape-main-search-button {
+    margin-left: auto;
+    margin-right: 20px;
     display: flex;
+    align-items: center;
     justify-content: center;
-}
-
-/* Search input */
-.scrape-main-search-select-input-row input {
-    background-color: #fff;
-    color: #222;
-    border: 1.5px solid #888;
-    border-radius: 4px;
-    outline: none;
-    width: 350px;
-    padding: 0.5rem;
-    font-size: 1rem;
-}
-
-/* Search button */
-.scrape-main-search-select-input-row button {
+    min-width: 110px;
+    max-width: 180px;
+    text-align: center;
     background-color: #fff;
     color: #222;
     border: 1.5px solid #888;
@@ -148,7 +105,114 @@
     outline: none;
     padding: 0.5rem 1.5rem;
     font-size: 1rem;
-    margin-left: 1rem;
     cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    box-sizing: border-box;
 }
 
+/* Bottom row: input + Scrape button */
+.scrape-main-select-input-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+/* Input field stays left, button moves right */
+.scrape-main-select-input-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 60%;
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Move Scrape button to the right, center its text */
+.scrape-main-scrape-button {
+    margin-left: auto;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    max-width: 180px;
+    text-align: center;
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    box-sizing: border-box;
+}
+
+.scrape-main-scrape-button:disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Right panel styling */
+.scrape-right-panel {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 400px;
+    min-width: 260px;
+    margin: 0;
+    margin-top: 2.5rem;
+}
+
+/* Chapter list panel styling */
+.scrape-right-chapter-list-panel {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem 1rem;
+    color: #222;
+    margin-bottom: 1rem;
+    min-height: 200px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Chapter listing styling */
+.scrape-right-chapter-list-panel ul {
+    padding: 0;
+    margin: 0;
+}
+
+.scrape-right-chapter-list-panel li {
+    display: flex;
+    align-items: center;
+    background: #23232b;
+    color: #fff;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+
+.scrape-right-chapter-list-panel li:last-child {
+    margin-bottom: 0;
+}
+
+.scrape-right-chapter-list-panel input[type="checkbox"] {
+    margin-right: 1rem;
+    accent-color: #0078d4;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* Add spacing below the Chapters heading */
+.scrape-right-chapter-list-panel h2 {
+    margin-bottom: 1rem;
+}

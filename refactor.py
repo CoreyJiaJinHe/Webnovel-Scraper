@@ -186,6 +186,8 @@ class RoyalRoadScraper():
                 else:
                     latestChapterTitle = ""
                 latestChapterTitle=remove_invalid_characters(latestChapterTitle)
+                href=first_a["href"]
+                latestChapterID=re.search(r'/fiction/(\d+)/', href).group(1)
                 #logging.warning(f"Latest chapter title: {latestChapterTitle}")
                 
                 img_url = soup.find("div",{"class":"cover-art-container"}).find("img")
@@ -209,7 +211,7 @@ class RoyalRoadScraper():
                             else:
                                 errorText=f"Failed to retrieve cover image from royalroad. Response status: {response.status}"
                                 write_to_logs(errorText)
-                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle
+                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID
             except Exception as e:
                 errorText=f"Failed to get novel data. Function royalroad_fetch_novel_data Error: {e}"
                 write_to_logs(errorText)
@@ -271,7 +273,7 @@ class RoyalRoadScraper():
             for row in rows[1:len(rows)]:
                 processChapterURL=row.find("a")
                 #Process into shortened link
-                chapterListTitles=processChapterURL.get_text()
+                chapterListTitles.append(processChapterURL.get_text().strip())
             return chapterListTitles
         except Exception as error:
             errorText=f"Failed to get soup for processing. Function RoyalRoad_fetch_chapter_title_list Error: {error}"
@@ -633,8 +635,8 @@ class SpaceBattlesScraper():
                 rows=chapterTable.find_all("li")
                 
                 latestChapter=rows[len(rows)-1]
-                latestChapter=latestChapter.get_text()
-                match=re.search(r'\b\d+(?:-\d+)?\b',latestChapter)
+                latestChapterTitle=latestChapter.get_text()
+                match=re.search(r'\b\d+(?:-\d+)?\b',latestChapterTitle)
                 latestChapterID=match.group()
             
                 try:
@@ -662,7 +664,7 @@ class SpaceBattlesScraper():
                     errorText=f"Failed to get cover image. There might be no cover. Or a different error. Function fetch_novel_data Error: {e}"
                     write_to_logs(errorText)
                 #logging.warning(bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID)
-                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+                return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID
             except Exception as e:
                 errorText=f"Failed to get novel data. Function Spacebattles fetch_novel_data Error: {e}"
                 write_to_logs(errorText)
@@ -684,22 +686,66 @@ class SpaceBattlesScraper():
     
     
     async def fetch_chapter_title_list(self, url):
-        soup=await self.get_soup(url)
+        def normalize_spacebattles_url(url: str) -> str:
+            # Find the last occurrence of digits/ and trim everything after
+            match = re.search(r'(\d+/)', url)
+            if match:
+                idx = url.find(match.group(1)) + len(match.group(1))
+                url = url[:idx]
+            # Ensure it ends with threadmarks?per_page=200
+            if not url.endswith('threadmarks?per_page=200'):
+                url += 'threadmarks?per_page=200'
+            return url
+        url=normalize_spacebattles_url(url)
         
+        soup=await self.get_soup(url)
+        logging.warning(url)
         try:
             #logging.warning(soup)
-            threadmarkBody=soup.find("div",{"class":"threadmarkBody"})
-            chapterTable = threadmarkBody.find("div", {"class": "structItem-title threadmark_depth0"})
-            #logging.warning(chapterTable)
-            rows= chapterTable.find_all("li")
-            
             chapterListTitles=list()
-            for row in rows[:len(rows)]:
-                processChapterURL=row.find("a")
-                chapterTitle=processChapterURL.get_text()
-                chapterTitle=remove_invalid_characters(chapterTitle)
-                chapterListTitles.append(chapterTitle)
-            #logging.warning(chapterListURL)
+            pageNav=soup.find("div",{"class":"pageNav"})
+            logging.warning(pageNav)
+            if not pageNav:
+                threadmarkBody=soup.find("div",{"class":"structItemContainer"})
+                #logging.warning(threadmarkBody)
+                rows= threadmarkBody.find_all("ul",{"class":"listInline listInline--bullet"})
+                for row in rows[:len(rows)]:
+                    #logging.warning(row)
+                    
+                    threadmarkItem = row.find("a")
+                    if threadmarkItem is not None:
+                        #logging.warning(threadmarkItem)
+                        chapterTitle = threadmarkItem.get_text()
+                        chapterTitle = remove_invalid_characters(chapterTitle)
+                        #logging.warning(f"Title:{chapterTitle}")
+                        chapterListTitles.append(chapterTitle)
+                    else:
+                        logging.warning("No <a> tag found in row!")
+            else:
+                pageNavMain=pageNav.find("ul",{"class":"pageNav-main"})
+                pages = pageNavMain.find_all("li")
+                #logging.warning(pageNav)
+                for page in range(1,len(pages)+1):
+                    url=f"{url}&page={page}/"
+                    logging.warning(page)
+                    soup=await self.get_soup(url)
+                    
+                    threadmarkBody=soup.find("div",{"class":"structItemContainer"})
+
+                    rows= threadmarkBody.find_all("ul",{"class":"listInline listInline--bullet"})
+                    for row in rows[:len(rows)]:
+                        #logging.warning(row)
+                        
+                        threadmarkItem = row.find("a")
+                        if threadmarkItem is not None:
+                            #logging.warning(threadmarkItem)
+                            chapterTitle = threadmarkItem.get_text()
+                            chapterTitle = remove_invalid_characters(chapterTitle)
+                            #logging.warning(f"Title:{chapterTitle}")
+                            chapterListTitles.append(chapterTitle)
+                        else:
+                            logging.warning("No <a> tag found in row!")
+                
             return chapterListTitles
         except Exception as error:
             errorText=f"Failed to get chapter titles from chapter list of page. Function Spacebattles_get_chapter_title_list Error: {error}"
@@ -1289,9 +1335,11 @@ class FoxaholicScraper():
             
             
             latestChapter=rows[0]
-            latestChapterID=latestChapter.find("a")
-            latestChapterID=latestChapterID.get_text()
-            latestChapterID=remove_tags_from_title(latestChapterID)
+            latestChapterTitle=latestChapter.find("a")
+            latestChapterTitle=latestChapterTitle.get_text()
+            latestChapterTitle=remove_tags_from_title(latestChapterTitle)
+            href=latestChapter.find("a")["href"]
+            latestChapterID=self.extract_chapter_ID(href)
             
             try:
                 img_url = soup.find("div",{"class":"summary_image"}).find("img")
@@ -1304,7 +1352,7 @@ class FoxaholicScraper():
                 write_to_logs(errorText)
                 
                             
-            return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+            return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID
         except Exception as error:
             errorText=f"Failed to extract noveldata from soup. Function foxaholic_fetch_novel_data Error: {error}"
             write_to_logs(errorText)
@@ -1766,10 +1814,10 @@ class NovelBinScraper():
             lastScraped=datetime.datetime.now()
             
             latestChapter = soup.find("div", {"class":"l-chapter"})
-            latestChapterID=latestChapter.find("a")
-            latestChapterID=latestChapterID.get_text()
-            latestChapterID=remove_tags_from_title(latestChapterID)
-            
+            latestChapterTitle=latestChapter.find("a")
+            latestChapterTitle=latestChapterTitle.get_text()
+            latestChapterTitle=remove_tags_from_title(latestChapterTitle)
+            latestChapterID=self.extract_chapter_ID(latestChapter.find("a")["href"])
             
             
         except Exception as error:
@@ -1786,7 +1834,7 @@ class NovelBinScraper():
             errorText=f"Failed to find image, or save it. There might be no cover. Or a different error. Function novelbin_fetch_novel_data Error: {error}"
             write_to_logs(errorText)
             
-        return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterID
+        return bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID
 
 
     async def novelbin_save_cover_image(self,title,img_url,saveDirectory):
@@ -2160,8 +2208,8 @@ async def main_interface(url, cookie):
             raise ValueError("Unsupported website")
         logging.warning(url)
         logging.warning('Fetching novel data')
-            
-        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle= await scraper.fetch_novel_data(url)
+        
+        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle, latestChapterID= await scraper.fetch_novel_data(url)
         
         style=open("style.css","r").read()
         default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
@@ -2596,6 +2644,9 @@ async def fetch_novel_data_from_epub(dirLocation):
                 idx -= 1
             if not latestChapterTitle:
                 latestChapterTitle = "N/A"
+                
+        
+        
         except Exception as e:
             errorText=f"Failed to extract latest chapter title from epub. Function fetch_novel_data_from_epub Error: {e}, file: {dirLocation}"
             logging.error(errorText)
@@ -2605,8 +2656,10 @@ async def fetch_novel_data_from_epub(dirLocation):
 
         
         
+        latestChapterID="N/A"
+        
         #Regular Format: bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle
-        return bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle
+        return bookID, bookTitle, bookAuthor, bookDescription, origin, lastScraped, latestChapterTitle,latestChapterID
 
 
 
@@ -3063,15 +3116,36 @@ def is_image_duplicate(epub_image_bytes, directory):
 async def search_page(input: str, selectedSite: str, cookie):
     
     url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
+    if selectedSite=="royalroad":
+            scraper=RoyalRoadScraper()
+            prefix="rr"
+    elif selectedSite=="spacebattles":
+        scraper=SpaceBattlesScraper()
+        prefix="sb"
+    elif selectedSite=="foxaholic":
+        scraper=FoxaholicScraper()
+        prefix="fx"
+        if (cookie is None):
+            errorText="Function search_page. Error: Cookie is required for Foxaholic. Please provide a cookie."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return None
+    elif selectedSite=="novelbin":
+        scraper=NovelBinScraper()
+        prefix="nb"
+        if (cookie is None):
+            errorText="Function search_page. Error: Cookie is required for NovelBin. Please provide a cookie."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return None
+    else:
+        raise ValueError("Unsupported website")
+    
+    
     
     if url_pattern.match(input.strip()):
         url=input
-        if "royalroad.com" in url:
-            scraper=RoyalRoadScraper()
-            prefix="rr"
-        elif "spacebattles.com" in url:
-            scraper=SpaceBattlesScraper()
-            prefix="sb"
+        if (scraper is SpaceBattlesScraper()):
             normalized_url = url if url.endswith('/') else url + '/'
             if re.search(r'/reader/page-\d+/$',normalized_url):
                 url = re.sub(r'/reader/page-\d+/?$', '/reader/', url)
@@ -3080,28 +3154,12 @@ async def search_page(input: str, selectedSite: str, cookie):
                     url += 'reader/'
                 else:
                     url += '/reader/'
-        elif "foxaholic.com" in url:
-            scraper=FoxaholicScraper()
-            prefix="fx"
-            if (cookie is None):
-                errorText="Function search_page. Error: Cookie is required for Foxaholic. Please provide a cookie."
-                logging.warning(errorText)
-                write_to_logs(errorText)
-                return None
-        elif "novelbin.com" or "novelbin.me" in url:
-            scraper=NovelBinScraper()
-            prefix="nb"
-            if (cookie is None):
-                errorText="Function search_page. Error: Cookie is required for NovelBin. Please provide a cookie."
-                logging.warning(errorText)
-                write_to_logs(errorText)
-                return None
-        else:
-            raise ValueError("Unsupported website")
+        
     
-        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle= await scraper.fetch_novel_data(url)
+        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID= await scraper.fetch_novel_data(url)
         
         listofChapters=await scraper.fetch_chapter_title_list(url)
+        logging.warning(listofChapters)
         
         return [bookID,bookTitle,bookAuthor,description,latestChapterTitle,listofChapters]
     
@@ -3111,5 +3169,10 @@ async def search_page(input: str, selectedSite: str, cookie):
         scraper = RoyalRoadScraper()
         prefix = "rr"
         
-        
+
+scraper = SpaceBattlesScraper()
+url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"
+result=asyncio.run(scraper.fetch_chapter_title_list(url))
+logging.warning("Results:")
+logging.warning(result)
 #NOTE TO SELF. TEST THE NEW FETCH_CHAPTER_TITLE_LIST FUNCTIONS FOR EACH SITE

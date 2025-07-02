@@ -254,6 +254,7 @@ async def queryBook(request: Request, searchTerm: str, siteHost:str):
         if new_access_token:
             # Pass searchTerm and siteHost to your search_page function
             data = await refactor.search_page(searchTerm, siteHost, None)
+            logging.error(data)
             response = JSONResponse(content=data, status_code=200)
             response.set_cookie(
                 key="access_token",

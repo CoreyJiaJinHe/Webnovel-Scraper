@@ -6,11 +6,12 @@ const API_URL = "http://localhost:8000/api";
 const api = axios.create({ baseURL: API_URL });
 function BookScraperPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [buttonText, setButtonText] = useState('Search');
+    const [searchSuccess, setSearchSuccess] = useState(false);
     const [book, setBook] = useState(null);
     const [selectedSite, setSelectedSite] = useState('royalroad');
     const [showPopup, setShowPopup] = useState(false);
-
+    
+    const [checkedChapters, setCheckedChapters] = useState([]);
 
     function setSessionCookie(name, value) {
         document.cookie = `${name}=${value}; path=/; samesite=strict`;
@@ -45,32 +46,42 @@ function BookScraperPage() {
     ];
 
     async function handleSearch(){
-        if (buttonText === 'Search') {
-            // Simulate search and show book details
-            try{
-                console.log("Searching for book:", searchTerm, "on site:", selectedSite);
-                const response = await axios.get(`${API_URL}/query_book`, {
-                    params: {
-                        searchTerm: searchTerm,
-                        siteHost: selectedSite
-                    },
-                    withCredentials: true
-                });
-            if (response.statusText === "OK") {
-                setBook(response.data);
-                setButtonText('Scrape');
-            }
-            else{
-                console.log("Error fetching book data:", error);
-            }
+        try{
+            console.log("Searching for book:", searchTerm, "on site:", selectedSite);
+            const response = await axios.get(`${API_URL}/query_book`, {
+                params: {
+                    searchTerm: searchTerm,
+                    siteHost: selectedSite
+                },
+                withCredentials: true
+            });
+        if (response.statusText === "OK") {
+            setBook(response.data);
+            setSearchSuccess(true);
+            if (Array.isArray(response.data[response.data.length - 1])) {
+                    setCheckedChapters(new Array(response.data[response.data.length - 1].length).fill(false));
+                } else {
+                    setCheckedChapters([]);
+                }
         }
-        catch (error){
+        else{
+            setBook(null);
+            setSearchSuccess(false);
+            setCheckedChapters([]);
             console.log("Error fetching book data:", error);
         }
     }
-    else if (buttonText === 'Scrape') {
-        try{    
-        const response = await axios.post(`${API_URL}/scrape_book`, {
+    catch (error){
+        setBook(null);
+        setSearchSuccess(false);
+        setCheckedChapters([]);
+        console.log("Error fetching book data:", error);
+    }
+    }
+    async function handleScrape() {
+        if (!searchSuccess) return;
+        try {
+            const response = await axios.post(`${API_URL}/scrape_book`, {
                 params: {
                     term: searchTerm,
                     site: selectedSite
@@ -78,13 +89,12 @@ function BookScraperPage() {
                 withCredentials: true
             });
             if (response.statusText !== "OK") {
+                // handle error
             }
-        }
-        catch (error){
+        } catch (error) {
             console.log("Error scraping book data:", error);
         }
     }
-    };
 
 
 
@@ -131,40 +141,65 @@ function BookScraperPage() {
                     </div>
                 </div>
                 {/* Main Content */}
-                <div className ="scrape-container-main-content">
-                    {/* Card for search controls */}
-                    <div className="scrape-main-search-card">
-                        <select className ="scrape-main-search-select-dropdown"
-                            value={selectedSite}
-                            onChange={e => setSelectedSite(e.target.value)}>
-                            <option value="royalroad">Royal Road</option>
-                            <option value="scribblehub">ScribbleHub</option>
-                            <option value="spacebattles">SpaceBattles</option>
-                            <option value="novelbin">NovelBin</option>
-                            <option value="foxaholic">Foxaholic</option>
-                        </select>
-                        <div className="scrape-main-search-select-input-row">
-                            <input
-                                type="text"
-                                placeholder="Enter book title or URL..."
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
+                    <div className="scrape-container-main-content">
+                        <div className="scrape-main-search-card">
+                            {/* Top row: dropdown + Search button */}
+                            <div className="scrape-main-dropdown-row" >
+                                <select className="scrape-main-search-select-dropdown"
+                                    value={selectedSite}
+                                    onChange={e => {
+                                        setSelectedSite(e.target.value);
+                                        setBook(null);
+                                        setSearchSuccess(false);
+                                    }}>
+                                    <option value="royalroad">Royal Road</option>
+                                    {/*<option value="scribblehub">ScribbleHub</option>*/}
+                                    <option value="spacebattles">SpaceBattles</option>
+                                    <option value="novelbin">NovelBin</option>
+                                    <option value="foxaholic">Foxaholic</option>
+                                </select>
+                                <button className="scrape-main-search-button"
+                                    onClick={handleSearch}>
+                                    Search
+                                </button>
+                            </div>
+                            {/* Second row: input + Scrape button */}
+                            <div className="scrape-main-select-input-row">
+                                <input
+                                    type="text"
+                                    placeholder="Enter book title or URL..."
+                                    value={searchTerm}
+                                    onChange={e => {
+                                        setSearchTerm(e.target.value);
+                                        setBook(null);
+                                        setSearchSuccess(false);
+                                    }}
+                                />
+                                <button className ="scrape-main-scrape-button"
                                 
-                            />
-                            <button onClick={handleSearch}>
-                                {buttonText}
-                            </button>
+                                    onClick={handleScrape} disabled={!searchSuccess}>
+                                    Scrape
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
                 {/* Right Panel: Chapter List */}
                     <div className="scrape-right-panel">
-                        <div className="scrape-chapter-list-panel">
-                            <h3 style={{ marginTop: 0 }}>Chapters</h3>
+                        <div className="scrape-right-chapter-list-panel">
+                            <h2>Chapters</h2>
                             {book && Array.isArray(book[book.length - 1]) ? (
                                 <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
-                                    {book[book.length - 1].map((chapter, idx) => (
-                                        <li key={idx} style={{ marginBottom: '0.5rem' }}>
+                                {book[book.length - 1].map((chapter, idx) => (
+                                        <li key={idx}>
+                                            <input
+                                                type="checkbox"
+                                                checked={checkedChapters[idx] || false}
+                                                onChange={() => {
+                                                    const updated = [...checkedChapters];
+                                                    updated[idx] = !updated[idx];
+                                                    setCheckedChapters(updated);
+                                                }}
+                                            />
                                             {chapter}
                                         </li>
                                     ))}
