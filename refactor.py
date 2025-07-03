@@ -85,6 +85,29 @@ from mongodb import(
     get_Entry_Via_Title
 )
 
+
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from seleniumwire import webdriver
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+
+firefox_options = FirefoxOptions()
+
+# Path to .xpi extension file
+path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
+
+# When creating the driver:
+#driver = webdriver.Firefox(options=firefox_options)
+#driver.install_addon(path_to_extension, temporary=True)
+
+
+
+
+
 #Cut out and insert function
 #Take [range1:range2] from the chapterList and insert into position [insertRange1] of existingChapterList
 def insert_into_Chapter_List(cutOutRange,insertRange,chapterList,existingChapterList):
@@ -292,16 +315,18 @@ class RoyalRoadScraper():
             write_to_logs(errorText)
             return None
         return chapterContent#.encode('ascii')
-        
+    
+    
+    #option takes two values. None for default. "popularity" for popularity.
     async def query_royalroad(self,title, option):
         if (title.isspace() or title==""):
             errorText=f"Failed to search title. Function query_royalroad Error: No title inputted"
             write_to_logs(errorText)
             return "Invalid Title"
             
-        if (option ==0):
+        if (option is None):
             querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}"
-        elif (option==1):
+        elif (option == "popularity"):
             querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}&orderBy=popularity"
         else:
             errorText=f"Improper query attempt. Function query_royalroad Error: Invalid query option. How did you even do this?"
@@ -970,6 +995,74 @@ class SpaceBattlesScraper():
                 f.write(";".join(map(str, data))+ "\n")
 
 
+    #https://forums.spacebattles.com/search/104090354/?q=New+Normal&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date 
+    #Basic format of search query
+    #https://forums.spacebattles.com/search/104090768/?q=Cheese
+    #& between each condition
+    #c[title_only]
+    #c[users]="Name"
+    #o=date, or, o=word_count, or, o=relevance
+    #This is for order
+    # 
+    async def query_spacebattles(self,title: str, sortby: str, additionalConditions: dict):
+        if (title.isspace() or title==""):
+            errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
+            write_to_logs(errorText)
+            return "Invalid Title"
+        #&t=post&c[child_nodes]=1&c[nodes][0]=18 is for forum: Creative Writing
+        #&c[title_only]=1 is for title only search
+        querylink = f"https://forums.spacebattles.com/search/104090354/?q={title}&t=post&c[child_nodes]=1&c[nodes][0]=18"
+        for item in additionalConditions:
+            querylink+=f"&{item}={additionalConditions[item]}"
+            logging.warning(querylink)
+        if (sortby =="date"):
+            querylink+="&o=date"
+            
+        elif (sortby =="word_count"):
+            querylink+="&o=word_count"
+
+        elif (sortby =="relevance"):
+            querylink+="&o=relevance"
+            
+        else:
+            errorText=f"Improper query attempt. Function query_spacebattles Error: Invalid query option. How did you even do this?"
+            write_to_logs(errorText)
+            return ("Invalid Option")
+        logging.warning(querylink)
+        
+        async def get_soup(url):
+            try:
+                driver = webdriver.Firefox(options=firefox_options)
+                driver.install_addon(path_to_extension, temporary=True)
+                driver.request_interceptor=interception
+                driver.get(url)
+                await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
+                soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+                driver.close()
+                return soup
+            except Exception as error:
+                errorText=f"Failed to get soup from url. Function spacebattles_get_soup Error: {error}"
+                write_to_logs(errorText)
+        
+        #Needs to be selenium because the 'search url' result is dynamically generated...
+        #Basically... The url will look like this in your browser.
+        #https://forums.spacebattles.com/search/104096825/?q=Trails+Of&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date
+        #But everything after those numbers is just for you to see. The numbers are the actual search results.
+        #for some god forsaken reason, spacebattles indexes the search results. 
+        #If you want to search, you have to use their form and button. Which I can't do since I am using url-based search
+        soup=await get_soup(querylink)
+        try:
+            resultTable=soup.find("div",{"class":"block-container"})
+            bookTable=resultTable.find("ol",{"class":"block-body"})
+            bookRows=bookTable.find_all("h3", {"class":"contentRow-title"})
+            bookLinks=bookRows[0].find("a")['href']
+            firstResult=bookLinks
+            #formatting
+            resultLink=f"https://forums.spacebattles.com/threads{firstResult}"
+            return resultLink
+        except Exception as error:
+            errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_royalroad Error: {error}"
+            write_to_logs(errorText)
 
 
 
@@ -978,15 +1071,44 @@ class SpaceBattlesScraper():
 
 
 
+async def spacebattles_search_interface(title:str, sortby: str,additionalConditions: dict):
+    spacebattles_scraper = SpaceBattlesScraper()
+    title = title.replace(" ", "+")
+    def clean_conditions(conditions):
+        filtered_conditions = {}
+        for key, value in conditions.items():
+            if value not in (0, "", None):
+                if isinstance(value, str):
+                    filtered_conditions[key] = value.replace(" ", "+")
+                else:
+                    filtered_conditions[key] = value
+        return filtered_conditions
+    additionalConditions = clean_conditions(additionalConditions)
+    #available additionalConditions:
+    #&c[container_only]=1
+    #&c[gifts_only]=1 (0/1 False/True)
+    #&c[tags]=word1+word2
+    #&c[threadmark_only]=1
+    #&c[title_only]=1
+    #&c[users]=String_Name
+    
+    result = await spacebattles_scraper.query_spacebattles(title, sortby, additionalConditions)
+    print(result)  # Should print the first search result link or an error message
+    return result
 
 
 
+result=asyncio.run(spacebattles_search_interface("Trails Of", "date", {
+    "c[container_only]": 0,
+    "c[gifts_only]": 0,
+    "c[tags]": "",
+    "c[threadmark_only]": 0,
+    "c[title_only]": 1,
+    "c[users]": ""
+}))
 
 
-
-
-
-
+logging.warning(result)
 
 
 
@@ -1170,25 +1292,6 @@ class SpaceBattlesEpubProducer():
     
 
 
-
-
-
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from seleniumwire import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-
-firefox_options = FirefoxOptions()
-
-# Path to .xpi extension file
-path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
-
-# When creating the driver:
-#driver = webdriver.Firefox(options=firefox_options)
-#driver.install_addon(path_to_extension, temporary=True)
 
 
 
@@ -2360,26 +2463,6 @@ async def retrieve_from_royalroad_follow_list():
     for link in bookLinks:
         logging.warning(await main_interface(link))
     
-#option takes two values 0 or 1. 0 for relevance. 1 for popularity.
-async def query_royalroad(title, option):
-    if (title.isspace() or title==""):
-        return "Invalid Title"
-        
-    if (option ==0):
-        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}"
-    elif (option==1):
-        querylink = f"https://www.royalroad.com/fictions/search?globalFilters=false&title={title}&orderBy=popularity"
-    else:
-        return ("Invalid Option")
-
-    soup=await RoyalRoadScraper.getSoup(querylink)
-    resultTable=soup.find("div",{"class":"fiction-list"})
-    bookTable=resultTable.find("h2",{"class":"fiction-title"})
-    bookRows=bookTable.find_all("a")
-    firstResult=bookRows[0]['href']
-    #formatting
-    resultLink=f"https://www.royalroad.com{firstResult}"
-    return resultLink
 
 
 
@@ -3170,9 +3253,9 @@ async def search_page(input: str, selectedSite: str, cookie):
         prefix = "rr"
         
 
-scraper = SpaceBattlesScraper()
-url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"
-result=asyncio.run(scraper.fetch_chapter_title_list(url))
-logging.warning("Results:")
-logging.warning(result)
+# scraper = SpaceBattlesScraper()
+# url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"
+# result=asyncio.run(scraper.fetch_chapter_title_list(url))
+# logging.warning("Results:")
+# logging.warning(result)
 #NOTE TO SELF. TEST THE NEW FETCH_CHAPTER_TITLE_LIST FUNCTIONS FOR EACH SITE
