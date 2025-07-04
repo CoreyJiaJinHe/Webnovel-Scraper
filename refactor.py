@@ -1003,77 +1003,157 @@ class SpaceBattlesScraper():
     #c[users]="Name"
     #o=date, or, o=word_count, or, o=relevance
     #This is for order
-    # 
-    async def query_spacebattles(self,title: str, sortby: str, additionalConditions: dict):
-        if (title.isspace() or title==""):
-            errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
-            write_to_logs(errorText)
-            return "Invalid Title"
-        #&t=post&c[child_nodes]=1&c[nodes][0]=18 is for forum: Creative Writing
-        #&c[title_only]=1 is for title only search
-        querylink = f"https://forums.spacebattles.com/search/104090354/?q={title}&t=post&c[child_nodes]=1&c[nodes][0]=18"
-        for item in additionalConditions:
-            querylink+=f"&{item}={additionalConditions[item]}"
+    async def query_spacebattles(self,title: str, sortby: str, additionalConditions: dict ,isSearchSearch: bool):
+        try:
+            if (title.isspace() or title==""):
+                errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
+                write_to_logs(errorText)
+                return "Invalid Title"
+            #&t=post&c[child_nodes]=1&c[nodes][0]=18 is for forum: Creative Writing
+            #&c[title_only]=1 is for title only search
+            querylink = f"https://forums.spacebattles.com/search/104090354/?q={title}&t=post&c[child_nodes]=1&c[nodes][0]=18"
+            for item in additionalConditions:
+                querylink+=f"&{item}={additionalConditions[item]}"
+                logging.warning(querylink)
+            if (sortby not in ["date", "word_count", "relevance"]):
+                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles Error: {sortby}"
+                write_to_logs(errorText)
+                sortby = "date"  # Default sort-by option
+                querylink+=f"&o={sortby}"
+                
+                
+            else:
+                querylink+=f"&o={sortby}"
             logging.warning(querylink)
-        if (sortby =="date"):
-            querylink+="&o=date"
             
-        elif (sortby =="word_count"):
-            querylink+="&o=word_count"
-
-        elif (sortby =="relevance"):
-            querylink+="&o=relevance"
+            async def get_soup(url):
+                try:
+                    driver = webdriver.Firefox(options=firefox_options)
+                    driver.install_addon(path_to_extension, temporary=True)
+                    driver.request_interceptor=interception
+                    driver.get(url)
+                    await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
+                    soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+                    driver.close()
+                    return soup
+                except Exception as error:
+                    errorText=f"Failed to get soup from url. Function spacebattles_get_soup Error: {error}"
+                    write_to_logs(errorText)
             
-        else:
-            errorText=f"Improper query attempt. Function query_spacebattles Error: Invalid query option. How did you even do this?"
+            #Needs to be selenium because the 'search url' result is dynamically generated...
+            #Basically... The url will look like this in your browser.
+            #https://forums.spacebattles.com/search/104096825/?q=Trails+Of&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date
+            #But everything after those numbers is just for you to see. The numbers are the actual search results.
+            #for some god forsaken reason, spacebattles indexes the search results. 
+            #If you want to search, you have to use their form and button. Which I can't do since I am using url-based search
+            soup=await get_soup(querylink)
+            try:
+                resultTable=soup.find("div",{"class":"block-container"})
+                bookTable=resultTable.find("ol",{"class":"block-body"})
+                bookRows=bookTable.find_all("h3", {"class":"contentRow-title"})
+                bookLinks=bookRows[0].find("a")['href']
+                firstResult=bookLinks
+                #formatting
+                resultLink=f"https://forums.spacebattles.com/threads{firstResult}"
+                return resultLink
+            except Exception as error:
+                errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_royalroad Error: {error}"
+                write_to_logs(errorText)
+        except Exception as e:
+            errorText=f"Improper query attempt. Function query_spacebattles Error: Invalid query option. {e}"
             write_to_logs(errorText)
             return ("Invalid Option")
-        logging.warning(querylink)
-        
-        async def get_soup(url):
-            try:
-                driver = webdriver.Firefox(options=firefox_options)
-                driver.install_addon(path_to_extension, temporary=True)
-                driver.request_interceptor=interception
-                driver.get(url)
-                await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
-                soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
-                driver.close()
-                return soup
-            except Exception as error:
-                errorText=f"Failed to get soup from url. Function spacebattles_get_soup Error: {error}"
-                write_to_logs(errorText)
-        
-        #Needs to be selenium because the 'search url' result is dynamically generated...
-        #Basically... The url will look like this in your browser.
-        #https://forums.spacebattles.com/search/104096825/?q=Trails+Of&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date
-        #But everything after those numbers is just for you to see. The numbers are the actual search results.
-        #for some god forsaken reason, spacebattles indexes the search results. 
-        #If you want to search, you have to use their form and button. Which I can't do since I am using url-based search
-        soup=await get_soup(querylink)
+    
+    #this one uses a different search system. It's not really a search but rather a filter.
+    #Search via main tag, and get the results. It's more dependent on the additional filter conditions to do the search.
+    async def query_spacebattles_version_two(self,title: str, sortby: str, direction:str, additionalConditions: dict):
         try:
-            resultTable=soup.find("div",{"class":"block-container"})
-            bookTable=resultTable.find("ol",{"class":"block-body"})
-            bookRows=bookTable.find_all("h3", {"class":"contentRow-title"})
-            bookLinks=bookRows[0].find("a")['href']
-            firstResult=bookLinks
-            #formatting
-            resultLink=f"https://forums.spacebattles.com/threads{firstResult}"
-            return resultLink
-        except Exception as error:
-            errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_royalroad Error: {error}"
+            if (title.isspace() or title==""):
+                errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
+                write_to_logs(errorText)
+                return "Invalid Title"
+            
+            querylink = f"https://forums.spacebattles.com/forums/creative-writing.18/?tags[0]={title}"
+            if (sortby not in ["title", "reply_count", "view_count", "last_threadmark", "watchers"] and direction not in ["asc", "desc"]):
+                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles_version_two Error: {sortby}"
+                write_to_logs(errorText)
+                sortby = "last_threadmark"  # Default sort-by option
+                querylink+=f"&order={sortby}&direction=desc"
+            else:
+                querylink+=f"&order={sortby}&direction={direction}"
+            for item in additionalConditions:
+                querylink+=f"&{item}={additionalConditions[item]}"
+                logging.warning(querylink)
+            logging.warning(querylink)
+            querylink+="&nodes[0]=48&nodes[1]=169&nodes[2]=40&nodes[3]=115"
+            
+            soup=await self.get_soup(querylink)
+            try:
+                resultTable=soup.find("div",{"class":"structItemContainer"})
+                bookTable=resultTable.find("div",{"class":"js-threadList"})
+                bookRows=bookTable.find_all("div", {"class":"structItem"})
+                #logging.warning(bookRows)
+                firstResult=bookRows[0].find("div", {"class":"structItem-title"})
+                logging.warning("=================")
+                logging.warning(firstResult.get_text())
+                
+                if (firstResult):
+                    links=firstResult.find_all("a")
+                    if (links):
+                        logging.warning(links)
+                        for link in links:
+                            if link.get_text(strip=True) == "Jump to New":
+                                continue
+                            # If we find a link that is not "Jump to New", we take it
+                            firstResultLink=link['href']
+                            break
+                        #formatting
+                        resultLink=f"https://forums.spacebattles.com/{firstResultLink}"
+                        return resultLink
+                return "No Results Found"
+            except Exception as e:
+                errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_spacebattles_version_two Error: {e}"
+                write_to_logs(errorText)
+                return "No Results Found"
+        except Exception as e:
+            errorText=f"Improper query attempt. Function query_spacebattles_version_two Error: {e} How did you even do this?"
             write_to_logs(errorText)
+            return "Invalid Option"
+        #These need to be added at the end to specify the forums.
+        #THEY MUST BE at the end of the query.
+
+    
+#available additionalConditions for search-filter
+#&t=post&c[child_nodes]=1&c[nodes][0]=18 is for forum: Creative Writing
+#&c[title_only]=1 is for title only search
+#https://forums.spacebattles.com/forums/creative-writing.18/?tags[0]=trails+series&nodes[0]=48&nodes[1]=169&nodes[2]=115
+#tag searching: ?tags[0]=trails+series
+#forums: &nodes[0]=48&nodes[1]=169&nodes[2]=40&nodes[3]=115
+#48 is original writing, 169 is unlisted original fiction, 40 is creative writing archives, and 115 is worm.
+#word count filters: &min_word_count=1000&max_word_count=1000000
+#sort by options:
+#order=title, reply_count,view_count, last_threadmark, watchers
+#&direction=desc/asc
+#threadmark status
+#&threadmark_index_statuses[0]=incomplete
+#&threadmark_index_statuses[1]=complete
+#&threadmark_index_statuses[2]=hiatus
+
+#available additionalConditions for search-search
+#https://forums.spacebattles.com/search/104096825/?q=Trails+Of&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date
+#&c[container_only]=1
+#&c[gifts_only]=1 (0/1 False/True)
+#&c[tags]=word1+word2
+#&c[threadmark_only]=1
+#&c[title_only]=1
+#&c[users]=String_Name
 
 
-
-
-
-
-
-
-async def spacebattles_search_interface(title:str, sortby: str,additionalConditions: dict):
+#title: query argument, sortby: query sort argument, direction: ascending or descending, additionalConditions: additional parameters in key-value pairs
+async def spacebattles_search_interface(title:str, sortby: str, direction: str,additionalConditions: dict):
     spacebattles_scraper = SpaceBattlesScraper()
     title = title.replace(" ", "+")
+    title = title.lower()
     def clean_conditions(conditions):
         filtered_conditions = {}
         for key, value in conditions.items():
@@ -1084,29 +1164,28 @@ async def spacebattles_search_interface(title:str, sortby: str,additionalConditi
                     filtered_conditions[key] = value
         return filtered_conditions
     additionalConditions = clean_conditions(additionalConditions)
-    #available additionalConditions:
-    #&c[container_only]=1
-    #&c[gifts_only]=1 (0/1 False/True)
-    #&c[tags]=word1+word2
-    #&c[threadmark_only]=1
-    #&c[title_only]=1
-    #&c[users]=String_Name
     
-    result = await spacebattles_scraper.query_spacebattles(title, sortby, additionalConditions)
-    print(result)  # Should print the first search result link or an error message
+    
+    #result = await spacebattles_scraper.query_spacebattles(title, sortby, direction, additionalConditions)
+    result = await spacebattles_scraper.query_spacebattles_version_two(title, sortby, direction, additionalConditions)
+    #print(result)  # Should print the first search result link or an error message
     return result
 
 
 
-result=asyncio.run(spacebattles_search_interface("Trails Of", "date", {
-    "c[container_only]": 0,
-    "c[gifts_only]": 0,
-    "c[tags]": "",
-    "c[threadmark_only]": 0,
-    "c[title_only]": 1,
-    "c[users]": ""
-}))
+# result=asyncio.run(spacebattles_search_interface("Trails Of", "date", {
+#     "c[container_only]": 0,
+#     "c[gifts_only]": 0,
+#     "c[tags]": "",
+#     "c[threadmark_only]": 0,
+#     "c[title_only]": 1,
+#     "c[users]": ""
+# }))
 
+result = asyncio.run(spacebattles_search_interface("Trails series", "", "" ,{
+    "min_word_count": 5000,
+    "threadmark_index_statuses[0]":"incomplete",
+    "threadmark_index_statuses[1]":"complete"}))
 
 logging.warning(result)
 
