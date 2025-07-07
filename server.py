@@ -239,7 +239,42 @@ async def verifyUser(request: Request):
     except Exception as e:
         logging.error(f"Error verifying user: {e}")
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
-        
+
+
+
+@app.get("/api/retrieve_book")
+async def retrieveBook(request: Request, bookTitle: str):
+    received_access_token=request.cookies.get("access_token")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (new_access_token):
+            book= mongodb.get_Entry_Via_Title(bookTitle)
+            if (book):
+                book_copy = dict(book)
+                book = {
+                    "bookID": book_copy.get("bookID"),
+                    "bookName": book_copy.get("bookName"),
+                    "bookAuthor": book_copy.get("bookAuthor"),
+                    "bookDescription": book_copy.get("bookDescription"),
+                    "websiteHost": book_copy.get("websiteHost"),
+                    "lastChapterTitle": book_copy.get("lastChapterTitle"),
+                    "totalChapters": book_copy.get("totalChapters"),
+                }
+                
+                order_of_contents=mongodb.get_existing_order_of_contents(str(book["bookName"]))
+                logging.error(f"Retrieved book: {book}")
+                logging.error(f"Retrieved order of contents: {order_of_contents}")
+                return JSONResponse(content=[book, order_of_contents], status_code=200)
+            else:
+                return JSONResponse (content={"error": "Book not found"}, status_code=404)
+        else:
+            raise credentials_exception  # 401 Unauthorized
+    except Exception as e:
+        errorText=f"Error retrieving book: {e}"
+        write_to_logs(errorText)
+        return JSONResponse(content={"error": errorText}, status_code=400)
 
 
 @app.get("/api/query_book/")

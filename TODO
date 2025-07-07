@@ -30,6 +30,11 @@ refactor.py TODO
 // # TODO: Translate the raw text. Create a glossary for terms to use in translation to ensure consistent term translations
 
 
+
+#REMINDER: TEST FOXAHOLIC WITH AIOHTTP WITH CLOUDFLARE COOKIE.
+
+
+
 scrapers folder TODO
 //Move the refactored code in refactor.py over to the appropriate scrapers in the scrapers folder.
 
@@ -59,7 +64,11 @@ OnlineReaderPage TODO
 //DONE TODO: Also make it so that the user can use the arrow keys to navigate through the chapters.
 //TODO: Limit the size of the div containing the chapter content to a certain height, and make it scrollable if the content exceeds that height.
 
-
+OnlineBookEditorPage TODO
+//Make a page where I can select, and drag to reorder the chapters in a book
+//Also make it so that I can delete files from said page
+//Make sure I am a developer to access this page
+//Books are opened via search of their name, fuzzy search.
 
 
 mainModule.py TODO

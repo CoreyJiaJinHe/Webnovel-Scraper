@@ -127,6 +127,15 @@ def get_Entry_Via_Title(bookTitle):
         return None
     return results
 
+def get_existing_order_of_contents(book_title):
+        # Default implementation
+        dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
+    
+
 def check_latest_chapter(bookID,bookTitle,latestChapter):
     bookData=get_Entry_Via_ID(bookID)
     if (bookData is None):

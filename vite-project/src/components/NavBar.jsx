@@ -43,6 +43,11 @@ function Navbar(){
             <navbar className="navbar-right">
                 {isDeveloper && (
                     <li>
+                        <Link to="/react/DeveloperBookEditPage">Edit Book Data</Link>
+                    </li>
+                )}
+                {isDeveloper && (
+                    <li>
                         <Link to="/react/DeveloperPage">Developer</Link>
                     </li>
                 )}

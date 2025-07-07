@@ -1041,7 +1041,7 @@ class SpaceBattlesScraper():
                     write_to_logs(errorText)
             
             #Needs to be selenium because the 'search url' result is dynamically generated...
-            #Basically... The url will look like this in your browser.
+            #Basically... Spacebattles generates the result and then sends its as a webpage. Instead of a static page hosting the results.
             #https://forums.spacebattles.com/search/104096825/?q=Trails+Of&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date
             #But everything after those numbers is just for you to see. The numbers are the actual search results.
             #for some god forsaken reason, spacebattles indexes the search results. 
@@ -1182,12 +1182,12 @@ async def spacebattles_search_interface(title:str, sortby: str, direction: str,a
 #     "c[users]": ""
 # }))
 
-result = asyncio.run(spacebattles_search_interface("Trails series", "", "" ,{
-    "min_word_count": 5000,
-    "threadmark_index_statuses[0]":"incomplete",
-    "threadmark_index_statuses[1]":"complete"}))
+# result = asyncio.run(spacebattles_search_interface("Trails series", "", "" ,{
+#     "min_word_count": 5000,
+#     "threadmark_index_statuses[0]":"incomplete",
+#     "threadmark_index_statuses[1]":"complete"}))
 
-logging.warning(result)
+# logging.warning(result)
 
 
 

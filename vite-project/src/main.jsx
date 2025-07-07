@@ -33,7 +33,7 @@ import DeveloperPage from './Pages/DeveloperPage.jsx'
 import BooksPage from './Pages/BooksPage.jsx'
 import OnlineReaderPage from './Pages/OnlineReaderPage.jsx'
 import BookScraperPage from './Pages/BookScraperPage.jsx'
-
+import DeveloperBookEditPage from './Pages/DeveloperBookEditPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -79,6 +79,10 @@ const router = createBrowserRouter([
   {
     path:"/react/BookScraperPage/",
     element: <BookScraperPage />,
+  },
+  {
+    path:"/react/DeveloperBookEditPage/",
+    element: <DeveloperBookEditPage />,
   }
 ]);
 
