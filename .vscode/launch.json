@@ -43,5 +43,15 @@
             "console": "integratedTerminal",
             "justMyCode": true
         }
+    ],
+    "compounds": [
+        {
+            "name": "Start React + FastAPI",
+            "configurations": [
+                "Run React App (vite-project)",
+                "FastAPI Debugger: server.py"
+            ],
+            "stopAll": true
+        }
     ]
 }

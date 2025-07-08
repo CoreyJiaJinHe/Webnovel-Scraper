@@ -297,9 +297,9 @@ function DeveloperBookEditPage() {
                         </div>
                     </div>
                     {/* Main Content: Fuzzy Search */}
-                    <div className="scrape-container-main-content">
-                        <div className="scrape-main-search-card">
-                            <div className="scrape-main-select-input-row" style={{ position: 'relative' }}>
+                    <div className="book-edit-container-main-content">
+                        <div className="book-edit-search-card">
+                            <div className="book-edit-select-input-row">
                                 <input
                                     ref={inputRef}
                                     type="text"
@@ -314,40 +314,16 @@ function DeveloperBookEditPage() {
                                 <button
                                     className="scrape-main-search-button"
                                     onClick={() => handleSearch(searchTerm)}
-                                    style={{ marginLeft: 'auto', marginRight: 20 }}
-                                >
+                                    style={{ marginLeft: 'auto', marginRight: 20 }}>
                                     Search
                                 </button>
                                 {/* Dropdown for fuzzy recommendations */}
                                 {showDropdown && recommendations.length > 0 && (
-                                    <ul
-                                        style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            background: '#fff',
-                                            border: '1px solid #ccc',
-                                            zIndex: 10,
-                                            listStyle: 'none',
-                                            margin: 0,
-                                            padding: 0,
-                                            maxHeight: 200,
-                                            overflowY: 'auto',
-                                            color: 'black' // <-- add this
-                                        }}
-                                    >
+                                    <ul className="book-edit-search-recommendations-dropdown">
                                         {recommendations.map((rec, idx) => (
-                                            <li
+                                            <li className="book-edit-search-recommendation-item"
                                                 key={idx}
-                                                style={{
-                                                    padding: '0.5rem 1rem',
-                                                    cursor: 'pointer',
-                                                    borderBottom: idx !== recommendations.length - 1 ? '1px solid #eee' : 'none',
-                                                    color: 'black' // <-- add this
-                                                }}
-                                                onMouseDown={() => handleRecommendationClick(rec)}
-                                            >
+                                                onMouseDown={() => handleRecommendationClick(rec)}>
                                                 {rec}
                                             </li>
                                         ))}
@@ -364,15 +340,10 @@ function DeveloperBookEditPage() {
                         <div className="scrape-right-chapter-list-panel">
                             <h2>Chapters</h2>
                             {orderOfContentsTitles.length > 0 ? (
-                                <>
-                                    <button
-                                        onClick={handleDelete}
-                                        disabled={!checkedChapters.some(Boolean)}
-                                        style={{ marginBottom: '1rem' }}
-                                    >
+                                <><button className="book-edit-delete-button" style={{ marginBottom: '1rem' }} onClick={handleDelete} disabled={!checkedChapters.some(Boolean)}>
                                         Delete Selected
                                     </button>
-                                    <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+                                    <ul className="book-edit-chapter-list-items">
                                     {orderOfContentsTitles.map((chapter, idx) => (
                                         <li
                                             key={idx}
@@ -380,8 +351,8 @@ function DeveloperBookEditPage() {
                                             onDragStart={() => handleDragStart(idx)}
                                             onDragOver={e => { e.preventDefault(); handleDragOver(idx); }}
                                             onDragEnd={handleDragEnd}
+                                            className={checkedChapters[idx] ? "selected" : ""}
                                             style={{
-                                                background: checkedChapters[idx] ? "#e0e7ff" : undefined,
                                                 cursor: checkedChapters[idx] ? "grab" : "default"
                                             }}
                                         >

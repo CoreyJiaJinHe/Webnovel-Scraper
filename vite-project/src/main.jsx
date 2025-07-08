@@ -15,6 +15,7 @@ import './CSS/LoginPage.css'
 import './CSS/DownloadPage.css'
 import './CSS/OnlineReaderPage.css'
 import './CSS/BookScraperPage.css'
+import './CSS/DeveloperBookEditPage.css'
 
 import {
   createBrowserRouter,
