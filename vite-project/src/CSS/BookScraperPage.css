@@ -160,6 +160,25 @@
     opacity: 0.6;
 }
 
+
+.scrape-main-cloudflare-input-row{
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+.scrape-main-cloudflare-input-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 60%;
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
 /* Right panel styling */
 .scrape-right-panel {
     width: 340px;

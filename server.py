@@ -316,8 +316,24 @@ async def scrapeBook(request: Request):
     received_access_token=request.cookies.get("access_token")
     if not received_access_token:
         raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token, username, userID, verifiedStatus = await authenticate_token(received_access_token)
+        if not new_access_token:
+            raise credentials_exception  # 401 Unauthorized
+        data = await request.json()
+        bookTitle = data.get("bookTitle")
+        siteHost = data.get("siteHost")
+        if not bookTitle or not siteHost:
+            return JSONResponse(content={"error": "Missing bookTitle or siteHost"}, status_code=400)
+        logging.error(f"Scraping book: {bookTitle} from {siteHost}")
 
-    return JSONResponse(content={"error": "Weird error"}, status_code=400)
+        
+        
+        
+    except Exception as e:
+        logging.error(f"Error in scrape_Book: {e}")
+        return JSONResponse(content={"error": "Invalid request"}, status_code=400)
+    
 
 #DONE: Write hashing function for passwords
 #DONE:Create user login function

@@ -10,9 +10,10 @@ function BookScraperPage() {
     const [book, setBook] = useState(null);
     const [selectedSite, setSelectedSite] = useState('royalroad');
     const [showPopup, setShowPopup] = useState(false);
-    
-    const [checkedChapters, setCheckedChapters] = useState([]);
+    const [cloudflareCookie, setCloudflareCookie] = useState("");
 
+    const [checkedChapters, setCheckedChapters] = useState([]);
+    const [chapterUrls, setChapterUrls] = useState([]);
     function setSessionCookie(name, value) {
         document.cookie = `${name}=${value}; path=/; samesite=strict`;
     }
@@ -36,15 +37,6 @@ function BookScraperPage() {
         setSessionCookie('seenBookScraperPopup', '1');
     };
 
-    // Dummy book data for demonstration; replace with real fetch logic as needed
-    const dummyBook = [
-        1,
-        "Example Book Title",
-        "Example Author",
-        "This is an example description for the book.",
-        "Example Latest Chapter"
-    ];
-
     async function handleSearch(){
         try{
             console.log("Searching for book:", searchTerm, "on site:", selectedSite);
@@ -58,11 +50,16 @@ function BookScraperPage() {
         if (response.statusText === "OK") {
             setBook(response.data);
             setSearchSuccess(true);
-            if (Array.isArray(response.data[response.data.length - 1])) {
-                    setCheckedChapters(new Array(response.data[response.data.length - 1].length).fill(false));
-                } else {
-                    setCheckedChapters([]);
-                }
+
+            const chapters = response.data.chapterTitles;
+            const urls = response.data.chapterUrls;
+            if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
+                setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
+                setChapterUrls(response.data.chapterUrls);
+            } else {
+                setCheckedChapters([]);
+                setChapterUrls([]);
+            }
         }
         else{
             setBook(null);
@@ -78,13 +75,24 @@ function BookScraperPage() {
         console.log("Error fetching book data:", error);
     }
     }
+
     async function handleScrape() {
         if (!searchSuccess) return;
+        // Get selected chapter indices
+        const selectedIndices = checkedChapters
+            .map((checked, idx) => checked ? idx : -1)
+            .filter(idx => idx !== -1);
+
+        // Get selected chapter URLs and titles
+        const selectedUrls = selectedIndices.map(idx => chapterUrls[idx]);
+        const selectedTitles = selectedIndices.map(idx => book.chapterTitles[idx]);
         try {
             const response = await axios.post(`${API_URL}/scrape_book`, {
                 params: {
-                    term: searchTerm,
-                    site: selectedSite
+                    term: book.bookTitle,
+                    site: selectedSite,
+                    chapters: selectedTitles,
+                    urls: selectedUrls
                 },
                 withCredentials: true
             });
@@ -126,14 +134,14 @@ function BookScraperPage() {
                         <h3 style={{ marginTop: 0 }}>Book Details</h3>
                         {book ? (
                             <ul style={{ listStyle: "none", padding: 0 }}>
-                                <li><strong>Title:</strong> {book[1]}</li>
-                                <li><strong>Author:</strong> {book[2]}</li>
+                                <li><strong>Title:</strong> {book.bookTitle}</li>
+                                <li><strong>Author:</strong> {book.bookAuthor}</li>
                                 <li><strong>Description:</strong>
                                     <div className="reader-book-details-panel-description">
-                                        {book[3]}
+                                        {book.bookDescription}
                                     </div>
                                 </li>
-                                <li><strong>Latest Chapter:</strong> {book[4]}</li>
+                                <li><strong>Latest Chapter:</strong> {book.latestChapterTitle}</li>
                             </ul>
                         ) : (
                             <p>No book selected.</p>
@@ -175,34 +183,50 @@ function BookScraperPage() {
                                         setSearchSuccess(false);
                                     }}
                                 />
-                                <button className ="scrape-main-scrape-button"
-                                
-                                    onClick={handleScrape} disabled={!searchSuccess}>
-                                    Scrape
-                                </button>
+                                <button
+                                className="scrape-main-scrape-button"
+                                onClick={handleScrape}
+                                disabled={
+                                    !searchSuccess ||
+                                    ((selectedSite === "foxaholic" || selectedSite === "novelbin") && !cloudflareCookie)
+                                }
+                            >
+                                Scrape
+                            </button>
                             </div>
+                            {(selectedSite === "foxaholic" || selectedSite === "novelbin") && (
+                            <div className="scrape-main-cloudflare-input-row">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Cloudflare cookie..."
+                                    value={cloudflareCookie}
+                                    onChange={e => setCloudflareCookie(e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        )}
                         </div>
                     </div>
                 {/* Right Panel: Chapter List */}
                     <div className="scrape-right-panel">
                         <div className="scrape-right-chapter-list-panel">
                             <h2>Chapters</h2>
-                            {book && Array.isArray(book[book.length - 1]) ? (
+                            {book && Array.isArray(book.chapterTitles) ? (
                                 <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
-                                {book[book.length - 1].map((chapter, idx) => (
-                                        <li key={idx}>
-                                            <input
-                                                type="checkbox"
-                                                checked={checkedChapters[idx] || false}
-                                                onChange={() => {
-                                                    const updated = [...checkedChapters];
-                                                    updated[idx] = !updated[idx];
-                                                    setCheckedChapters(updated);
-                                                }}
-                                            />
-                                            {chapter}
-                                        </li>
-                                    ))}
+                                {book.chapterTitles.map((chapter, idx) => (
+                                    <li key={idx}>
+                                        <input
+                                            type="checkbox"
+                                            checked={checkedChapters[idx] || false}
+                                            onChange={() => {
+                                                const updated = [...checkedChapters];
+                                                updated[idx] = !updated[idx];
+                                                setCheckedChapters(updated);
+                                            }}
+                                        />
+                                        {chapter}
+                                    </li>
+                                ))}
                                 </ul>
                             ) : (
                                 <p style={{ color: "#aaa" }}>No chapters loaded.</p>
@@ -216,93 +240,3 @@ function BookScraperPage() {
 }
 
 export default BookScraperPage;
-
-
-// .scrape-container{
-//     style={{
-//                     display: 'flex',
-//                     flexDirection: 'row',
-//                     alignItems: 'flex-start',
-//                     justifyContent: 'center',
-//                     marginTop: '2.5rem',
-//                     gap: '2rem'
-//                 }}
-// }
-
-// .scrape-left-panel{
-//     width: 250px;
-//     display: flex;
-//     flex-direction: column;
-//     gap: 1.5rem;
-//     maxWidth: 400, minWidth: 300, margin: 0 
-// }
-
-// .scrape-book-details-panel{
-//     background: #23232b;
-//     border-radius: 8px;
-//     padding: 1rem;
-//     color: #fff;
-//     margin-bottom: 1rem;
-//     margin-top: 2.5rem;}
-
-
-// .scrape-container-main-content{
-//     style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' , marginTop: '2.5rem' // <-- Add this line
-// }}>
-// }
-
-// .scrape-main-search-card{
-//     style={{
-//                             background: '#fff',
-//                             border: '2px solid #111',
-//                             borderRadius: '8px',
-//                             padding: '2rem 2rem 1.5rem 2rem',
-//                             minWidth: 400,
-//                             boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                            
-//                         }}
-// }
-
-// .scrape-main-search-select-dropdown{
-//      style={{
-//                                 backgroundColor: '#fff',
-//                                 color: '#222',
-//                                 border: '1.5px solid #888',
-//                                 borderRadius: '4px',
-//                                 outline: 'none',
-//                                 width: '220px',
-//                                 padding: '0.5rem',
-//                                 fontSize: '1rem',
-//                                 marginBottom: '1rem'
-//                             }}
-// }
-
-// .scrape-main-search-select-input-row{
-//     style={{ display: 'flex', justifyContent: 'center' }}
-// }
-
-// .scrape-main-search-select-input-row input{
-//     style={{
-//                                     backgroundColor: '#fff',
-//                                     color: '#222',
-//                                     border: '1.5px solid #888',
-//                                     borderRadius: '4px',
-//                                     outline: 'none',
-//                                     width: '350px',
-//                                     padding: '0.5rem',
-//                                     fontSize: '1rem'
-//                                 }}
-// }
-
-// .scrape-main-search-select-input-row button{
-//      style={{
-//                                     backgroundColor: '#fff',
-//                                     color: '#222',
-//                                     border: '1.5px solid #888',
-//                                     borderRadius: '4px',
-//                                     outline: 'none',
-//                                     padding: '0.5rem 1.5rem',
-//                                     fontSize: '1rem',
-//                                     marginLeft: '1rem',
-//                                     cursor: 'pointer'
-//                                 }}

@@ -5,19 +5,6 @@ import axios from "axios";
 const API_URL = "http://localhost:8000/api";
 const api = axios.create({ baseURL: API_URL });
 
-const existingBookTitles = [
-    "Harry Potter and the Methods of Rationality",
-    "Worm",
-    "Mother of Learning",
-    "The Wandering Inn",
-    "The New Normal",
-    "A Practical Guide to Evil",
-    "The Iron Teeth",
-    "The Perfect Run",
-    "The Last Angel",
-    "The Zombie Knight Saga"
-];
-
 function DeveloperBookEditPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [recommendations, setRecommendations] = useState([]);

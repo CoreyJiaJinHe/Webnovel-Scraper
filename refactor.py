@@ -399,6 +399,31 @@ class RoyalRoadScraper():
                 chapter_content=bs4.BeautifulSoup(str(chapter_content),'html.parser')
         return chapter_content
     
+    #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
+    async def process_new_chapter_non_saved(self, chapter_url, book_title,chapter_id,image_count):
+        soup = await self.get_soup(chapter_url)
+        chapter_title = await self.fetch_chapter_title(soup)
+        chapter_content = await self.fetch_chapter_content(soup)
+        chapter_content = await self.remove_junk_links(chapter_content)
+        
+        currentImageCount=image_count
+        # Process images
+        images=chapter_content.find_all('img')
+        images=[image['src'] for image in images]
+        logging.warning(images)
+        #Do not save these images permanent. Always overwrite.
+        image_dir = f"./books/raw/temporary/images/"
+        if images:
+            image_count = await self.save_images_in_chapter(images, image_dir, image_count)
+            for img,image in zip(chapter_content.find_all('img'),images):
+                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                currentImageCount+=1
+        
+        file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+        
+        return file_chapter_title, currentImageCount, chapter_content
+    
+
     async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count):
         soup = await self.get_soup(chapter_url)
         chapter_title = await self.fetch_chapter_title(soup)
@@ -613,6 +638,25 @@ class RoyalRoadEpubProducer():
         
         logging.warning("Finalizing epub")
         self.finalize_epub(new_epub, toc_list, book_title)
+
+    
+    #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
+    async def process_custom_book(self, book_title, book_chapter_urls):
+        if not book_chapter_urls:
+            errorText="Function: royalroad_process_custom_book. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        rrScraper=RoyalRoadScraper()
+        
+        chapter_metadata = []
+        image_counter=0 
+        for chapter_url in book_chapter_urls:
+            chapter_id = await self.extract_chapter_ID(chapter_url)
+            
+            file_chapter_title,image_counter,chapterContent=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+            chapter_metadata.append([chapter_id, chapter_url, f"./books/raw/{book_title}/{file_chapter_title}.html"])
+
 
 
 
@@ -3277,7 +3321,6 @@ def is_image_duplicate(epub_image_bytes, directory):
 
 async def search_page(input: str, selectedSite: str, cookie):
     
-    url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
     if selectedSite=="royalroad":
             scraper=RoyalRoadScraper()
             prefix="rr"
@@ -3305,6 +3348,7 @@ async def search_page(input: str, selectedSite: str, cookie):
     
     
     
+    url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
     if url_pattern.match(input.strip()):
         url=input
         if (scraper is SpaceBattlesScraper()):
@@ -3316,21 +3360,27 @@ async def search_page(input: str, selectedSite: str, cookie):
                     url += 'reader/'
                 else:
                     url += '/reader/'
-        
-    
-        bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID= await scraper.fetch_novel_data(url)
-        
-        listofChapters=await scraper.fetch_chapter_title_list(url)
-        logging.warning(listofChapters)
-        
-        return [bookID,bookTitle,bookAuthor,description,latestChapterTitle,listofChapters]
-    
+
     else:
         #If input is not a URL, treat it as a search query
         #default search query will be Royalroad
         scraper = RoyalRoadScraper()
         prefix = "rr"
+        url=await scraper.query_royalroad(input.strip(), None)
         
+    bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID= await scraper.fetch_novel_data(url)
+    listofChapterTitles=await scraper.fetch_chapter_title_list(url)
+    listofChapters = await scraper.fetch_chapter_list(url)
+    logging.warning(listofChapters)
+    return {
+        "bookID": bookID,
+        "bookTitle": bookTitle,
+        "bookAuthor": bookAuthor,
+        "bookDescription": description,
+        "latestChapterTitle": latestChapterTitle,
+        "chapterTitles": listofChapterTitles,
+        "chapterUrls": listofChapters
+    }
 
 # scraper = SpaceBattlesScraper()
 # url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"
