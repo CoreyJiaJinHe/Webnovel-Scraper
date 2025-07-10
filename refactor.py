@@ -641,21 +641,70 @@ class RoyalRoadEpubProducer():
 
     
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
-    async def process_custom_book(self, book_title, book_chapter_urls):
+    async def produce_custom_epub(self, new_epub, css, book_title, book_chapter_urls):
         if not book_chapter_urls:
-            errorText="Function: royalroad_process_custom_book. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+            errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
             write_to_logs(errorText)
             return
         rrScraper=RoyalRoadScraper()
         
-        chapter_metadata = []
-        image_counter=0 
+        toc_list = []
+        image_counter=0
         for chapter_url in book_chapter_urls:
+            soup = await rrScraper.get_soup(chapter_url)
             chapter_id = await self.extract_chapter_ID(chapter_url)
+            chapter_title = await rrScraper.fetch_chapter_title(soup)
+            file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
             
-            file_chapter_title,image_counter,chapterContent=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
-            chapter_metadata.append([chapter_id, chapter_url, f"./books/raw/{book_title}/{file_chapter_title}.html"])
+            chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
+            images=chapter_content_soup.find_all('img')
+            images=[image['src'] for image in images]
+            image_dir = f"./books/raw/temporary/"
+            if images:
+                image_count=await self.retrieve_images_in_chapter(images, image_dir,image_count,new_epub)
+            
+            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)
+            toc_list.append(chapter)
+            new_epub.add_item(chapter)
+
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
+
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+
+        try:
+            dirLocation="./books/epubs/temporary/"+book_title
+            if not check_directory_exists(dirLocation):
+                make_directory(dirLocation)
+            
+            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
 
 
 
@@ -3382,6 +3431,55 @@ async def search_page(input: str, selectedSite: str, cookie):
         "chapterUrls": listofChapters
     }
 
+
+async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls):
+    if selectedSite=="royalroad":
+        epub_producer=RoyalRoadEpubProducer()
+        prefix="rr"
+    # elif selectedSite=="spacebattles":
+    #     epub_producer=SpaceBattlesEpubProducer()
+    #     prefix="sb"
+    # elif selectedSite=="foxaholic":
+    #     epub_producer=FoxaholicEpubProducer()
+    #     prefix="fx"
+    #     if (cookie is None):
+    #         errorText="Function search_page_scrape_interface. Error: Cookie is required for Foxaholic. Please provide a cookie."
+    #         logging.warning(errorText)
+    #         write_to_logs(errorText)
+    #         return None
+    # elif selectedSite=="novelbin":
+    #     epub_producer=NovelBinEpubProducer()
+    #     prefix="nb"
+    #     if (cookie is None):
+    #         errorText="Function search_page_scrape_interface. Error: Cookie is required for NovelBin. Please provide a cookie."
+    #         logging.warning(errorText)
+    #         write_to_logs(errorText)
+    #         return None
+    else:
+        raise ValueError("Unsupported website")
+    
+    style=open("style.css","r").read()
+    default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
+    
+    async def instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css):
+        try:
+            new_epub=epub.EpubBook()
+            new_epub.set_identifier(bookID)
+            new_epub.set_title(bookTitle)
+            new_epub.set_language('en')
+            new_epub.add_author(bookAuthor)
+            new_epub.add_item(default_css)
+            return new_epub
+        except Exception as e:
+            errorText=f"Failed to create new_epub object. Error: {e}"
+            write_to_logs(errorText)
+            return
+        
+    new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css)
+    
+    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls)
+    
+    return dirLocation
 # scraper = SpaceBattlesScraper()
 # url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"
 # result=asyncio.run(scraper.fetch_chapter_title_list(url))

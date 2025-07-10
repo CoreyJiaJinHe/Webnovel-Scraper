@@ -186,7 +186,9 @@ default_values = {
         "lastScraped": "1970-01-01 00:00:00",
         #Using a default date that is unlikely to be used.
         "totalChapters":-1,
-        "directory": "Template"
+        "directory": "Template",
+        "imported": False #This is used to determine if the book was imported from a file or not.
+        #If it was, then it needs to be edited by a developer.
     }
 #This is dict merging.
 #Another method is to use .get(value, default_value) for each key, but that's not as clean.
@@ -209,8 +211,8 @@ def create_Entry(**kwargs):
         "lastChapterTitle": book_data["lastChapterTitle"],
         "lastScraped": datetime.datetime.now(),
         "totalChapters": book_data["totalChapters"],
-        "directory": book_data["directory"]
-        
+        "directory": book_data["directory"],
+        "imported": book_data["imported"]
     }
     
     
@@ -245,7 +247,8 @@ def create_latest(**kwargs):
             "lastChapterTitle": book_data["lastChapterTitle"],
             "lastScraped": datetime.datetime.now(),
             "totalChapters": book_data["totalChapters"],
-            "directory": book_data["directory"]
+            "directory": book_data["directory"],
+            "imported": book_data["imported"]
         }
         db=Database.get_instance()
         savedBooks=db["Books"]
@@ -320,15 +323,14 @@ def fill_existing_records():
             "lastChapterTitle": result.get("lastChapterTitle", "N/A"),
             "lastScraped": result["lastScraped"],
             "totalChapters": result["totalChapters"],
-            "directory": result["directory"]
+            "directory": result["directory"],
+            "imported": result.get("imported", False)  # Default to False if not present
         }
         if "lastChapter" in results:
             if not (str(result["lastChapter"]).isdigit()):
                 book["lastChapterID"] = -1
             else:
                 book["lastChapterID"] = int(results["lastChapter"])
-        
-        
         
         logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
 
@@ -356,7 +358,8 @@ def fix_existing_record_data_types():
             "lastChapterTitle": result["lastChapterTitle"],
             "lastScraped": result["lastScraped"],
             "totalChapters": int(result["totalChapters"]),
-            "directory": result["directory"]
+            "directory": result["directory"],
+            "imported": result["imported"]
         }
         logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
 
@@ -569,10 +572,6 @@ def get_Followed_Books(username):
                         bookData["lastScraped"].strftime('%m/%d/%Y'),
                         bookData["lastChapterTitle"]
                     ]
-                    
-                    
-                    
-                    
                     #book=[bookData["bookID"],bookData["bookName"],(bookData["lastScraped"]).strftime('%m/%d/%Y'),bookData["lastChapterTitle"]]
                     bookList.append(book)
             if (bookList):

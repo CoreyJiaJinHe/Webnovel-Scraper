@@ -321,15 +321,27 @@ async def scrapeBook(request: Request):
         if not new_access_token:
             raise credentials_exception  # 401 Unauthorized
         data = await request.json()
+        bookID= data.get("bookID")
         bookTitle = data.get("bookTitle")
-        siteHost = data.get("siteHost")
-        if not bookTitle or not siteHost:
-            return JSONResponse(content={"error": "Missing bookTitle or siteHost"}, status_code=400)
-        logging.error(f"Scraping book: {bookTitle} from {siteHost}")
+        bookAuthor=data.get("bookAuthor")
+        selectedSite = data.get("selectedSite")
+        cookie = data.get("cookie")
+        book_chapter_urls = data.get("book_chapter_urls", [])
 
+        if (not bookTitle or not selectedSite or not book_chapter_urls):
+            return JSONResponse(content={"error": "Missing bookTitle, siteHost or selectedSite"}, status_code=400)
+        if selectedSite not in [str(url) for url in book_chapter_urls]:
+            logging.error(f"Selected site {selectedSite} not in book_chapter_urls: {book_chapter_urls}")
+            return JSONResponse(content={"error": "Selected site not in book chapter URLs"}, status_code=400)
         
         
+        if not bookTitle or not selectedSite:
+            return JSONResponse(content={"error": "Missing bookTitle or siteHost"}, status_code=400)
+        logging.error(f"Scraping book: {bookTitle} from {selectedSite}")
+
+        dirLocation = await refactor.search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls)
         
+        return FileResponse(path=dirLocation, filename=f"{bookTitle}.epub", headers={"Content-Disposition": f"attachment; filename={bookTitle}.epub"}, status_code=200)
     except Exception as e:
         logging.error(f"Error in scrape_Book: {e}")
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)
