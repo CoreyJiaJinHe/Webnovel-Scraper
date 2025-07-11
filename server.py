@@ -93,6 +93,19 @@ app.add_middleware(
 #https://stackoverflow.com/questions/73234675/how-to-download-a-file-after-posting-data-using-fastapi/73240097#73240097
 #https://stackoverflow.com/questions/73410132/how-to-download-a-file-using-reactjs-with-axios-in-the-frontend-and-fastapi-in-t
 
+
+@app.get("/api/get_website_hosts/")
+def get_website_hosts():
+    """
+    Returns a list of website hosts that are supported.
+    """
+    try:
+        website_hosts = mongodb.get_website_hosts()
+        return JSONResponse(content=website_hosts)
+    except Exception as e:
+        logging.error(f"Error retrieving website hosts: {e}")
+        return JSONResponse(content={"error": "Failed to retrieve website hosts"}, status_code=500)
+
 @app.get("/api/getFiles/")
 def getFiles():
     latestBook=mongodb.getLatest()

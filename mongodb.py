@@ -48,6 +48,12 @@ def get_Total_Books():
     result=savedBooks.count_documents({})
     return result-2
 
+def get_website_hosts():
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    result = savedBooks.distinct("websiteHost", {"websiteHost": {"$nin": ["Template", "Unknown"]}})
+    return result
+
 def get_Total_Books_Organized(websiteHost):
     db=Database.get_instance()
     savedBooks=db["Books"]

@@ -14,9 +14,21 @@ function BookScraperPage() {
 
     const [checkedChapters, setCheckedChapters] = useState([]);
     const [chapterUrls, setChapterUrls] = useState([]);
-    function setSessionCookie(name, value) {
-        document.cookie = `${name}=${value}; path=/; samesite=strict`;
+    const [foxaholicUrlError, setFoxaholicUrlError] = useState("");
+    const [websiteHosts, setWebsiteHosts] = useState([])
+
+    
+    const [showFoxaholicPopup, setShowFoxaholicPopup] = useState(() => {
+    return !getSessionCookie('seenFoxaholicPopup');
+    });
+
+
+    // Foxaholic URL validation
+    function isFoxaholicUrl(url) {
+        // Accepts URLs like https://foxaholic.com/novel/...
+        return /^https?:\/\/(www\.)?foxaholic\.com\/.+/.test(url.trim());
     }
+
 
     function getSessionCookie(name) {
         const value = `; ${document.cookie}`;
@@ -25,12 +37,34 @@ function BookScraperPage() {
         return null;
     }
 
+    function setSessionCookie(name, value) {
+        document.cookie = `${name}=${value}; path=/; samesite=strict`;
+    }
     
     useEffect(() => {
         if (!getSessionCookie('seenBookScraperPopup')) {
             setShowPopup(true);
         }
+        getWebsiteHosts();
     }, []);
+
+    
+    async function getWebsiteHosts(){
+        try{
+            const response = await axios.get(`${API_URL}/get_website_hosts`, {});
+            if (response.statusText === "OK") {
+                setWebsiteHosts(response.data);
+            }
+            else {
+                console.error("Error fetching website hosts:", response);
+            }
+        }
+        catch (error) {
+            console.error("Error fetching website hosts:", error);
+            setWebsiteHosts([]);
+        }
+    }
+    
 
     const handleClosePopup = () => {
         setShowPopup(false);
@@ -103,13 +137,27 @@ function BookScraperPage() {
             console.log("Error scraping book data:", error);
         }
     }
+    
+    function handleSearchTermChange(e) {
+        const value = e.target.value;
+        setSearchTerm(value);
+        setBook(null);
+        setSearchSuccess(false);
 
+        if (selectedSite === "foxaholic") {
+            if (!isFoxaholicUrl(value)) {
+                setFoxaholicUrlError("Please enter a valid Foxaholic novel URL (e.g., https://foxaholic.com/novel/...).");
+            } else {
+                setFoxaholicUrlError("");
+            }
+        } else {
+            setFoxaholicUrlError("");
+        }
+    }
 
 
     return (
-        <>
-            <NavBar />
-            {showPopup && (
+        <>{showPopup && (
                 <div className= "book-scraper-pop-up" >
                     <div className="book-scraper-pop-up-inner">
                         <button className="book-scraper-pop-up-close-button"
@@ -126,6 +174,8 @@ function BookScraperPage() {
                     </div>
                 </div>
             )}
+            <NavBar />
+            
             <div className="scrape-background">
             <div className="scrape-container" >
                 {/* Left Panel (keep default/dark background) */}
@@ -152,24 +202,78 @@ function BookScraperPage() {
                     <div className="scrape-container-main-content">
                         <div className="scrape-main-search-card">
                             {/* Top row: dropdown + Search button */}
-                            <div className="scrape-main-dropdown-row" >
+                            <div className="scrape-main-dropdown-row" style={{ position: "relative" }}>
                                 <select className="scrape-main-search-select-dropdown"
                                     value={selectedSite}
                                     onChange={e => {
                                         setSelectedSite(e.target.value);
                                         setBook(null);
                                         setSearchSuccess(false);
+                                        // Show popup again if switching to foxaholic and not seen before
+                                        if (e.target.value === "foxaholic" && !getSessionCookie('seenFoxaholicPopup')) {
+                                            setShowFoxaholicPopup(true);
+                                        }
                                     }}>
-                                    <option value="royalroad">Royal Road</option>
-                                    {/*<option value="scribblehub">ScribbleHub</option>*/}
-                                    <option value="spacebattles">SpaceBattles</option>
-                                    <option value="novelbin">NovelBin</option>
-                                    <option value="foxaholic">Foxaholic</option>
+                                    {websiteHosts.map(host => {
+                                        // Remove everything from the last period to the end (removes .com, .net, etc.)
+                                        const lastDot = host.lastIndexOf(".");
+                                        const label = lastDot !== -1 ? host.substring(0, lastDot) : host;
+                                        return (
+                                            <option key={label} value={label}>
+                                                {label}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
-                                <button className="scrape-main-search-button"
-                                    onClick={handleSearch}>
+                                <button
+                                    className="scrape-main-search-button"
+                                    onClick={handleSearch}
+                                    disabled={selectedSite === "foxaholic"}>
                                     Search
                                 </button>
+                                {/* Foxaholic popup */}
+                                {selectedSite === "foxaholic" && showFoxaholicPopup && (
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: "110%",
+                                            left: 0,
+                                            right: 0,
+                                            background: "#fff",
+                                            border: "2px solid #d32f2f",
+                                            borderRadius: "8px",
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                            padding: "1rem",
+                                            zIndex: 100,
+                                            color: "#222",
+                                            textAlign: "center"
+                                        }}
+                                    >
+                                        <button
+                                            style={{
+                                                position: "absolute",
+                                                top: 8,
+                                                right: 12,
+                                                background: "none",
+                                                border: "none",
+                                                fontSize: "1.2rem",
+                                                color: "#d32f2f",
+                                                cursor: "pointer"
+                                            }}
+                                            aria-label="Close"
+                                            onClick={() => {
+                                                setShowFoxaholicPopup(false);
+                                                setSessionCookie('seenFoxaholicPopup', '1');
+                                            }}
+                                        >
+                                            ×
+                                        </button>
+                                        <strong style={{ color: "#d32f2f" }}>Foxaholic does not support search.</strong>
+                                        <div style={{ marginTop: "0.5rem" }}>
+                                            Please enter a valid Foxaholic novel URL below. This message will not appear again this session.
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             {/* Second row: input + Scrape button */}
                             <div className="scrape-main-select-input-row">
@@ -177,22 +281,20 @@ function BookScraperPage() {
                                     type="text"
                                     placeholder="Enter book title or URL..."
                                     value={searchTerm}
-                                    onChange={e => {
-                                        setSearchTerm(e.target.value);
-                                        setBook(null);
-                                        setSearchSuccess(false);
-                                    }}
+                                    onChange={handleSearchTermChange}
                                 />
+                                
                                 <button
-                                className="scrape-main-scrape-button"
-                                onClick={handleScrape}
-                                disabled={
-                                    !searchSuccess ||
-                                    ((selectedSite === "foxaholic" || selectedSite === "novelbin") && !cloudflareCookie)
-                                }
-                            >
-                                Scrape
-                            </button>
+                                    className="scrape-main-scrape-button"
+                                    onClick={handleScrape}
+                                    disabled={
+                                        !searchSuccess ||
+                                        ((selectedSite === "foxaholic" || selectedSite === "novelbin") && !cloudflareCookie) ||
+                                        (selectedSite === "foxaholic" && (!isFoxaholicUrl(searchTerm) || !!foxaholicUrlError))
+                                    }
+                                >
+                                    Scrape
+                                </button>
                             </div>
                             {(selectedSite === "foxaholic" || selectedSite === "novelbin") && (
                             <div className="scrape-main-cloudflare-input-row">
@@ -204,6 +306,10 @@ function BookScraperPage() {
                                     style={{ width: '100%' }}
                                 />
                             </div>
+                        )}
+                        {/* This needs to be moved.*/}
+                        {foxaholicUrlError && (
+                            <div style={{ color: "#d32f2f", marginTop: "0.5rem" }}>{foxaholicUrlError}</div>
                         )}
                         </div>
                     </div>

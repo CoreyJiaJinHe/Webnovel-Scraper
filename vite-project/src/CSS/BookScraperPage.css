@@ -2,6 +2,64 @@
 .scrape-background {
     min-height: 100vh;
     background: #181a1b;
+    width: 99vw;
+}
+
+/* Pop-up overlay */
+.book-scraper-pop-up {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pop-up inner card */
+.book-scraper-pop-up-inner {
+    background: #fff;
+    color: #222;
+    padding: 3rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+/* Pop-up close button */
+.book-scraper-pop-up-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+
+/* Full page dark background */
+.scrape-background {
+    min-height: 100vh;
+    background: #181a1b;
     width: 100vw;
 }
 
