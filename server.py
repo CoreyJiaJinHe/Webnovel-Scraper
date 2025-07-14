@@ -107,34 +107,51 @@ def get_website_hosts():
         return JSONResponse(content={"error": "Failed to retrieve website hosts"}, status_code=500)
 
 @app.get("/api/getFiles/")
-def getFiles():
-    latestBook=mongodb.getLatest()
-    #logging.warning(latestBook)
-    #logging.warning(latestBook["directory"])
-    fileLocation=latestBook["directory"]
-    fileName=latestBook["bookName"]
-    
-    #Consider improving fileName to include Ch1- Latest chapter
-    #logging.warning(fileName)
-    
-    headers={"content-disposition": f"{fileName}"}
-    
-    #This now works
-    return FileResponse(path=fileLocation,filename=fileName,headers=headers)
+async def getFiles():
+    try:
+        latestBook=mongodb.getLatest()
+        print("Before logging")
+        logging.error(latestBook)
+        print("After logging")
+        #logging.warning(latestBook["directory"])
+        fileLocation=latestBook["directory"]
+        fileName=latestBook["bookName"]
+            
+        #Consider improving fileName to include Ch1- Latest chapter
+        #logging.warning(fileName)
+        
+        headers={"content-disposition": f"{fileName}"}
+        
+        #This now works
+        return FileResponse(path=fileLocation,filename=fileName,headers=headers, status_code=200)
+    except Exception as e:
+        logging.error(f"Error retrieving files: {e}")
+        return JSONResponse(content={"error": "Failed to retrieve files"}, status_code=500)
 
 @app.get("/api/getBook/")
 async def getBook(id):
-    book=mongodb.getEpub(id)
+    try:
+        logging.error(id)
+        book=mongodb.getEpub(id)
+        
+        print("Before logging")
+        logging.error(book)
+        print("After logging")
+        fileLocation=book["directory"]
+        fileName=book["bookName"]
+        #Consider improving fileName to include Ch1- Latest chapter
+        #logging.warning(fileName)
+        
+        headers={"content-disposition": f"{fileName}"}
+        
+        #This now works
+        return FileResponse(path=fileLocation,filename=fileName,headers=headers)
+    except Exception as e:
+            logging.error(f"Error retrieving book: {e}")
+            return JSONResponse(content={"error": "Failed to retrieve book"}, status_code=500)
 
-    fileLocation=book["directory"]
-    fileName=book["bookName"]
-    #Consider improving fileName to include Ch1- Latest chapter
-    #logging.warning(fileName)
-    
-    headers={"content-disposition": f"{fileName}"}
-    
-    #This now works
-    return FileResponse(path=fileLocation,filename=fileName,headers=headers)
+
+
 
 @app.get("/api/allBooks/")
 def getAllBooks():
@@ -292,31 +309,15 @@ async def retrieveBook(request: Request, bookTitle: str):
 
 @app.get("/api/query_book/")
 async def queryBook(request: Request, searchTerm: str, siteHost:str):
-    
-    received_access_token=request.cookies.get("access_token")
-    if not received_access_token:
-        raise credentials_exception  # 401 Unauthorized
+    #Figure out a way to limit the amount of attempts per user
     try:
         logging.error(f"queryBook input: {searchTerm}")
-        new_access_token, username, userID, verifiedStatus = await authenticate_token(received_access_token)
-        if new_access_token:
-            # Pass searchTerm and siteHost to your search_page function
-            data = await refactor.search_page(searchTerm, siteHost, None)
-            logging.error(data)
-            response = JSONResponse(content=data, status_code=200)
-            response.set_cookie(
-                key="access_token",
-                value=new_access_token,
-                httponly=True,
-                samesite="lax",
-                secure=False,
-                max_age=60 * 60 * 24,  # 1 day in seconds
-                expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
-            )
-            return response
-            
-        else:
-            return JSONResponse(content={"error": "User verification failed"}, status_code=400)
+        # Pass searchTerm and siteHost to your search_page function
+        data = await refactor.search_page(searchTerm, siteHost, None)
+        logging.error(data)
+        response = JSONResponse(content=data, status_code=200)
+        
+        return response
 
     except Exception as e:
         logging.error(f"Weird error occurred: {e}")
@@ -326,35 +327,34 @@ async def queryBook(request: Request, searchTerm: str, siteHost:str):
 
 @app.post("/api/scrape_book/")
 async def scrapeBook(request: Request):
-    received_access_token=request.cookies.get("access_token")
-    if not received_access_token:
-        raise credentials_exception  # 401 Unauthorized
     try:
-        new_access_token, username, userID, verifiedStatus = await authenticate_token(received_access_token)
-        if not new_access_token:
-            raise credentials_exception  # 401 Unauthorized
         data = await request.json()
+        logging.error(data)
         bookID= data.get("bookID")
         bookTitle = data.get("bookTitle")
         bookAuthor=data.get("bookAuthor")
         selectedSite = data.get("selectedSite")
-        cookie = data.get("cookie")
+        cookie = data.get("cookie",[])
         book_chapter_urls = data.get("book_chapter_urls", [])
 
         if (not bookTitle or not selectedSite or not book_chapter_urls):
             return JSONResponse(content={"error": "Missing bookTitle, siteHost or selectedSite"}, status_code=400)
-        if selectedSite not in [str(url) for url in book_chapter_urls]:
+        if not any(selectedSite in str(url) for url in book_chapter_urls):
             logging.error(f"Selected site {selectedSite} not in book_chapter_urls: {book_chapter_urls}")
             return JSONResponse(content={"error": "Selected site not in book chapter URLs"}, status_code=400)
-        
-        
-        if not bookTitle or not selectedSite:
-            return JSONResponse(content={"error": "Missing bookTitle or siteHost"}, status_code=400)
         logging.error(f"Scraping book: {bookTitle} from {selectedSite}")
-
+        #return JSONResponse(content={"message": "Scraping started"}, status_code=200)
         dirLocation = await refactor.search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls)
         
-        return FileResponse(path=dirLocation, filename=f"{bookTitle}.epub", headers={"Content-Disposition": f"attachment; filename={bookTitle}.epub"}, status_code=200)
+        
+        fileName=bookTitle
+        #Consider improving fileName to include Ch1- Latest chapter
+        #logging.warning(fileName)
+        
+        headers={"content-disposition":  f"attachment; filename={bookTitle}.epub"}
+        #There is a potentially bad error where you get sent a file that's double its actual size?
+        #CONFIRMED: TODO: FIX THIS ERROR. It breaks the epub file.
+        return FileResponse(path=dirLocation, filename=fileName, headers=headers, status_code=200)
     except Exception as e:
         logging.error(f"Error in scrape_Book: {e}")
         return JSONResponse(content={"error": "Invalid request"}, status_code=400)

@@ -19,10 +19,12 @@ function DownloadPage() {
         }
     })
 
+
+    //Both functions appear to have broken.
     async function getFiles()
     {
     try{
-        const response=await axios.get(`${API_URL}/getFiles`,{responseType:'blob'}) //withCredentials: true
+        const response=await axios.get(`${API_URL}/getFiles/`,{responseType:'blob'}) //withCredentials: true
         console.log(response)
         if (response.statusText!=="OK"){
         console.log("Error getting files")
@@ -32,16 +34,16 @@ function DownloadPage() {
         }
         //console.log(response.headers)
         const contentDisposition=response.headers['content-disposition'];
-        //console.log(contentDisposition)
+        console.log(contentDisposition)
         //let contentDispositionx=contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
         //console.log(contentDispositionx)
-        const regex=/filename\*?=.*''(.+)/; //Regex to split string between metadata and bookTitle
-        const match = contentDisposition.match(regex);
+        //const regex=/filename\*?=.*''(.+)/; //Regex to split string between metadata and bookTitle
+        //const match = contentDisposition.match(regex);
         //console.log(match);
-        const bookTitle=match[1];
+        //const bookTitle=match[1];
         //console.log(bookTitle)
-        let fileName=bookTitle.replace(/%20|_/g, " ");
-
+        //let fileName=bookTitle.replace(/%20|_/g, " ");
+        let fileName = contentDisposition
         fileName=fileName+".epub";
         //let fileName = contentDisposition.split 
         
@@ -75,7 +77,7 @@ function DownloadPage() {
     async function getBook(id)
     {
     try{
-        const response=await axios.get(`${API_URL}/getBook`,{headers:{'bookID':{id}},responseType:'blob',withCredentials: true})
+        const response=await axios.get(`${API_URL}/getBook/`,{params:{id:id},responseType:'blob'})//,withCredentials: true})
         console.log(response)
         if (response.statusText!=="OK"){
         console.log("Error getting files")
@@ -84,8 +86,9 @@ function DownloadPage() {
         console.log("Error getting files")
         }
         const contentDisposition=response.headers['content-disposition'];
-        let fileName = contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
-        fileName=fileName.replaceAll("\"",'')
+        let fileName=contentDisposition+".epub";
+        // let fileName = contentDisposition.split(/;(.+)/)[1].split(/=(.+)/)[1]+".epub";
+        // fileName=fileName.replaceAll("\"",'')
 
         //For files. Get response type as blob > Get Data from Blob > Create Object Url > 
         //Create Element, Give Element HREF, Add Element to Page

@@ -122,16 +122,29 @@ function BookScraperPage() {
         const selectedTitles = selectedIndices.map(idx => book.chapterTitles[idx]);
         try {
             const response = await axios.post(`${API_URL}/scrape_book`, {
-                params: {
-                    term: book.bookTitle,
-                    site: selectedSite,
-                    chapters: selectedTitles,
-                    urls: selectedUrls
-                },
+                    bookID: book.bookID,
+                    bookAuthor: book.bookAuthor,
+                    bookTitle: book.bookTitle,
+                    selectedSite: selectedSite,
+                    cookie: cloudflareCookie,
+                    book_chapter_urls: selectedUrls
+                },{responseType:'blob'},{
                 withCredentials: true
             });
+            if (response.statusText === "OK" && response.data.Response !== "False") {
+                let fileName=book.bookTitle+".epub";
+
+                const file = await new Blob([response.data],{type:response.data.type})
+                const url = window.URL.createObjectURL(file);
+                const link = document.createElement('a')
+                link.href=url;
+                link.setAttribute('download',fileName)
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
             if (response.statusText !== "OK") {
-                // handle error
             }
         } catch (error) {
             console.log("Error scraping book data:", error);
@@ -155,6 +168,10 @@ function BookScraperPage() {
         }
     }
 
+    //TODO: Implement shift click functionality to select all markdown boxes for chapters.
+    //TODO: Implemention a button to select all chapters for scraping.
+    //TODO: Implement a field to change the name of the file, if none provided, default to bookTitle.
+
 
     return (
         <>{showPopup && (
@@ -176,18 +193,18 @@ function BookScraperPage() {
             )}
             <NavBar />
             
-            <div className="scrape-background">
-            <div className="scrape-container" >
+            <div className="book-scraper-background">
+            <div className="book-scraper-container" >
                 {/* Left Panel (keep default/dark background) */}
-                <div className="scrape-left-panel">
-                    <div className="scrape-book-details-panel">
+                <div className="book-scraper-left-panel">
+                    <div className="book-scraper-book-details-panel">
                         <h3 style={{ marginTop: 0 }}>Book Details</h3>
                         {book ? (
                             <ul style={{ listStyle: "none", padding: 0 }}>
                                 <li><strong>Title:</strong> {book.bookTitle}</li>
                                 <li><strong>Author:</strong> {book.bookAuthor}</li>
                                 <li><strong>Description:</strong>
-                                    <div className="reader-book-details-panel-description">
+                                    <div className="book-scraper-book-details-panel-description">
                                         {book.bookDescription}
                                     </div>
                                 </li>
@@ -199,11 +216,11 @@ function BookScraperPage() {
                     </div>
                 </div>
                 {/* Main Content */}
-                    <div className="scrape-container-main-content">
-                        <div className="scrape-main-search-card">
+                    <div className="book-scraper-container-main-content">
+                        <div className="book-scraper-main-search-card">
                             {/* Top row: dropdown + Search button */}
-                            <div className="scrape-main-dropdown-row" style={{ position: "relative" }}>
-                                <select className="scrape-main-search-select-dropdown"
+                            <div className="book-scraper-main-dropdown-row" style={{ position: "relative" }}>
+                                <select className="book-scraper-main-search-select-dropdown"
                                     value={selectedSite}
                                     onChange={e => {
                                         setSelectedSite(e.target.value);
@@ -226,40 +243,15 @@ function BookScraperPage() {
                                     })}
                                 </select>
                                 <button
-                                    className="scrape-main-search-button"
+                                    className="book-scraper-main-search-button"
                                     onClick={handleSearch}
                                     disabled={selectedSite === "foxaholic"}>
                                     Search
                                 </button>
                                 {/* Foxaholic popup */}
                                 {selectedSite === "foxaholic" && showFoxaholicPopup && (
-                                    <div
-                                        style={{
-                                            position: "absolute",
-                                            top: "110%",
-                                            left: 0,
-                                            right: 0,
-                                            background: "#fff",
-                                            border: "2px solid #d32f2f",
-                                            borderRadius: "8px",
-                                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                                            padding: "1rem",
-                                            zIndex: 100,
-                                            color: "#222",
-                                            textAlign: "center"
-                                        }}
-                                    >
-                                        <button
-                                            style={{
-                                                position: "absolute",
-                                                top: 8,
-                                                right: 12,
-                                                background: "none",
-                                                border: "none",
-                                                fontSize: "1.2rem",
-                                                color: "#d32f2f",
-                                                cursor: "pointer"
-                                            }}
+                                    <div className="book-scraper-foxaholic-popup">
+                                        <button className="book-scraper-foxaholic-popup-close-button"
                                             aria-label="Close"
                                             onClick={() => {
                                                 setShowFoxaholicPopup(false);
@@ -276,7 +268,7 @@ function BookScraperPage() {
                                 )}
                             </div>
                             {/* Second row: input + Scrape button */}
-                            <div className="scrape-main-select-input-row">
+                            <div className="book-scraper-main-select-input-row">
                                 <input
                                     type="text"
                                     placeholder="Enter book title or URL..."
@@ -285,7 +277,7 @@ function BookScraperPage() {
                                 />
                                 
                                 <button
-                                    className="scrape-main-scrape-button"
+                                    className="book-scraper-main-scrape-button"
                                     onClick={handleScrape}
                                     disabled={
                                         !searchSuccess ||
@@ -297,7 +289,7 @@ function BookScraperPage() {
                                 </button>
                             </div>
                             {(selectedSite === "foxaholic" || selectedSite === "novelbin") && (
-                            <div className="scrape-main-cloudflare-input-row">
+                            <div className="book-scraper-main-cloudflare-input-row">
                                 <input
                                     type="text"
                                     placeholder="Enter Cloudflare cookie..."
@@ -314,9 +306,20 @@ function BookScraperPage() {
                         </div>
                     </div>
                 {/* Right Panel: Chapter List */}
-                    <div className="scrape-right-panel">
-                        <div className="scrape-right-chapter-list-panel">
-                            <h2>Chapters</h2>
+                    <div className="book-scraper-right-panel">
+                        <div className="book-scraper-right-chapter-list-panel">
+                            <h2 style={{ display: "inline-block", marginRight: "1rem" }}>Chapters</h2>
+                            <button
+                                type="button"
+                                style={{ fontSize: "1rem", padding: "0.3rem 0.8rem", marginBottom: "0.5rem", color:'white'}}
+                                onClick={() => {
+                                    if (book && Array.isArray(book.chapterTitles)) {
+                                        setCheckedChapters(new Array(book.chapterTitles.length).fill(true));
+                                    }
+                                }}
+                            >
+                                Select All
+                            </button>
                             {book && Array.isArray(book.chapterTitles) ? (
                                 <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
                                 {book.chapterTitles.map((chapter, idx) => (

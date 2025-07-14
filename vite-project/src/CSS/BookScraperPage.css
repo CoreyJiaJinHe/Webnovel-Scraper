@@ -57,14 +57,14 @@
 
 
 /* Full page dark background */
-.scrape-background {
+.book-scraper-background {
     min-height: 100vh;
     background: #181a1b;
     width: 100vw;
 }
 
 /* Main container for left panel, main content, and right panel */
-.scrape-container {
+.book-scraper-container {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
@@ -79,7 +79,7 @@
 }
 
 /* Left panel */
-.scrape-left-panel {
+.book-scraper-left-panel {
     width: 320px;
     display: flex;
     flex-direction: column;
@@ -90,7 +90,7 @@
 }
 
 /* Book details card */
-.scrape-book-details-panel {
+.book-scraper-book-details-panel {
     background: #23232b;
     border-radius: 8px;
     padding: 1rem;
@@ -100,7 +100,7 @@
 }
 
 /* Main content container */
-.scrape-container-main-content {
+.book-scraper-container-main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -111,7 +111,7 @@
 }
 
 /* Search card */
-.scrape-main-search-card {
+.book-scraper-main-search-card {
     background: #fff;
     border: 2px solid #111;
     border-radius: 8px;
@@ -123,7 +123,7 @@
 }
 
 /* Top row: dropdown + Search button */
-.scrape-main-dropdown-row {
+.book-scraper-main-dropdown-row {
     display: flex;
     align-items: center;
     width: 100%;
@@ -132,7 +132,7 @@
 }
 
 /* Dropdown */
-.scrape-main-search-select-dropdown {
+.book-scraper-main-search-select-dropdown {
     background-color: #fff;
     color: #222;
     border: 1.5px solid #888;
@@ -147,7 +147,7 @@
 
 
 /* Move Search button to the right, center its text */
-.scrape-main-search-button {
+.book-scraper-main-search-button {
     margin-left: auto;
     margin-right: 20px;
     display: flex;
@@ -169,7 +169,7 @@
 }
 
 /* Bottom row: input + Scrape button */
-.scrape-main-select-input-row {
+.book-scraper-main-select-input-row {
     display: flex;
     align-items: center;
     width: 100%;
@@ -177,7 +177,7 @@
 }
 
 /* Input field stays left, button moves right */
-.scrape-main-select-input-row input {
+.book-scraper-main-select-input-row input {
     flex: 1 1 auto;
     min-width: 0;
     max-width: 60%;
@@ -191,7 +191,7 @@
 }
 
 /* Move Scrape button to the right, center its text */
-.scrape-main-scrape-button {
+.book-scraper-main-scrape-button {
     margin-left: auto;
     margin-right: 20px;
     display: flex;
@@ -212,19 +212,19 @@
     box-sizing: border-box;
 }
 
-.scrape-main-scrape-button:disabled {
+.book-scraper-main-scrape-button:disabled {
     background-color: #eee;
     cursor: not-allowed;
     opacity: 0.6;
 }
 
 
-.scrape-main-cloudflare-input-row{
+.book-scraper-main-cloudflare-input-row{
     margin-top: 0.5rem;
     width: 100%;
 }
 
-.scrape-main-cloudflare-input-row input {
+.book-scraper-main-cloudflare-input-row input {
     flex: 1 1 auto;
     min-width: 0;
     max-width: 60%;
@@ -238,7 +238,7 @@
 }
 
 /* Right panel styling */
-.scrape-right-panel {
+.book-scraper-right-panel {
     width: 340px;
     display: flex;
     flex-direction: column;
@@ -250,7 +250,7 @@
 }
 
 /* Chapter list panel styling */
-.scrape-right-chapter-list-panel {
+.book-scraper-right-chapter-list-panel {
     background: #fff;
     border-radius: 8px;
     padding: 1.5rem 1rem;
@@ -261,12 +261,12 @@
 }
 
 /* Chapter listing styling */
-.scrape-right-chapter-list-panel ul {
+.book-scraper-right-chapter-list-panel ul {
     padding: 0;
     margin: 0;
 }
 
-.scrape-right-chapter-list-panel li {
+.book-scraper-right-chapter-list-panel li {
     display: flex;
     align-items: center;
     background: #23232b;
@@ -278,11 +278,11 @@
     transition: background 0.2s;
 }
 
-.scrape-right-chapter-list-panel li:last-child {
+.book-scraper-right-chapter-list-panel li:last-child {
     margin-bottom: 0;
 }
 
-.scrape-right-chapter-list-panel input[type="checkbox"] {
+.book-scraper-right-chapter-list-panel input[type="checkbox"] {
     margin-right: 1rem;
     accent-color: #0078d4;
     width: 1.1rem;
@@ -290,6 +290,61 @@
 }
 
 /* Add spacing below the Chapters heading */
-.scrape-right-chapter-list-panel h2 {
+.book-scraper-right-chapter-list-panel h2 {
     margin-bottom: 1rem;
 }
+.book-scraper-foxaholic-popup {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 2px solid #d32f2f;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    padding: 1rem;
+    z-index: 100;
+    color: #222;
+    text-align: center;
+}
+
+.book-scraper-foxaholic-popup-close-button {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #d32f2f;
+    cursor: pointer;
+}
+/* 
+.book-scraper-foxaholic-popup{
+    style={{
+                                            position: "absolute",
+                                            top: "110%",
+                                            left: 0,
+                                            right: 0,
+                                            background: "#fff",
+                                            border: "2px solid #d32f2f",
+                                            borderRadius: "8px",
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                                            padding: "1rem",
+                                            zIndex: 100,
+                                            color: "#222",
+                                            textAlign: "center"
+                                        }}
+}
+
+.book-scraper-foxaholic-popup-close-button{
+    style={{
+                                                position: "absolute",
+                                                top: 8,
+                                                right: 12,
+                                                background: "none",
+                                                border: "none",
+                                                fontSize: "1.2rem",
+                                                color: "#d32f2f",
+                                                cursor: "pointer"
+                                            }}
+} */

@@ -381,7 +381,7 @@ class RoyalRoadScraper():
         
         self.write_order_of_contents(book_title,chapter_metadata)
         
-    async def remove_junk_links(self, chapter_content):    
+    async def remove_junk_links(self, chapter_content):
         hyperlinks=chapter_content.find_all('a',{'class':'link'})
         for link in hyperlinks:
             if ("emoji" in link):
@@ -401,27 +401,34 @@ class RoyalRoadScraper():
     
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
     async def process_new_chapter_non_saved(self, chapter_url, book_title,chapter_id,image_count):
-        soup = await self.get_soup(chapter_url)
-        chapter_title = await self.fetch_chapter_title(soup)
-        chapter_content = await self.fetch_chapter_content(soup)
-        chapter_content = await self.remove_junk_links(chapter_content)
+        try:
+            soup = await self.get_soup(chapter_url)
+            chapter_title = await self.fetch_chapter_title(soup)
+            chapter_content = await self.fetch_chapter_content(soup)
+            chapter_content = await self.remove_junk_links(chapter_content)
+            #logging.warning(chapter_content)
+            #logging.warning(chapter_title)
+            currentImageCount=image_count
+            # Process images
+            images=chapter_content.find_all('img')
+            images=[image['src'] for image in images]
+            logging.warning("The warning below is for images.")
+            logging.warning(images)
+            #Do not save these images permanent. Always overwrite.
+            image_dir = f"./books/raw/temporary/images/"
+            if images:
+                image_count = await self.save_images_in_chapter(images, image_dir, image_count)
+                for img,image in zip(chapter_content.find_all('img'),images):
+                    img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                    currentImageCount+=1
+            
+            file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+            
+            return file_chapter_title, currentImageCount, chapter_content
+        except Exception as e:
+            errorText=f"Failed to process new chapter. Function process_new_chapter_non_saved Error: {e}"
+            write_to_logs(errorText)
         
-        currentImageCount=image_count
-        # Process images
-        images=chapter_content.find_all('img')
-        images=[image['src'] for image in images]
-        logging.warning(images)
-        #Do not save these images permanent. Always overwrite.
-        image_dir = f"./books/raw/temporary/images/"
-        if images:
-            image_count = await self.save_images_in_chapter(images, image_dir, image_count)
-            for img,image in zip(chapter_content.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
-                currentImageCount+=1
-        
-        file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
-        
-        return file_chapter_title, currentImageCount, chapter_content
     
 
     async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count):
@@ -564,7 +571,10 @@ class RoyalRoadEpubProducer():
 
     def create_epub_chapter(self, chapter_title,file_chapter_title,chapter_content, css):
         try:
-            chapter_content=chapter_content.encode('ascii')
+
+            if not isinstance(chapter_content, str):
+                chapter_content = str(chapter_content)
+            #chapter_content=chapter_content.encode('ascii')
             chapter=epub.EpubHtml(title=chapter_title,file_name=file_chapter_title+'.xhtml',lang='en')
             chapter.set_content(chapter_content)
             chapter.add_item(css)
@@ -641,7 +651,9 @@ class RoyalRoadEpubProducer():
 
     
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
-    async def produce_custom_epub(self, new_epub, css, book_title, book_chapter_urls):
+    #TODO: Fix this. This is currently broken with an 'NoneType' error.
+    
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls):
         if not book_chapter_urls:
             errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
@@ -651,24 +663,52 @@ class RoyalRoadEpubProducer():
         
         toc_list = []
         image_counter=0
-        for chapter_url in book_chapter_urls:
-            soup = await rrScraper.get_soup(chapter_url)
-            chapter_id = await self.extract_chapter_ID(chapter_url)
-            chapter_title = await rrScraper.fetch_chapter_title(soup)
-            file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
-            
-            chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
-            images=chapter_content_soup.find_all('img')
-            images=[image['src'] for image in images]
-            image_dir = f"./books/raw/temporary/"
-            if images:
-                image_count=await self.retrieve_images_in_chapter(images, image_dir,image_count,new_epub)
-            
-            chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)
-            toc_list.append(chapter)
-            new_epub.add_item(chapter)
+        current_image_counter=0
+        try:
+            for chapter_url in book_chapter_urls:
+                logging.error(chapter_url)
+                soup = await rrScraper.get_soup(chapter_url)
+                #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
+                
+                def extract_chapter_ID(chapter_url):
+                    import re
+                    match = re.search(r'/(\d+)/?$', chapter_url)
+                    if match:
+                        return match.group(1)
 
+                chapter_id = extract_chapter_ID(chapter_url)
+                chapter_title = await rrScraper.fetch_chapter_title(soup)
+                chapter_title = remove_invalid_characters(chapter_title)
+                # logging.warning(chapter_id)
+                # logging.warning(chapter_title)
+                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+                #logging.warning(chapter_content)
+                #chapter_conte_soup appears to not be working?
+                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+                #write_to_logs(str(chapter_content_soup).encode("ascii", "ignore").decode("ascii"))
+                #logging.error(chapter_content_soup)
+                images=chapter_content_soup.find_all('img')
+                images=[image['src'] for image in images]
+                image_dir = f"./books/raw/temporary/"
+                
+                #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
+                if images:
+                    current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
+                
+                logging.warning(chapter_title)
+                logging.warning(file_chapter_title)
+                
+                #This function is not working for some odd reason.
+                chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
+                logging.error("This should be a chapter object below this line.")
+                logging.error(chapter)
+                toc_list.append(chapter)
+                new_epub.add_item(chapter)
+        except Exception as e:
+            errorText=f"Failed to process chapter for custom epub. Function produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
         dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
         if os.path.exists(dirLocation):
             try:
                 cover_image= Image.open(dirLocation)
@@ -693,10 +733,6 @@ class RoyalRoadEpubProducer():
         new_epub.add_item(epub.EpubNav())
 
         try:
-            dirLocation="./books/epubs/temporary/"+book_title
-            if not check_directory_exists(dirLocation):
-                make_directory(dirLocation)
-            
             dirLocation="./books/epubs/temporary/"+book_title+".epub"
             if (check_directory_exists(dirLocation)):
                 os.remove(dirLocation)
@@ -2501,10 +2537,10 @@ async def main_interface(url, cookie):
                 errorText=f"Failed to create new_epub object. Error: {e}"
                 write_to_logs(errorText)
                 return
-        
-        new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor)
-        
         bookID=remove_invalid_characters(bookID)
+        new_epub=await instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css)
+        
+        
         
         def ensure_bookid_prefix(bookID, prefix):
             """
@@ -3371,8 +3407,8 @@ def is_image_duplicate(epub_image_bytes, directory):
 async def search_page(input: str, selectedSite: str, cookie):
     
     if selectedSite=="royalroad":
-            scraper=RoyalRoadScraper()
-            prefix="rr"
+        scraper=RoyalRoadScraper()
+        prefix="rr"
     elif selectedSite=="spacebattles":
         scraper=SpaceBattlesScraper()
         prefix="sb"
@@ -3418,6 +3454,7 @@ async def search_page(input: str, selectedSite: str, cookie):
         url=await scraper.query_royalroad(input.strip(), None)
         
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID= await scraper.fetch_novel_data(url)
+    bookID=remove_invalid_characters(bookID)
     listofChapterTitles=await scraper.fetch_chapter_title_list(url)
     listofChapters = await scraper.fetch_chapter_list(url)
     logging.warning(listofChapters)
@@ -3461,7 +3498,7 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
     style=open("style.css","r").read()
     default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
     
-    async def instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css):
+    async def instantiate_new_epub(bookID,bookTitle,bookAuthor):
         try:
             new_epub=epub.EpubBook()
             new_epub.set_identifier(bookID)
@@ -3474,11 +3511,13 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
             errorText=f"Failed to create new_epub object. Error: {e}"
             write_to_logs(errorText)
             return
-        
-    new_epub=instantiate_new_epub(bookID,bookTitle,bookAuthor,default_css)
     
+    bookID=remove_invalid_characters(bookID)
+    new_epub=await instantiate_new_epub(bookID,bookTitle,bookAuthor)
+    
+
     dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls)
-    
+    logging.error(dirLocation)    
     return dirLocation
 # scraper = SpaceBattlesScraper()
 # url="https://forums.spacebattles.com/threads/the-new-normal-a-pok%C3%A9mon-elite-4-si.1076757/threadmarks?"

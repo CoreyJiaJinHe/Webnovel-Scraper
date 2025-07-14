@@ -2,6 +2,10 @@ from pymongo import MongoClient
 import os
 import datetime
 import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -40,7 +44,10 @@ def getLatest():
     savedBooks=db["Books"]
     result=savedBooks.find_one({"bookID":"-1"})
     logging.warning(result)
+    logging.error(result)
     return result
+
+#logging.warning(getLatest())
 
 def get_Total_Books():
     db=Database.get_instance()
@@ -122,8 +129,11 @@ def getEpub(bookID):
     db=Database.get_instance()
     savedBooks=db["Books"]
     results=savedBooks.find_one({"bookID":bookID})
-    directory=results["directory"]
-    return directory
+    book = {
+        "directory" :results["directory"],
+        "bookName" :results["bookName"]
+    }
+    return book
 
 def get_Entry_Via_Title(bookTitle):
     db=Database.get_instance()
@@ -259,9 +269,9 @@ def create_latest(**kwargs):
         db=Database.get_instance()
         savedBooks=db["Books"]
         if (check_existing_book("-1")):
-            savedBooks.replace_one({"bookID": "-1"}, book)
+            logging.warning(savedBooks.replace_one({"bookID": "-1"}, book))
         else:
-            savedBooks.insert_one(book)
+            logging.warning(savedBooks.insert_one(book))
 
 
 
