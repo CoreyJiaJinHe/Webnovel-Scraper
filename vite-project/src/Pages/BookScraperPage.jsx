@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NavBar from '../components/NavBar.jsx';
 
 import axios from "axios";
@@ -17,7 +17,8 @@ function BookScraperPage() {
     const [foxaholicUrlError, setFoxaholicUrlError] = useState("");
     const [websiteHosts, setWebsiteHosts] = useState([])
 
-    
+    const [lastCheckedIndex, setLastCheckedIndex] = useState(null);
+
     const [showFoxaholicPopup, setShowFoxaholicPopup] = useState(() => {
     return !getSessionCookie('seenFoxaholicPopup');
     });
@@ -171,7 +172,25 @@ function BookScraperPage() {
     //TODO: Implement shift click functionality to select all markdown boxes for chapters.
     //TODO: Implemention a button to select all chapters for scraping.
     //TODO: Implement a field to change the name of the file, if none provided, default to bookTitle.
+    // Checkbox handler with shift-click support
 
+
+    
+    function handleChapterCheckboxChange(idx, e) {
+        
+        const shiftKey = window.event ? window.event.shiftKey : false;
+        let updated = [...checkedChapters];
+        if (shiftKey && lastCheckedIndex !== null) {
+            const [start, end] = [lastCheckedIndex, idx].sort((a, b) => a - b);
+            for (let i = start; i <= end; i++) {
+                updated[i] = true;
+            }
+        } else {
+            updated[idx] = !updated[idx];
+        }
+        setCheckedChapters(updated);
+        setLastCheckedIndex(idx);
+    }
 
     return (
         <>{showPopup && (
@@ -311,14 +330,15 @@ function BookScraperPage() {
                             <h2 style={{ display: "inline-block", marginRight: "1rem" }}>Chapters</h2>
                             <button
                                 type="button"
-                                style={{ fontSize: "1rem", padding: "0.3rem 0.8rem", marginBottom: "0.5rem", color:'white'}}
+                                style={{ fontSize: "1rem", padding: "0.3rem 0.8rem", marginBottom: "0.5rem", color: 'white' }}
                                 onClick={() => {
                                     if (book && Array.isArray(book.chapterTitles)) {
-                                        setCheckedChapters(new Array(book.chapterTitles.length).fill(true));
+                                        const allChecked = checkedChapters.every(Boolean);
+                                        setCheckedChapters(new Array(book.chapterTitles.length).fill(!allChecked));
                                     }
                                 }}
                             >
-                                Select All
+                                {book && Array.isArray(book.chapterTitles) && checkedChapters.every(Boolean) ? "Unselect All" : "Select All"}
                             </button>
                             {book && Array.isArray(book.chapterTitles) ? (
                                 <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
@@ -327,11 +347,7 @@ function BookScraperPage() {
                                         <input
                                             type="checkbox"
                                             checked={checkedChapters[idx] || false}
-                                            onChange={() => {
-                                                const updated = [...checkedChapters];
-                                                updated[idx] = !updated[idx];
-                                                setCheckedChapters(updated);
-                                            }}
+                                            onChange={e => handleChapterCheckboxChange(idx, e)}
                                         />
                                         {chapter}
                                     </li>

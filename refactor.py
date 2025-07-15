@@ -3473,6 +3473,10 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
     if selectedSite=="royalroad":
         epub_producer=RoyalRoadEpubProducer()
         prefix="rr"
+        
+    #TODO: Make the rest of it work by copying the royalroad method
+    
+    
     # elif selectedSite=="spacebattles":
     #     epub_producer=SpaceBattlesEpubProducer()
     #     prefix="sb"

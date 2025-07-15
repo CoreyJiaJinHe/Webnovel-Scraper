@@ -353,7 +353,7 @@ async def scrapeBook(request: Request):
         
         headers={"content-disposition":  f"attachment; filename={bookTitle}.epub"}
         #There is a potentially bad error where you get sent a file that's double its actual size?
-        #CONFIRMED: TODO: FIX THIS ERROR. It breaks the epub file.
+        #CONFIRMED: TODO: FIXED FIX THIS ERROR. It breaks the epub file.
         return FileResponse(path=dirLocation, filename=fileName, headers=headers, status_code=200)
     except Exception as e:
         logging.error(f"Error in scrape_Book: {e}")
