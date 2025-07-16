@@ -18,11 +18,19 @@ export function LoginPage() {
   const [username, setUserName]=useState("");
   const [password, setPassword]=useState("");
   const [confirmPassword, setConfirmPassword]=useState("");
-  const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn} = useUser();
+  const {isDeveloper,setIsDeveloper,isLoggedIn, setIsLoggedIn, recentAttempt, setRecentAttempt} = useUser();
   const [redirectCountdown, setRedirectCountdown] = useState(2);
   
+
   useEffect(() => {
-      tokenLogin();
+      if (!isLoggedIn) {
+          if (!document.cookie.includes("recentAttempt=true")) {
+              // Cookie not present, attempt backend call
+              tokenLogin();
+              document.cookie = "recentAttempt=true; path=/";
+              setRecentAttempt(true);
+          }
+      }
   }, []);
 
   const navigate = useNavigate();

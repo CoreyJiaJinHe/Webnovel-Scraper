@@ -15,18 +15,29 @@ export function FollowListPage() {
   const [bookList, setBookList] = useState([]);
 
   const {
-    isLoggedIn, setIsLoggedIn,
-    username, setUserName,
-    verifiedState, setVerifiedState,
-    logout
-  } = useUser();
+        isLoggedIn, setIsLoggedIn,
+        username, setUserName,
+        verifiedState, setVerifiedState,
+        logout,
+        isDeveloper, setIsDeveloper,
+        recentAttempt, setRecentAttempt} = useUser();
 
 
   const navigate = useNavigate();
-
+  
   useEffect(() => {
-    authenticateAndPopulate();
-  }, []);
+    if (!isLoggedIn) {
+        if (document.cookie.includes("recentAttempt=true")) {
+            // Cookie is present, skip backend call and redirect
+            navigate("/react/LoginPage/");
+        } else {
+            // Cookie not present, attempt backend call
+            authenticateAndPopulate();
+            document.cookie = "recentAttempt=true; path=/";
+            setRecentAttempt(true);
+        }
+    }
+}, []);
 
   //Cookie is not accessible to JS which is why this and the userpage is broken
   async function authenticateAndPopulate() {

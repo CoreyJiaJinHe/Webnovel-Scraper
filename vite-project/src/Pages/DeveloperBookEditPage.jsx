@@ -261,11 +261,11 @@ function DeveloperBookEditPage() {
     return (
         <>
             <NavBar />
-            <div className="scrape-background">
-                <div className="scrape-container">
+            <div className="book-edit-background">
+                <div className="book-edit-container">
                     {/* Left Panel: Book Details */}
-                    <div className="scrape-left-panel">
-                        <div className="scrape-book-details-panel">
+                    <div className="book-edit-left-panel">
+                        <div className="book-edit-book-details-panel">
                             <h3 style={{ marginTop: 0 }}>Book Details</h3>
                             {book ? (
                                 <ul style={{ listStyle: "none", padding: 0 }}>
@@ -299,7 +299,7 @@ function DeveloperBookEditPage() {
                                     autoComplete="off"
                                 />
                                 <button
-                                    className="scrape-main-search-button"
+                                    className="book-edit-main-search-button"
                                     onClick={() => handleSearch(searchTerm)}
                                     style={{ marginLeft: 'auto', marginRight: 20 }}>
                                     Search
@@ -323,13 +323,30 @@ function DeveloperBookEditPage() {
                         </div>
                     </div>
                     {/* Right Panel: Chapter List */}
-                    <div className="scrape-right-panel">
-                        <div className="scrape-right-chapter-list-panel">
-                            <h2>Chapters</h2>
-                            {orderOfContentsTitles.length > 0 ? (
-                                <><button className="book-edit-delete-button" style={{ marginBottom: '1rem' }} onClick={handleDelete} disabled={!checkedChapters.some(Boolean)}>
+                    <div className="book-edit-right-panel">
+                        <div className="book-edit-right-chapter-list-panel">
+                            <div className="book-edit-right-chapter-list-panel-heading-row"
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                                <h2 style={{
+                                    fontSize: "1.5rem",
+                                    fontWeight: "bold",
+                                    color: "#222",
+                                    letterSpacing: "0.5px",
+                                    margin: 0
+                                }}>Chapters</h2>
+                                {orderOfContentsTitles.length > 0 && (
+                                    <button
+                                        className="book-edit-delete-button"
+                                        onClick={handleDelete}
+                                        disabled={!checkedChapters.some(Boolean)}
+                                        style={{ marginLeft: "1rem" }}
+                                    >
                                         Delete Selected
                                     </button>
+                                )}
+                            </div>
+                            {orderOfContentsTitles.length > 0 ? (
+                                <>
                                     <ul className="book-edit-chapter-list-items">
                                     {orderOfContentsTitles.map((chapter, idx) => (
                                         <li

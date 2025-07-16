@@ -1,3 +1,46 @@
+/* Full page dark background */
+.book-edit-background {
+    min-height: 100vh;
+    background: #181a1b;
+    width: 99vw;
+}
+
+.book-edit-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 2.5rem;
+    gap: 6rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Left panel */
+.book-edit-left-panel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 400px;
+    min-width: 260px;
+    margin: 0;
+}
+
+/* Book details card */
+.book-edit-book-details-panel {
+    background: #23232b;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    margin-top: 2.5rem;
+}
+
 .book-edit-container-main-content{
     flex: 1;
     display: flex;
@@ -62,6 +105,26 @@
     min-width: 100%; /* Ensures it matches the width of the parent */
     box-sizing: border-box;
 }
+.book-edit-main-search-button {
+    margin-left: auto;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    max-width: 180px;
+    text-align: center;
+    background-color: #fff;
+    color: #222;
+    border: 1.5px solid #888;
+    border-radius: 4px;
+    outline: none;
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    box-sizing: border-box;
+}
 
 .book-edit-search-recommendation-item {
     padding: 0.5rem 1rem;
@@ -74,6 +137,30 @@
     border-bottom: none;
 }
 
+/* Right panel styling */
+.book-edit-right-panel {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 400px;
+    min-width: 260px;
+    margin: 0;
+    margin-top: 2.5rem;
+}
+
+/* Chapter list panel styling */
+.book-edit-right-chapter-list-panel {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem 1rem;
+    color: #222;
+    margin-bottom: 1rem;
+    min-height: 200px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+
 .book-edit-chapter-list-items {
     list-style: none;
     padding: 0;
@@ -83,7 +170,13 @@
 
 /* Default chapter list item */
 .book-edit-chapter-list-items li {
-    color: #eee; /* Default text color */
+    color: #222; /* Black text for readability */
+    background: #fff;
+    font-size: 1rem;
+    padding: 0.45rem 0.65rem; /* Reduced padding */
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #d3d3d3; /* Add subtle border */
     transition: background 0.2s, color 0.2s;
 }
 
@@ -105,3 +198,4 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+

@@ -16,12 +16,23 @@ export function UserPage() {
   const {
     isLoggedIn, setIsLoggedIn,
     username, setUsername,
-    verifiedState, setVerifiedState
+    verifiedState, setVerifiedState,
+    recentAttempt, setRecentAttempt
   } = useUser(); 
 
   useEffect(() => {
-      tokenLogin();
-  }, []);
+        if (!isLoggedIn) {
+            // Only attempt login once per session
+            if (!document.cookie.includes("recentAttempt=true")) {
+                tokenLogin();
+                document.cookie = "recentAttempt=true; path=/";
+                setRecentAttempt(true);
+            }
+            else{
+              navigate("/react/LoginPage/");
+            }
+        }
+    }, []);
 
   async function tokenLogin(){
       try {

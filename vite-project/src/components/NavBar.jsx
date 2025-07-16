@@ -14,7 +14,8 @@ function Navbar(){
         username, setUserName,
         verifiedState, setVerifiedState,
         logout,
-        isDeveloper, setIsDeveloper} = useUser();
+        isDeveloper, setIsDeveloper,
+        recentAttempt, setRecentAttempt} = useUser();
 
     const navigate = useNavigate();
 
@@ -25,8 +26,13 @@ function Navbar(){
 
     useEffect(() => {
         if (!isLoggedIn) {
-          tokenLogin();
-      }
+            // Only attempt login once per session
+            if (!document.cookie.includes("recentAttempt=true")) {
+                tokenLogin();
+                document.cookie = "recentAttempt=true; path=/";
+                setRecentAttempt(true);
+            }
+        }
     }, []);
 
     async function tokenLogin(){

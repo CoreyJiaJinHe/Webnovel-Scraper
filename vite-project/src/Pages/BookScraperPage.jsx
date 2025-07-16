@@ -19,6 +19,8 @@ function BookScraperPage() {
 
     const [lastCheckedIndex, setLastCheckedIndex] = useState(null);
 
+    const [customBookName, setCustomBookName] = useState('');
+
     const [showFoxaholicPopup, setShowFoxaholicPopup] = useState(() => {
     return !getSessionCookie('seenFoxaholicPopup');
     });
@@ -134,7 +136,9 @@ function BookScraperPage() {
             });
             if (response.statusText === "OK" && response.data.Response !== "False") {
                 let fileName=book.bookTitle+".epub";
-
+                if (customBookName.trim() !== '') {
+                    fileName = customBookName + ".epub";
+                }
                 const file = await new Blob([response.data],{type:response.data.type})
                 const url = window.URL.createObjectURL(file);
                 const link = document.createElement('a')
@@ -322,6 +326,15 @@ function BookScraperPage() {
                         {foxaholicUrlError && (
                             <div style={{ color: "#d32f2f", marginTop: "0.5rem" }}>{foxaholicUrlError}</div>
                         )}
+                        </div>
+                        <div className="book-scraper-main-search-card" style={{ marginTop: "1rem", color:"black" }}>
+                            <h2>Change File Name</h2>
+                            <p>Current File Name: {(book && book.bookTitle) ? book.bookTitle : "Does not exist"}</p>
+                            <input type ="text" placeholder="Optional: Change file name"
+                                value={customBookName}
+                                style={{ width: '100%', marginBottom: '0.5rem', marginTop: '0.5rem' }}
+                                onChange={e => setCustomBookName(e.target.value)}
+                            />
                         </div>
                     </div>
                 {/* Right Panel: Chapter List */}

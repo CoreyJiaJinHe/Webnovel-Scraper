@@ -12,6 +12,18 @@ export function UserProvider({ children }) {
     const [username, setUserName] = useState("");
     const [verifiedState, setVerifiedState] = useState(false);
 
+    const [recentAttempt, setRecentAttempt] = useState(
+        document.cookie.includes("recentAttempt=true")
+    );
+
+    useEffect(() => {
+        // Set or remove the recentAttempt cookie for this session only
+        if (recentAttempt) {
+            document.cookie = "recentAttempt=true; path=/";
+        } else {
+            document.cookie = "recentAttempt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+    }, [recentAttempt]);
 
     useEffect(() => {
         const loginTime = localStorage.getItem("loginTime");
@@ -30,6 +42,7 @@ export function UserProvider({ children }) {
             setIsLoggedIn(false);
             setIsDeveloper(false);
             logout();
+            setRecentAttempt(false);
         }
     }, []);
     
@@ -38,6 +51,7 @@ export function UserProvider({ children }) {
         setIsDeveloper(false);
         setUserName("");
         setVerifiedState(false);
+        setRecentAttempt(false);
         localStorage.removeItem("username");
         localStorage.removeItem("verifiedStatus");
         localStorage.removeItem("isDeveloper");
@@ -48,6 +62,8 @@ export function UserProvider({ children }) {
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        document.cookie = "recentAttempt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
         try{
             const response=await axios.post(`${API_URL}/logout/`,{},{withCredentials:true});
             console.log("Logout response:",response);
@@ -66,7 +82,8 @@ export function UserProvider({ children }) {
             isDeveloper, setIsDeveloper, 
             isLoggedIn, setIsLoggedIn, logout,
             username, setUserName,
-            verifiedState, setVerifiedState
+            verifiedState, setVerifiedState,
+            recentAttempt, setRecentAttempt,
             }}>
             {children}
         </UserContext.Provider>
