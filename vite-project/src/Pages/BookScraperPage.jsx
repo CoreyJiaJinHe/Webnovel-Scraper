@@ -32,6 +32,138 @@ function BookScraperPage() {
         return /^https?:\/\/(www\.)?foxaholic\.com\/.+/.test(url.trim());
     }
 
+    const [searchConditions, setSearchConditions] = useState({});
+
+    
+
+    const royalroadSortOptions = [
+        { key: "popularity", label: "Popularity" },
+        { key: "relevance", label: "Relevance" }
+    ];
+
+    const spacebattlesSortOptions = [
+        { key: "sort_title", label: "Title" },
+        { key: "sort_reply_count", label: "Reply Count" },
+        { key: "sort_view_count", label: "View Count" },
+        { key: "sort_last_threadmark", label: "Last Threadmark" },
+        { key: "sort_watchers", label: "Watchers" }
+    ];
+    //TODO: FINISH THIS
+    //Implement search conditions
+
+    
+    const enforceTimer = useRef(null);
+    const pendingConditions = useRef(null);
+
+    // Debounced enforcement for word count min/max
+    function enforceWordCountLimits(conditions) {
+        const updated = { ...conditions };
+        const min = Math.max(0, parseInt(updated["word_count_min"] || "0", 10));
+        let max = parseInt(updated["word_count_max"] || "0", 10);
+
+        updated["word_count_min"] = min.toString();
+        if (max < min) {
+            updated["word_count_max"] = min.toString();
+        } else {
+            updated["word_count_max"] = max.toString();
+        }
+        setSearchConditions(updated);
+    }
+
+    function handleConditionChange(key, value) {
+        setSearchConditions(prev => {
+            const updated = { ...prev };
+
+            if (key === "word_count_min") {
+                updated["word_count_min"] = value;
+            } else if (key === "word_count_max") {
+                updated["word_count_max"] = value;
+            } else if (key === "threadmark_status") {
+                if (value) {
+                    updated[key] = value;
+                } else {
+                    delete updated[key];
+                }
+            } else {
+                if (value === true) {
+                    updated[key] = true;
+                } else {
+                    delete updated[key];
+                }
+            }
+
+            // Debounce enforcement for word count min/max
+            if (key === "word_count_min" || key === "word_count_max") {
+                pendingConditions.current = updated;
+                if (enforceTimer.current) clearTimeout(enforceTimer.current);
+                enforceTimer.current = setTimeout(() => {
+                    enforceWordCountLimits(pendingConditions.current);
+                    enforceTimer.current = null;
+                }, 3000);
+            }
+
+            return updated;
+        });
+    }
+
+
+    function handleSortChange(site, value) {
+        setSearchConditions(prev => {
+            const updated = { ...prev };
+            // Remove all sort_ and royalroad keys
+            if (site === "royalroad") {
+                delete updated["popularity"];
+                delete updated["relevance"];
+                if (value) updated[value] = true;
+            } else if (site === "forums.spacebattles") {
+                Object.keys(updated).forEach(k => {
+                    if (k.startsWith("sort_")) delete updated[k];
+                });
+                if (value) updated[value] = true;
+            }
+            return updated;
+        });
+    }
+
+    const incrementTimers = useRef({});
+    
+    function startRapidChange(key, delta) {
+        stopRapidChange(key);
+
+        function change() {
+            setSearchConditions(prev => {
+                const updated = { ...prev };
+                if (key === "word_count_min") {
+                    let min = parseInt(updated["word_count_min"] || "0", 10);
+                    let next = min + delta;
+                    if (next < 0) next = 0;
+                    updated["word_count_min"] = next.toString();
+                } else if (key === "word_count_max") {
+                    let max = parseInt(updated["word_count_max"] || "0", 10);
+                    let next = max + delta;
+                    updated["word_count_max"] = next.toString();
+                }
+                // Debounce enforcement for word count min/max
+                pendingConditions.current = updated;
+                if (enforceTimer.current) clearTimeout(enforceTimer.current);
+                enforceTimer.current = setTimeout(() => {
+                    enforceWordCountLimits(pendingConditions.current);
+                    enforceTimer.current = null;
+                }, 3000);
+                return updated;
+            });
+        }
+
+        change();
+        incrementTimers.current[key] = setInterval(change, 80);
+    }
+
+    function stopRapidChange(key) {
+        if (incrementTimers.current[key]) {
+            clearInterval(incrementTimers.current[key]);
+            incrementTimers.current[key] = null;
+        }
+    }
 
     function getSessionCookie(name) {
         const value = `; ${document.cookie}`;
@@ -249,6 +381,7 @@ function BookScraperPage() {
                                         setSelectedSite(e.target.value);
                                         setBook(null);
                                         setSearchSuccess(false);
+                                        setSearchConditions({}); // Reset all search conditions when site changes
                                         // Show popup again if switching to foxaholic and not seen before
                                         if (e.target.value === "foxaholic" && !getSessionCookie('seenFoxaholicPopup')) {
                                             setShowFoxaholicPopup(true);
@@ -322,7 +455,6 @@ function BookScraperPage() {
                                 />
                             </div>
                         )}
-                        {/* This needs to be moved.*/}
                         {foxaholicUrlError && (
                             <div style={{ color: "#d32f2f", marginTop: "0.5rem" }}>{foxaholicUrlError}</div>
                         )}
@@ -336,7 +468,157 @@ function BookScraperPage() {
                                 onChange={e => setCustomBookName(e.target.value)}
                             />
                         </div>
-                    </div>
+                        {/* New card panel for search conditions */}
+                        <div className="book-scraper-main-search-card" style={{ marginTop: "1rem", color: "black" }}>
+                            <h2>Search Options</h2>
+                            {selectedSite === "royalroad" && (
+                                <div>
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        Sort By:&nbsp;
+                                        <select
+                                            value={
+                                                royalroadSortOptions.find(opt => searchConditions[opt.key])?.key || ""
+                                            }
+                                            onChange={e => handleSortChange("royalroad", e.target.value)}
+                                            style={{ marginRight: "0.5rem" }}
+                                        >
+                                            <option value="">Select...</option>
+                                            {royalroadSortOptions.map(opt => (
+                                                <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                </div>
+                            )}
+                            {selectedSite === "forums.spacebattles" && (
+                                <div>
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        Sort By:&nbsp;
+                                        <select
+                                            value={
+                                                spacebattlesSortOptions.find(opt => searchConditions[opt.key])?.key || ""
+                                            }
+                                            onChange={e => handleSortChange("forums.spacebattles", e.target.value)}
+                                            style={{ marginRight: "0.5rem" }}
+                                        >
+                                            <option value="">Select...</option>
+                                            {spacebattlesSortOptions.map(opt => (
+                                                <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    {/* Word Count Range */}
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        Word Count:&nbsp;
+                                        <span style={{ marginRight: "0.3rem" }}>Min</span>
+                                        <div style={{ display: "inline-flex", alignItems: "center", marginRight: "1rem" }}>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={searchConditions["word_count_min"] || ""}
+                                                onChange={e => handleConditionChange("word_count_min", e.target.value)}
+                                                style={{
+                                                    width: "80px",
+                                                    outline: "2px solid #b3b3b3",
+                                                    border: "1px solid #b3b3b3",
+                                                    borderRadius: "4px",
+                                                    background: "white",
+                                                    WebkitAppearance: 'textfield',
+                                                    MozAppearance: 'textfield',
+                                                    appearance: 'textfield',
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                                onMouseDown={() => startRapidChange("word_count_min", 1)}
+                                                onMouseUp={() => stopRapidChange("word_count_min")}
+                                                onMouseLeave={() => stopRapidChange("word_count_min")}
+                                                onTouchStart={() => startRapidChange("word_count_min", 1)}
+                                                onTouchEnd={() => stopRapidChange("word_count_min")}
+                                            >+</button>
+                                            <button
+                                                type="button"
+                                                style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                                onMouseDown={() => startRapidChange("word_count_min", -1)}
+                                                onMouseUp={() => stopRapidChange("word_count_min")}
+                                                onMouseLeave={() => stopRapidChange("word_count_min")}
+                                                onTouchStart={() => startRapidChange("word_count_min", -1)}
+                                                onTouchEnd={() => stopRapidChange("word_count_min")}
+                                                disabled={parseInt(searchConditions["word_count_min"] || "0", 10) <= 0}
+                                            >-</button>
+                                        </div>
+                                        <span style={{ marginRight: "0.3rem" }}>Max</span>
+                                        <div style={{ display: "inline-flex", alignItems: "center" }}>
+                                            <input
+                                                type="number"
+                                                min={searchConditions["word_count_min"] || 0}
+                                                value={searchConditions["word_count_max"] || ""}
+                                                onChange={e => handleConditionChange("word_count_max", e.target.value)}
+                                                style={{
+                                                    width: "80px",
+                                                    outline: "2px solid #b3b3b3",
+                                                    border: "1px solid #b3b3b3",
+                                                    borderRadius: "4px",
+                                                    background: "white",
+                                                    
+                                                    WebkitAppearance: 'textfield',
+                                                    MozAppearance: 'textfield',
+                                                    appearance: 'textfield',
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                                onMouseDown={() => startRapidChange("word_count_max", 1)}
+                                                onMouseUp={() => stopRapidChange("word_count_max")}
+                                                onMouseLeave={() => stopRapidChange("word_count_max")}
+                                                onTouchStart={() => startRapidChange("word_count_max", 1)}
+                                                onTouchEnd={() => stopRapidChange("word_count_max")}
+                                            >+</button>
+                                            <button
+                                                type="button"
+                                                style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                                onMouseDown={() => startRapidChange("word_count_max", -1)}
+                                                onMouseUp={() => stopRapidChange("word_count_max")}
+                                                onMouseLeave={() => stopRapidChange("word_count_max")}
+                                                onTouchStart={() => startRapidChange("word_count_max", -1)}
+                                                onTouchEnd={() => stopRapidChange("word_count_max")}
+                                                disabled={parseInt(searchConditions["word_count_max"] || "0", 10) <= parseInt(searchConditions["word_count_min"] || "0", 10)}
+                                            >-</button>
+                                        </div>
+                                    </label>
+                                    {/* Threadmark Status dropdown */}
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        Threadmark Status:&nbsp;
+                                        <select
+                                            value={searchConditions["threadmark_status"] || ""}
+                                            onChange={e => handleConditionChange("threadmark_status", e.target.value !== "" ? e.target.value : undefined)}
+                                            style={{ marginRight: "0.5rem" }}
+                                        >
+                                            <option value="">Select...</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="ongoing">Ongoing</option>
+                                            <option value="hiatus">Hiatus</option>
+                                            <option value="dropped">Dropped</option>
+                                        </select>
+                                    </label>
+                                    {/* Direction toggle */}
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        Direction:&nbsp;
+                                        <select
+                                            value={searchConditions["direction"] === true ? "desc" : "asc"}
+                                            onChange={e => handleConditionChange("direction", e.target.value === "desc")}
+                                            style={{ marginRight: "0.5rem" }}
+                                        >
+                                            <option value="asc">Ascending</option>
+                                            <option value="desc">Descending</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+                        </div>
                 {/* Right Panel: Chapter List */}
                     <div className="book-scraper-right-panel">
                         <div className="book-scraper-right-chapter-list-panel">
