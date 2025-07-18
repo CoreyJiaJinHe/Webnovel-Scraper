@@ -37,17 +37,13 @@ function BookScraperPage() {
     
 
     const royalroadSortOptions = [
-        { key: "popularity", label: "Popularity" },
-        { key: "relevance", label: "Relevance" }
-    ];
+        "Popularity",
+        "Relevance"];
 
-    const spacebattlesSortOptions = [
-        { key: "sort_title", label: "Title" },
-        { key: "sort_reply_count", label: "Reply Count" },
-        { key: "sort_view_count", label: "View Count" },
-        { key: "sort_last_threadmark", label: "Last Threadmark" },
-        { key: "sort_watchers", label: "Watchers" }
-    ];
+    const spacebattlesSortOptions = ["Title","Reply Count", "View Count", "Last Threadmark", "Watchers"]
+
+    const [currentSelect, setCurrentSelect]=useState("Select...")
+
     //TODO: FINISH THIS
     //Implement search conditions
 
@@ -58,15 +54,24 @@ function BookScraperPage() {
     // Debounced enforcement for word count min/max
     function enforceWordCountLimits(conditions) {
         const updated = { ...conditions };
-        const min = Math.max(0, parseInt(updated["word_count_min"] || "0", 10));
-        let max = parseInt(updated["word_count_max"] || "0", 10);
 
-        updated["word_count_min"] = min.toString();
-        if (max < min) {
-            updated["word_count_max"] = min.toString();
-        } else {
-            updated["word_count_max"] = max.toString();
+        // Only enforce if both are set and valid numbers
+        const minSet = updated["min_word_count"] !== undefined && updated["min_word_count"] !== "";
+        const maxSet = updated["max_word_count"] !== undefined && updated["max_word_count"] !== "";
+
+        const min = minSet ? Math.max(0, parseInt(updated["min_word_count"], 10)) : undefined;
+        const max = maxSet ? parseInt(updated["max_word_count"], 10) : undefined;
+
+        if (minSet) updated["min_word_count"] = isNaN(min) ? "" : min.toString();
+        if (maxSet) updated["max_word_count"] = isNaN(max) ? "" : max.toString();
+
+        // Only enforce relationship if both are set and valid
+        if (minSet && maxSet && !isNaN(min) && !isNaN(max)) {
+            if (max < min) {
+                updated["max_word_count"] = min.toString();
+            }
         }
+
         setSearchConditions(updated);
     }
 
@@ -74,10 +79,20 @@ function BookScraperPage() {
         setSearchConditions(prev => {
             const updated = { ...prev };
 
-            if (key === "word_count_min") {
-                updated["word_count_min"] = value;
-            } else if (key === "word_count_max") {
-                updated["word_count_max"] = value;
+            if (key === "min_word_count") {
+                // Remove if empty or invalid
+                if (value === "" || isNaN(parseInt(value, 10))) {
+                    delete updated["min_word_count"];
+                } else {
+                    updated["min_word_count"] = value;
+                }
+            } else if (key === "max_word_count") {
+                // Remove if empty or invalid
+                if (value === "" || isNaN(parseInt(value, 10))) {
+                    delete updated["max_word_count"];
+                } else {
+                    updated["max_word_count"] = value;
+                }
             } else if (key === "threadmark_status") {
                 if (value) {
                     updated[key] = value;
@@ -93,7 +108,7 @@ function BookScraperPage() {
             }
 
             // Debounce enforcement for word count min/max
-            if (key === "word_count_min" || key === "word_count_max") {
+            if (key === "min_word_count" || key === "max_word_count") {
                 pendingConditions.current = updated;
                 if (enforceTimer.current) clearTimeout(enforceTimer.current);
                 enforceTimer.current = setTimeout(() => {
@@ -108,19 +123,30 @@ function BookScraperPage() {
 
 
     function handleSortChange(site, value) {
+        setCurrentSelect(value);
         setSearchConditions(prev => {
             const updated = { ...prev };
-            // Remove all sort_ and royalroad keys
+            delete updated["sort_by"];
+            
+            let sortValue = "";
             if (site === "royalroad") {
-                delete updated["popularity"];
-                delete updated["relevance"];
-                if (value) updated[value] = true;
+                if (value === "Popularity") sortValue = "popularity";
+                else if (value === "Relevance") sortValue = "relevance";
             } else if (site === "forums.spacebattles") {
-                Object.keys(updated).forEach(k => {
-                    if (k.startsWith("sort_")) delete updated[k];
-                });
-                if (value) updated[value] = true;
+                switch (value) {
+                case "Title": sortValue = "title"; break;
+                case "Reply Count": sortValue = "reply_count"; break;
+                case "View Count": sortValue = "view_count"; break;
+                case "Last Threadmark": sortValue = "last_threadmark"; break;
+                case "Watchers": sortValue = "watchers"; break;
+                default: sortValue = "";
+                }
             }
+
+            if (sortValue) {
+                updated["sort_by"] = sortValue;
+            }
+
             return updated;
         });
     }
@@ -133,15 +159,15 @@ function BookScraperPage() {
         function change() {
             setSearchConditions(prev => {
                 const updated = { ...prev };
-                if (key === "word_count_min") {
-                    let min = parseInt(updated["word_count_min"] || "0", 10);
+                if (key === "min_word_count") {
+                    let min = parseInt(updated["min_word_count"] || "0", 10);
                     let next = min + delta;
                     if (next < 0) next = 0;
-                    updated["word_count_min"] = next.toString();
-                } else if (key === "word_count_max") {
-                    let max = parseInt(updated["word_count_max"] || "0", 10);
+                    updated["min_word_count"] = next.toString();
+                } else if (key === "max_word_count") {
+                    let max = parseInt(updated["max_word_count"] || "0", 10);
                     let next = max + delta;
-                    updated["word_count_max"] = next.toString();
+                    updated["max_word_count"] = next.toString();
                 }
                 // Debounce enforcement for word count min/max
                 pendingConditions.current = updated;
@@ -207,42 +233,46 @@ function BookScraperPage() {
     };
 
     async function handleSearch(){
-        try{
-            console.log("Searching for book:", searchTerm, "on site:", selectedSite);
-            const response = await axios.get(`${API_URL}/query_book`, {
-                params: {
-                    searchTerm: searchTerm,
-                    siteHost: selectedSite
-                },
-                withCredentials: true
-            });
-        if (response.statusText === "OK") {
-            setBook(response.data);
-            setSearchSuccess(true);
+        
+        console.log(searchConditions);
+        
+    //     try{
+    //         console.log("Searching for book:", searchTerm, "on site:", selectedSite);
+    //         const response = await axios.get(`${API_URL}/query_book`, {
+    //             params: {
+    //                 searchTerm: searchTerm,
+    //                 siteHost: selectedSite,
+    //                 searchConditions: searchConditions
+    //             },
+    //             withCredentials: true
+    //         });
+    //     if (response.statusText === "OK") {
+    //         setBook(response.data);
+    //         setSearchSuccess(true);
 
-            const chapters = response.data.chapterTitles;
-            const urls = response.data.chapterUrls;
-            if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
-                setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
-                setChapterUrls(response.data.chapterUrls);
-            } else {
-                setCheckedChapters([]);
-                setChapterUrls([]);
-            }
-        }
-        else{
-            setBook(null);
-            setSearchSuccess(false);
-            setCheckedChapters([]);
-            console.log("Error fetching book data:", error);
-        }
-    }
-    catch (error){
-        setBook(null);
-        setSearchSuccess(false);
-        setCheckedChapters([]);
-        console.log("Error fetching book data:", error);
-    }
+    //         const chapters = response.data.chapterTitles;
+    //         const urls = response.data.chapterUrls;
+    //         if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
+    //             setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
+    //             setChapterUrls(response.data.chapterUrls);
+    //         } else {
+    //             setCheckedChapters([]);
+    //             setChapterUrls([]);
+    //         }
+    //     }
+    //     else{
+    //         setBook(null);
+    //         setSearchSuccess(false);
+    //         setCheckedChapters([]);
+    //         console.log("Error fetching book data:", error);
+    //     }
+    // }
+    // catch (error){
+    //     setBook(null);
+    //     setSearchSuccess(false);
+    //     setCheckedChapters([]);
+    //     console.log("Error fetching book data:", error);
+    // }
     }
 
     async function handleScrape() {
@@ -476,15 +506,13 @@ function BookScraperPage() {
                                     <label style={{ display: "block", marginBottom: "0.5rem" }}>
                                         Sort By:&nbsp;
                                         <select
-                                            value={
-                                                royalroadSortOptions.find(opt => searchConditions[opt.key])?.key || ""
-                                            }
+                                            value={currentSelect|| ""}
                                             onChange={e => handleSortChange("royalroad", e.target.value)}
                                             style={{ marginRight: "0.5rem" }}
                                         >
                                             <option value="">Select...</option>
                                             {royalroadSortOptions.map(opt => (
-                                                <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                                <option key={opt} value={opt}>{opt}</option>
                                             ))}
                                         </select>
                                     </label>
@@ -495,113 +523,123 @@ function BookScraperPage() {
                                     <label style={{ display: "block", marginBottom: "0.5rem" }}>
                                         Sort By:&nbsp;
                                         <select
-                                            value={
-                                                spacebattlesSortOptions.find(opt => searchConditions[opt.key])?.key || ""
-                                            }
+                                            value={currentSelect || ""}
                                             onChange={e => handleSortChange("forums.spacebattles", e.target.value)}
                                             style={{ marginRight: "0.5rem" }}
                                         >
                                             <option value="">Select...</option>
                                             {spacebattlesSortOptions.map(opt => (
-                                                <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                                <option key={opt} value={opt}>{opt}</option>
                                             ))}
                                         </select>
                                     </label>
                                     {/* Word Count Range */}
+                                    <label style={{ display: "block"}}>
+                                        Word Count:&nbsp;</label>
+                                    <span style={{ marginRight: "0.3rem" }}>Min</span>
+                                    <div style={{ display: "inline-flex", alignItems: "center", marginRight: "1rem" }}>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={searchConditions["min_word_count"] || ""}
+                                            onChange={e => handleConditionChange("min_word_count", e.target.value)}
+                                            style={{
+                                                width: "80px",
+                                                outline: "2px solid #b3b3b3",
+                                                border: "1px solid #b3b3b3",
+                                                borderRadius: "4px",
+                                                background: "white",
+                                                WebkitAppearance: 'textfield',
+                                                MozAppearance: 'textfield',
+                                                appearance: 'textfield',
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                            onMouseDown={() => startRapidChange("min_word_count", 10)}
+                                            onMouseUp={() => stopRapidChange("min_word_count")}
+                                            onMouseLeave={() => stopRapidChange("min_word_count")}
+                                            onTouchStart={() => startRapidChange("min_word_count", 10)}
+                                            onTouchEnd={() => stopRapidChange("min_word_count")}
+                                        >+</button>
+                                        <button
+                                            type="button"
+                                            style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                            onMouseDown={() => startRapidChange("min_word_count", -10)}
+                                            onMouseUp={() => stopRapidChange("min_word_count")}
+                                            onMouseLeave={() => stopRapidChange("min_word_count")}
+                                            onTouchStart={() => startRapidChange("min_word_count", -10)}
+                                            onTouchEnd={() => stopRapidChange("min_word_count")}
+                                            disabled={parseInt(searchConditions["min_word_count"] || "0", 10) <= 0}
+                                        >-</button>
+                                    </div>
+                                    <span style={{ marginRight: "0.3rem" }}>Max</span>
+                                    <div style={{ display: "inline-flex", alignItems: "center" }}>
+                                        <input
+                                            type="number"
+                                            min={searchConditions["min_word_count"] || 0}
+                                            value={searchConditions["max_word_count"] || ""}
+                                            onChange={e => handleConditionChange("max_word_count", e.target.value)}
+                                            style={{
+                                                width: "80px",
+                                                outline: "2px solid #b3b3b3",
+                                                border: "1px solid #b3b3b3",
+                                                borderRadius: "4px",
+                                                background: "white",
+                                                
+                                                WebkitAppearance: 'textfield',
+                                                MozAppearance: 'textfield',
+                                                appearance: 'textfield',
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                            onMouseDown={() => startRapidChange("max_word_count", 10)}
+                                            onMouseUp={() => stopRapidChange("max_word_count")}
+                                            onMouseLeave={() => stopRapidChange("max_word_count")}
+                                            onTouchStart={() => startRapidChange("max_word_count", 10)}
+                                            onTouchEnd={() => stopRapidChange("max_word_count")}
+                                        >+</button>
+                                        <button
+                                            type="button"
+                                            style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
+                                            onMouseDown={() => startRapidChange("max_word_count", -10)}
+                                            onMouseUp={() => stopRapidChange("max_word_count")}
+                                            onMouseLeave={() => stopRapidChange("max_word_count")}
+                                            onTouchStart={() => startRapidChange("max_word_count", -10)}
+                                            onTouchEnd={() => stopRapidChange("max_word_count")}
+                                            disabled={parseInt(searchConditions["max_word_count"] || "0", 10) <= parseInt(searchConditions["min_word_count"] || "0", 10)}
+                                        >-</button>
+                                    </div>
+                                    {/* Threadmark Status checkboxes */}
                                     <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                                        Word Count:&nbsp;
-                                        <span style={{ marginRight: "0.3rem" }}>Min</span>
-                                        <div style={{ display: "inline-flex", alignItems: "center", marginRight: "1rem" }}>
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                value={searchConditions["word_count_min"] || ""}
-                                                onChange={e => handleConditionChange("word_count_min", e.target.value)}
-                                                style={{
-                                                    width: "80px",
-                                                    outline: "2px solid #b3b3b3",
-                                                    border: "1px solid #b3b3b3",
-                                                    borderRadius: "4px",
-                                                    background: "white",
-                                                    WebkitAppearance: 'textfield',
-                                                    MozAppearance: 'textfield',
-                                                    appearance: 'textfield',
-                                                }}
-                                            />
-                                            <button
-                                                type="button"
-                                                style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
-                                                onMouseDown={() => startRapidChange("word_count_min", 1)}
-                                                onMouseUp={() => stopRapidChange("word_count_min")}
-                                                onMouseLeave={() => stopRapidChange("word_count_min")}
-                                                onTouchStart={() => startRapidChange("word_count_min", 1)}
-                                                onTouchEnd={() => stopRapidChange("word_count_min")}
-                                            >+</button>
-                                            <button
-                                                type="button"
-                                                style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
-                                                onMouseDown={() => startRapidChange("word_count_min", -1)}
-                                                onMouseUp={() => stopRapidChange("word_count_min")}
-                                                onMouseLeave={() => stopRapidChange("word_count_min")}
-                                                onTouchStart={() => startRapidChange("word_count_min", -1)}
-                                                onTouchEnd={() => stopRapidChange("word_count_min")}
-                                                disabled={parseInt(searchConditions["word_count_min"] || "0", 10) <= 0}
-                                            >-</button>
+                                        Threadmark Status:
+                                        <div style={{ display: "flex", flexDirection: "column", marginTop: "0.3rem" }}>
+                                            {["completed", "ongoing", "hiatus", "dropped"].map(status => (
+                                                <label key={status} style={{ marginBottom: "0.3rem", fontWeight: "normal" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={Array.isArray(searchConditions["threadmark_status"])
+                                                            ? searchConditions["threadmark_status"].includes(status)
+                                                            : false}
+                                                        onChange={e => {
+                                                            setSearchConditions(prev => {
+                                                                let arr = Array.isArray(prev["threadmark_status"]) ? [...prev["threadmark_status"]] : [];
+                                                                if (e.target.checked) {
+                                                                    if (!arr.includes(status)) arr.push(status);
+                                                                } else {
+                                                                    arr = arr.filter(s => s !== status);
+                                                                }
+                                                                return { ...prev, threadmark_status: arr };
+                                                            });
+                                                        }}
+                                                    />
+                                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                </label>
+                                            ))}
                                         </div>
-                                        <span style={{ marginRight: "0.3rem" }}>Max</span>
-                                        <div style={{ display: "inline-flex", alignItems: "center" }}>
-                                            <input
-                                                type="number"
-                                                min={searchConditions["word_count_min"] || 0}
-                                                value={searchConditions["word_count_max"] || ""}
-                                                onChange={e => handleConditionChange("word_count_max", e.target.value)}
-                                                style={{
-                                                    width: "80px",
-                                                    outline: "2px solid #b3b3b3",
-                                                    border: "1px solid #b3b3b3",
-                                                    borderRadius: "4px",
-                                                    background: "white",
-                                                    
-                                                    WebkitAppearance: 'textfield',
-                                                    MozAppearance: 'textfield',
-                                                    appearance: 'textfield',
-                                                }}
-                                            />
-                                            <button
-                                                type="button"
-                                                style={{maxWidtdh:"50px", marginLeft: "4px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
-                                                onMouseDown={() => startRapidChange("word_count_max", 1)}
-                                                onMouseUp={() => stopRapidChange("word_count_max")}
-                                                onMouseLeave={() => stopRapidChange("word_count_max")}
-                                                onTouchStart={() => startRapidChange("word_count_max", 1)}
-                                                onTouchEnd={() => stopRapidChange("word_count_max")}
-                                            >+</button>
-                                            <button
-                                                type="button"
-                                                style={{maxWidtdh:"50px", marginLeft: "2px", padding: "2px 8px", background: "white", color: "black", border: "1px solid #b3b3b3", borderRadius: "4px" }}
-                                                onMouseDown={() => startRapidChange("word_count_max", -1)}
-                                                onMouseUp={() => stopRapidChange("word_count_max")}
-                                                onMouseLeave={() => stopRapidChange("word_count_max")}
-                                                onTouchStart={() => startRapidChange("word_count_max", -1)}
-                                                onTouchEnd={() => stopRapidChange("word_count_max")}
-                                                disabled={parseInt(searchConditions["word_count_max"] || "0", 10) <= parseInt(searchConditions["word_count_min"] || "0", 10)}
-                                            >-</button>
-                                        </div>
-                                    </label>
-                                    {/* Threadmark Status dropdown */}
-                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                                        Threadmark Status:&nbsp;
-                                        <select
-                                            value={searchConditions["threadmark_status"] || ""}
-                                            onChange={e => handleConditionChange("threadmark_status", e.target.value !== "" ? e.target.value : undefined)}
-                                            style={{ marginRight: "0.5rem" }}
-                                        >
-                                            <option value="">Select...</option>
-                                            <option value="completed">Completed</option>
-                                            <option value="ongoing">Ongoing</option>
-                                            <option value="hiatus">Hiatus</option>
-                                            <option value="dropped">Dropped</option>
-                                        </select>
                                     </label>
                                     {/* Direction toggle */}
                                     <label style={{ display: "block", marginBottom: "0.5rem" }}>

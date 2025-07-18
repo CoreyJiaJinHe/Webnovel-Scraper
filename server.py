@@ -308,9 +308,19 @@ async def retrieveBook(request: Request, bookTitle: str):
 
 
 @app.get("/api/query_book/")
-async def queryBook(request: Request, searchTerm: str, siteHost:str):
-    #Figure out a way to limit the amount of attempts per user
+async def queryBook(searchConditions: list, searchTerm: str, siteHost:str):
+    #TODO Figure out a way to limit the amount of attempts per user
     try:
+        def adapt_search_conditions(conditions):
+            adapted_conditions = []
+            if not conditions:
+                return conditions #Remain empty. There are default conditions built into the existing search.
+
+
+
+            return adapted_conditions
+        
+        
         logging.error(f"queryBook input: {searchTerm}")
         # Pass searchTerm and siteHost to your search_page function
         data = await refactor.search_page(searchTerm, siteHost, None)
