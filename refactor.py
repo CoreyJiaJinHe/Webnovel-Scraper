@@ -316,7 +316,8 @@ class RoyalRoadScraper():
             return None
         return chapterContent#.encode('ascii')
     
-    async def query_site(self,title,option):
+    async def query_site(self,title,additionalConditions, cookie):
+        option = additionalConditions.get("sort_by", None)
         return await self.query_royalroad(title,option)
     
     #option takes two values. None for default. "popularity" for popularity.
@@ -653,7 +654,8 @@ class RoyalRoadEpubProducer():
 
     
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
-    #TODO: Fix this. This is currently broken with an 'NoneType' error.
+    #DONE? TODO: Fix this. This is currently broken with an 'NoneType' error.
+    #
     
     async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls):
         if not book_chapter_urls:
@@ -825,6 +827,7 @@ class SpaceBattlesScraper():
                 errorText=f"Failed to get novel data. Function Spacebattles fetch_novel_data Error: {e}"
                 write_to_logs(errorText)
     
+    #This doesn't actually return chapters. It just returns the pages.
     async def fetch_chapter_list(self,url):
         soup=await self.get_soup(url)
         last=0
@@ -840,7 +843,7 @@ class SpaceBattlesScraper():
             errorText=f"Failed to get total number of pages. Function Spacebattles fetch_chapter_list Error: {e}"
             write_to_logs(errorText)
     
-    
+    #While this returns the threadmark titles.
     async def fetch_chapter_title_list(self, url):
         def normalize_spacebattles_url(url: str) -> str:
             # Find the last occurrence of digits/ and trim everything after
@@ -1126,8 +1129,16 @@ class SpaceBattlesScraper():
                 f.write(";".join(map(str, data))+ "\n")
 
 
-    async def query_site(self,title:str,sortby:str, additionalConditions: dict, isSearchSearch: bool):
-        if (isSearchSearch): #This will decide what sort of search. 
+    async def query_site(self,title:str,additionalConditions: dict, cookie):
+        isSearchSearch = additionalConditions.get("isSearchSearch", False)
+        sortby= additionalConditions.get("sortby", "date")
+        
+        def normalize_title(title: str) -> str:
+            """Convert spaces in a title to underscores."""
+            title = title.lower()
+            return title.replace(" ", "+")
+        title = normalize_title(title)
+        if (isSearchSearch): #This will decide what sort of search.
             #the first search is a search of the forums, the second is a filter of the forums
             return await self.query_spacebattles(title,sortby, additionalConditions)
         else:
@@ -1141,6 +1152,11 @@ class SpaceBattlesScraper():
     #c[users]="Name"
     #o=date, or, o=word_count, or, o=relevance
     #This is for order
+    
+    #This function only takes certain parameters.
+    #c[title_only]=1 or 0.
+    #c[users]="Name"
+    #o=date/word_count/relevance
     async def query_spacebattles(self,title: str, sortby: str, additionalConditions: dict):
         try:
             if (title.isspace() or title==""):
@@ -1158,7 +1174,6 @@ class SpaceBattlesScraper():
                 write_to_logs(errorText)
                 sortby = "date"  # Default sort-by option
                 querylink+=f"&o={sortby}"
-                
                 
             else:
                 querylink+=f"&o={sortby}"
@@ -1204,12 +1219,26 @@ class SpaceBattlesScraper():
     
     #this one uses a different search system. It's not really a search but rather a filter.
     #Search via main tag, and get the results. It's more dependent on the additional filter conditions to do the search.
-    async def query_spacebattles_version_two(self,title: str, sortby: str, direction:str, additionalConditions: dict):
+    #The additional filter conditions are:
+    #sortby: title, reply_count, view_count, last_threadmark, watchers
+    #direction: asc, desc
+    #&threadmark_index_statuses[0]=incomplete
+    #&threadmark_index_statuses[1]=complete
+    #&threadmark_index_statuses[2]=hiatus
+    #min_word_count=0
+    #max_word_count=10000000
+    async def query_spacebattles_version_two(self,title: str, sortby: str, additionalConditions: dict):
         try:
             if (title.isspace() or title==""):
                 errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
                 write_to_logs(errorText)
                 return "Invalid Title"
+            
+            direction = additionalConditions.get("direction", "desc")
+            if direction not in ["asc", "desc"]:
+                errorText=f"Invalid direction condition. Continuing on with default. Function query_spacebattles_version_two Error: {direction}"
+                write_to_logs(errorText)
+                direction = "desc"
             
             querylink = f"https://forums.spacebattles.com/forums/creative-writing.18/?tags[0]={title}"
             if (sortby not in ["title", "reply_count", "view_count", "last_threadmark", "watchers"] and direction not in ["asc", "desc"]):
@@ -1224,6 +1253,8 @@ class SpaceBattlesScraper():
                 logging.warning(querylink)
             logging.warning(querylink)
             querylink+="&nodes[0]=48&nodes[1]=169&nodes[2]=40&nodes[3]=115"
+            
+            
             
             soup=await self.get_soup(querylink)
             try:
@@ -1442,7 +1473,96 @@ class SpaceBattlesEpubProducer():
         
     
 
+    #TODO: Modify to work with specific Threadmarks
+    
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls):
+        if not book_chapter_urls:
+            errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        rrScraper=RoyalRoadScraper()
+        
+        toc_list = []
+        image_counter=0
+        current_image_counter=0
+        try:
+            for chapter_url in book_chapter_urls:
+                logging.error(chapter_url)
+                soup = await rrScraper.get_soup(chapter_url)
+                #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
+                
+                def extract_chapter_ID(chapter_url):
+                    import re
+                    match = re.search(r'/(\d+)/?$', chapter_url)
+                    if match:
+                        return match.group(1)
 
+                chapter_id = extract_chapter_ID(chapter_url)
+                chapter_title = await rrScraper.fetch_chapter_title(soup)
+                chapter_title = remove_invalid_characters(chapter_title)
+                # logging.warning(chapter_id)
+                # logging.warning(chapter_title)
+                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+                #logging.warning(chapter_content)
+                #chapter_conte_soup appears to not be working?
+                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+                #write_to_logs(str(chapter_content_soup).encode("ascii", "ignore").decode("ascii"))
+                #logging.error(chapter_content_soup)
+                images=chapter_content_soup.find_all('img')
+                images=[image['src'] for image in images]
+                image_dir = f"./books/raw/temporary/"
+                
+                #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
+                if images:
+                    current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
+                
+                logging.warning(chapter_title)
+                logging.warning(file_chapter_title)
+                
+                #This function is not working for some odd reason.
+                chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
+                logging.error("This should be a chapter object below this line.")
+                logging.error(chapter)
+                toc_list.append(chapter)
+                new_epub.add_item(chapter)
+        except Exception as e:
+            errorText=f"Failed to process chapter for custom epub. Function produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
+
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+
+        try:
+            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
 
 
 
@@ -2620,13 +2740,13 @@ async def retrieve_from_royalroad_follow_list():
 
 async def search_page(input: str, selectedSite: str, searchConditions:dict, cookie):
     
-    if selectedSite=="royalroad":
+    if "royalroad"in selectedSite:
         scraper=RoyalRoadScraper()
         prefix="rr"
-    elif selectedSite=="spacebattles":
+    elif "spacebattles" in selectedSite:
         scraper=SpaceBattlesScraper()
         prefix="sb"
-    elif selectedSite=="foxaholic":
+    elif "foxaholic" in selectedSite:
         scraper=FoxaholicScraper()
         prefix="fx"
         if (cookie is None):
@@ -2634,7 +2754,7 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
             logging.warning(errorText)
             write_to_logs(errorText)
             return None
-    elif selectedSite=="novelbin":
+    elif "novelbin" in selectedSite:
         scraper=NovelBinScraper()
         prefix="nb"
         if (cookie is None):
@@ -2661,10 +2781,38 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
                     url += '/reader/'
 
     else:
+        def adapt_search_conditions(search_conditions):
+            adapted_conditions = []
+            if not search_conditions:
+                return search_conditions #Remain empty. There are default conditions built into the existing search.
+            else:
+                threadmark_status = search_conditions.get("threadmark_status", [])
+                if isinstance(threadmark_status, list):
+                    for idx, status in enumerate(threadmark_status):
+                        adapted_conditions[f"threadmark_index_statuses[{idx}]"] = status
+                if "min_word_count" in search_conditions:
+                    adapted_conditions.append(f"min_word_count={search_conditions['min_word_count']}")
+                if "max_word_count" in search_conditions:
+                    adapted_conditions.append(f"max_word_count={search_conditions['max_word_count']}")
+                if "sort_by" in search_conditions:
+                    adapted_conditions.append(f"order={search_conditions['sort_by']}")
+                if "direction" in search_conditions:
+                    adapted_conditions.append(f"direction={search_conditions['direction']}")
+                
+            return adapted_conditions
+        searchConditions=adapt_search_conditions(searchConditions)
+        
         #If input is not a URL, treat it as a search query
         #default search query will be Royalroad
-        url=await scraper.query_site(input.strip(), None)
-        
+        #I need to standardize the query_site function 
+        url=await scraper.query_site(input.strip(), searchConditions,cookie)
+        logging.warning(f"Search URL: {url}")
+    
+    if not url_pattern.match(url.strip()):
+        errorText=f"Function search_page. Error: There was no result. Please check the input or the search conditions."
+        logging.warning(errorText)
+        write_to_logs(errorText)
+        return None
     bookID,bookTitle,bookAuthor,description,lastScraped,latestChapterTitle,latestChapterID= await scraper.fetch_novel_data(url)
     bookID=remove_invalid_characters(bookID)
     listofChapterTitles=await scraper.fetch_chapter_title_list(url)
@@ -2708,6 +2856,12 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
 #&c[threadmark_only]=1
 #&c[title_only]=1
 #&c[users]=String_Name
+async def test(url):
+    spacebattles_scraper=SpaceBattlesScraper()
+    threadmarks=await spacebattles_scraper.fetch_chapter_title_list(url)
+    logging.warning(threadmarks)
+
+#asyncio.run(test("https://forums.spacebattles.com/threads/quahinium-industries-shipworks-kancolle-si.1103320/reader/"))
 
 
 #title: query argument, sortby: query sort argument, direction: ascending or descending, additionalConditions: additional parameters in key-value pairs
@@ -2755,7 +2909,9 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
     if selectedSite=="royalroad":
         epub_producer=RoyalRoadEpubProducer()
         prefix="rr"
-        
+    elif selectedSite=="forums.spacebattles":
+        epub_producer=SpaceBattlesEpubProducer()
+        prefix="sb"
     #TODO: Make the rest of it work by copying the royalroad method
     
     

@@ -122,6 +122,17 @@
     width: 100%;
 }
 
+.book-scraper-main-middle-card{
+    background: #fff;
+    border: 2px solid #111;
+    border-radius: 8px;
+    padding: 2rem 2rem 1.5rem 2rem;
+    min-width: 350px;
+    max-width: 500px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    width: 100%;
+
+}
 /* Top row: dropdown + Search button */
 .book-scraper-main-dropdown-row {
     display: flex;

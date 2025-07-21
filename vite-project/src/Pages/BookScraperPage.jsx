@@ -234,45 +234,45 @@ function BookScraperPage() {
 
     async function handleSearch(){
         
-        console.log(searchConditions);
+        //console.log(searchConditions);
         
-    //     try{
-    //         console.log("Searching for book:", searchTerm, "on site:", selectedSite);
-    //         const response = await axios.get(`${API_URL}/query_book`, {
-    //             params: {
-    //                 searchTerm: searchTerm,
-    //                 siteHost: selectedSite,
-    //                 searchConditions: searchConditions
-    //             },
-    //             withCredentials: true
-    //         });
-    //     if (response.statusText === "OK") {
-    //         setBook(response.data);
-    //         setSearchSuccess(true);
+        try{
+            console.log("Searching for book:", searchTerm, "on site:", selectedSite, "with conditions:", searchConditions);
+            const response = await axios.get(`${API_URL}/query_book`, {
+                params: {
+                    searchTerm: searchTerm,
+                    siteHost: selectedSite,
+                    searchConditions: JSON.stringify(searchConditions && Object.keys(searchConditions).length > 0 ? searchConditions : {}) // Always send a string
+                }
+            });
 
-    //         const chapters = response.data.chapterTitles;
-    //         const urls = response.data.chapterUrls;
-    //         if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
-    //             setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
-    //             setChapterUrls(response.data.chapterUrls);
-    //         } else {
-    //             setCheckedChapters([]);
-    //             setChapterUrls([]);
-    //         }
-    //     }
-    //     else{
-    //         setBook(null);
-    //         setSearchSuccess(false);
-    //         setCheckedChapters([]);
-    //         console.log("Error fetching book data:", error);
-    //     }
-    // }
-    // catch (error){
-    //     setBook(null);
-    //     setSearchSuccess(false);
-    //     setCheckedChapters([]);
-    //     console.log("Error fetching book data:", error);
-    // }
+            if (response.statusText === "OK") {
+                setBook(response.data);
+                setSearchSuccess(true);
+
+                const chapters = response.data.chapterTitles;
+                const urls = response.data.chapterUrls;
+                if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
+                    setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
+                    setChapterUrls(response.data.chapterUrls);
+                } else {
+                    setCheckedChapters([]);
+                    setChapterUrls([]);
+                }
+            }
+            else{
+                setBook(null);
+                setSearchSuccess(false);
+                setCheckedChapters([]);
+                console.log("Error fetching book data:", error);
+            }
+        }
+        catch (error){
+            setBook(null);
+            setSearchSuccess(false);
+            setCheckedChapters([]);
+            console.log("Error fetching book data:", error);
+        }
     }
 
     async function handleScrape() {
@@ -489,14 +489,28 @@ function BookScraperPage() {
                             <div style={{ color: "#d32f2f", marginTop: "0.5rem" }}>{foxaholicUrlError}</div>
                         )}
                         </div>
-                        <div className="book-scraper-main-search-card" style={{ marginTop: "1rem", color:"black" }}>
-                            <h2>Change File Name</h2>
-                            <p>Current File Name: {(book && book.bookTitle) ? book.bookTitle : "Does not exist"}</p>
-                            <input type ="text" placeholder="Optional: Change file name"
-                                value={customBookName}
-                                style={{ width: '100%', marginBottom: '0.5rem', marginTop: '0.5rem' }}
-                                onChange={e => setCustomBookName(e.target.value)}
-                            />
+                        <div className="book-scraper-main-middle-card" style={{ marginTop: "1rem", color:"black" }}>
+                            {book ? (
+                                <>
+                                    <h2>Change File Name</h2>
+                                    <p>Current File Name:</p>
+                                    <p>{book.bookTitle ? book.bookTitle : "Does not exist"}</p>
+                                    <input
+                                        type="text"
+                                        placeholder="Optional: Change file name"
+                                        value={customBookName}
+                                        style={{ width: '100%', marginBottom: '0.5rem', marginTop: '0.5rem', border: '1px solid #ccc', padding: '0.5rem' }}
+                                        onChange={e => setCustomBookName(e.target.value)}
+                                    />
+                                </>
+                            ) : (
+                                <div style={{ minHeight: "4rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    {searchSuccess === false
+                                        ? <span style={{ color: "#d32f2f" }}>No book found for your search. Please try a different title or check your spelling.</span>
+                                        : <span style={{ color: "#888" }}>Search for a book to enable file name options and see results here.</span>
+                                    }
+                                </div>
+                            )}
                         </div>
                         {/* New card panel for search conditions */}
                         <div className="book-scraper-main-search-card" style={{ marginTop: "1rem", color: "black" }}>

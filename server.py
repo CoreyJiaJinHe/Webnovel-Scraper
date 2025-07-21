@@ -17,7 +17,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 #logging.getLogger("uvicorn").setLevel(logging.DEBUG)
-#logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
 #logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
 
 
@@ -306,32 +306,34 @@ async def retrieveBook(request: Request, bookTitle: str):
         write_to_logs(errorText)
         return JSONResponse(content={"error": errorText}, status_code=400)
 
+from typing import Dict, Any
+import json
 
 @app.get("/api/query_book/")
-async def queryBook(searchConditions: list, searchTerm: str, siteHost:str):
+async def queryBook(searchTerm: str, siteHost:str,searchConditions: str = "{}"):
     #TODO Figure out a way to limit the amount of attempts per user
     try:
-        def adapt_search_conditions(conditions):
-            adapted_conditions = []
-            if not conditions:
-                return conditions #Remain empty. There are default conditions built into the existing search.
-
-
-
-            return adapted_conditions
         
+        if not searchConditions:
+            searchConditions = "{}"
+        searchConditionsDict: Dict[str, Any] = json.loads(searchConditions) if searchConditions else {}
+
         
         logging.error(f"queryBook input: {searchTerm}")
+        logging.error(f"Search Conditions: {searchConditionsDict}")
         # Pass searchTerm and siteHost to your search_page function
-        data = await refactor.search_page(searchTerm, siteHost, None)
+        data = await refactor.search_page(searchTerm, siteHost, searchConditionsDict, None)
         logging.error(data)
-        response = JSONResponse(content=data, status_code=200)
-        
+        if not data:
+            response = JSONResponse(content={"error": "No results found"}, status_code=404)
+        else:
+            response = JSONResponse(content=data, status_code=200)
+
         return response
 
     except Exception as e:
-        logging.error(f"Weird error occurred: {e}")
-        
+        errorText=(f"Weird error occurred: {e}")
+        write_to_logs(errorText)
         return JSONResponse(content={"error": "Weird error"}, status_code=400)
 
 
