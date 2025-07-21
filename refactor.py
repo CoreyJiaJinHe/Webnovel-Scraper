@@ -764,7 +764,18 @@ class SpaceBattlesScraper():
                         write_to_logs(errorText)
         except Exception as e:
             errorText=f"Failed to get soup. Function get_soup Error: {e}, {url}"
-    
+
+
+    def normalize_spacebattles_url(self, url: str) -> str:
+        # Find the last occurrence of digits/ and trim everything after
+        match = re.search(r'(\d+/)', url)
+        if match:
+            idx = url.find(match.group(1)) + len(match.group(1))
+            url = url[:idx]
+        # Ensure it ends with threadmarks?per_page=200
+        if not url.endswith('threadmarks?per_page=200'):
+            url += 'threadmarks?per_page=200'
+        return url
     
     async def fetch_novel_data(self,url):
         logging.warning(url)
@@ -828,7 +839,22 @@ class SpaceBattlesScraper():
                 write_to_logs(errorText)
     
     #This doesn't actually return chapters. It just returns the pages.
+    #Page numbers are to generated under the assumption that each page can hold 10 threadmarks.
     async def fetch_chapter_list(self,url):
+        url=self.normalize_spacebattles_url(url)
+        def threadmarks_to_reader(url: str) -> str:
+            """
+            Replace 'threadmarks?per_page=200' at the end of a SpaceBattles thread URL with 'reader/'.
+            """
+            if url.endswith('threadmarks?per_page=200'):
+                url = url[: -len('threadmarks?per_page=200')]
+                if not url.endswith('/'):
+                    url += '/'
+                url += 'reader/'
+            return url
+        url = threadmarks_to_reader(url)
+        logging.warning(url)
+        
         soup=await self.get_soup(url)
         last=0
         try:
@@ -845,17 +871,7 @@ class SpaceBattlesScraper():
     
     #While this returns the threadmark titles.
     async def fetch_chapter_title_list(self, url):
-        def normalize_spacebattles_url(url: str) -> str:
-            # Find the last occurrence of digits/ and trim everything after
-            match = re.search(r'(\d+/)', url)
-            if match:
-                idx = url.find(match.group(1)) + len(match.group(1))
-                url = url[:idx]
-            # Ensure it ends with threadmarks?per_page=200
-            if not url.endswith('threadmarks?per_page=200'):
-                url += 'threadmarks?per_page=200'
-            return url
-        url=normalize_spacebattles_url(url)
+        url=self.normalize_spacebattles_url(url)
         
         soup=await self.get_soup(url)
         logging.warning(url)
