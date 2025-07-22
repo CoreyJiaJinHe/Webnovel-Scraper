@@ -12,6 +12,8 @@ function BookScraperPage() {
     const [showPopup, setShowPopup] = useState(false);
     const [cloudflareCookie, setCloudflareCookie] = useState("");
 
+    const [mainBookURL, setMainBookURL] = useState("");
+
     const [checkedChapters, setCheckedChapters] = useState([]);
     const [chapterUrls, setChapterUrls] = useState([]);
     const [foxaholicUrlError, setFoxaholicUrlError] = useState("");
@@ -255,15 +257,18 @@ function BookScraperPage() {
                 if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
                     setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
                     setChapterUrls(response.data.chapterUrls);
+                    setMainBookURL(response.data.mainURL || ""); // Set main URL if available
                 } else {
                     setCheckedChapters([]);
                     setChapterUrls([]);
+                    setMainBookURL("");
                 }
             }
             else{
                 setBook(null);
                 setSearchSuccess(false);
                 setCheckedChapters([]);
+                setMainBookURL("");
                 console.log("Error fetching book data:", error);
             }
         }
@@ -271,6 +276,7 @@ function BookScraperPage() {
             setBook(null);
             setSearchSuccess(false);
             setCheckedChapters([]);
+            setMainBookURL("");
             console.log("Error fetching book data:", error);
         }
     }
@@ -292,7 +298,8 @@ function BookScraperPage() {
                     bookTitle: book.bookTitle,
                     selectedSite: selectedSite,
                     cookie: cloudflareCookie,
-                    book_chapter_urls: selectedUrls
+                    book_chapter_urls: selectedUrls,
+                    mainBookURL: mainBookURL
                 },{responseType:'blob'},{
                 withCredentials: true
             });

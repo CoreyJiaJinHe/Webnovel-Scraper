@@ -657,7 +657,7 @@ class RoyalRoadEpubProducer():
     #DONE? TODO: Fix this. This is currently broken with an 'NoneType' error.
     #
     
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls):
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL):
         if not book_chapter_urls:
             errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
@@ -765,6 +765,42 @@ class SpaceBattlesScraper():
         except Exception as e:
             errorText=f"Failed to get soup. Function get_soup Error: {e}, {url}"
 
+    async def fetch_cover_image(self, soup, bookTitle):
+        try:
+            if not isinstance(soup, bs4.BeautifulSoup):
+                # Check if soup is a valid URL
+                url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
+                if isinstance(soup, str) and url_pattern.match(soup.strip()):
+                    # If it's a valid URL, fetch the soup for that URL
+                    soup = await self.get_soup(soup)
+                else:
+                    errorText = f"Provided object is neither a BeautifulSoup object nor a valid URL: {soup}"
+                    write_to_logs(errorText)
+                    return None
+            
+            img_url = soup.find("span",{"class":"avatar avatar--l"})
+            img_url=img_url.find("img")
+            if (img_url):
+                saveDirectory=f"./books/raw/{bookTitle}/"
+                if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
+                    async with aiohttp.ClientSession(headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                    }) as session:
+                        if not isinstance(img_url,str):
+                            img_url=img_url["src"]
+                        async with session.get(f"https://forums.spacebattles.com/{img_url}") as response:
+                            if response.status == 200:
+                                fileNameDir=f"{saveDirectory}cover_image.png"
+                                if not (check_directory_exists(saveDirectory)):
+                                    make_directory(saveDirectory)
+                                if not (check_directory_exists(fileNameDir)):
+                                    response=await response.content.read()
+                                    with open (fileNameDir,'wb') as f:
+                                        f.write(response)
+                                    f.close()
+        except Exception as e:
+            errorText=f"Failed to get cover image. Function fetch_cover_image Error: {e}"
+            write_to_logs(errorText)
 
     def normalize_spacebattles_url(self, url: str) -> str:
         # Find the last occurrence of digits/ and trim everything after
@@ -809,26 +845,7 @@ class SpaceBattlesScraper():
                 latestChapterID=match.group()
             
                 try:
-                    img_url = soup.find("span",{"class":"avatar avatar--l"})
-                    img_url=img_url.find("img")
-                    if (img_url):
-                        saveDirectory=f"./books/raw/{bookTitle}/"
-                        if not (check_directory_exists(f"./books/raw/{bookTitle}/cover_image.png")):
-                            async with aiohttp.ClientSession(headers = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-                            }) as session:
-                                if not isinstance(img_url,str):
-                                    img_url=img_url["src"]
-                                async with session.get(f"https://forums.spacebattles.com/{img_url}") as response:
-                                    if response.status == 200:
-                                        fileNameDir=f"{saveDirectory}cover_image.png"
-                                        if not (check_directory_exists(saveDirectory)):
-                                            make_directory(saveDirectory)
-                                        if not (check_directory_exists(fileNameDir)):
-                                            response=await response.content.read()
-                                            with open (fileNameDir,'wb') as f:
-                                                f.write(response)
-                                            f.close()
+                    self.fetch_cover_image(soup, bookTitle)
                 except Exception as e:
                     errorText=f"Failed to get cover image. There might be no cover. Or a different error. Function fetch_novel_data Error: {e}"
                     write_to_logs(errorText)
@@ -1308,6 +1325,55 @@ class SpaceBattlesScraper():
         #THEY MUST BE at the end of the query.
 
     
+    #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
+    async def process_new_chapter_non_saved(self, soup, book_title,chapter_id,image_count):
+        try:
+            soup = soup
+            chapter_title = await self.fetch_chapter_title(soup)
+            chapter_content= soup.find("div", {"class": "message-userContent"})
+            if not chapter_content:
+                errorText=f"Failed to find chapter content. Function process_new_chapter_non_saved Error: No content found for page {chapter_id} in book {book_title}."
+                write_to_logs(errorText)
+                return None, image_count, None
+            chapter_content = await self.spacebattles_remove_garbage_from_chapter(chapter_content)
+            chapter_content = await self.remove_junk_links(chapter_content)
+            if not chapter_content:
+                errorText=f"Failed to clean chapter content. Function process_new_chapter_non_saved Error: No valid content found for page {chapter_id} in book {book_title}."
+                write_to_logs(errorText)
+                return None, image_count, None
+            
+            currentImageCount=image_count
+            # Process images
+            
+            images=[]
+            seen = set()
+            for image in chapter_content.find_all('img'):
+                # Prefer a valid http(s) URL from data-src or src
+                img_url = None
+                for attr in ['data-src', 'src']:
+                    candidate = image.get(attr)
+                    if candidate and re.match(r'^https?://', candidate):
+                        img_url = candidate
+                        break
+                    if img_url and img_url not in seen:
+                        images.append(img_url)
+                        seen.add(img_url)
+            image_dir = f"./books/raw/temporary/images/"
+            #Do not save these images permanent. Always overwrite.
+            if images:
+                start_idx = image_counter  # Save the starting index
+                image_counter = await self.save_images_in_chapter(images, image_dir, image_counter)
+                # Replace all img srcs with local file path
+                for idx, img in enumerate(chapter_content.find_all('img')):
+                    if idx < len(images):
+                        img['src'] = f"images/image_{start_idx + idx}.png"
+            
+            file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+            
+            return file_chapter_title, currentImageCount, chapter_content
+        except Exception as e:
+            errorText=f"Failed to process new chapter. Function spacebattles_process_new_chapter_non_saved Error: {e}"
+            write_to_logs(errorText)
 
 
 
@@ -1490,60 +1556,76 @@ class SpaceBattlesEpubProducer():
     
 
     #TODO: Modify to work with specific Threadmarks
-    
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls):
-        if not book_chapter_urls:
-            errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+    #TODO: Test if it works
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_titles, mainBookURL):
+        if not book_chapter_titles:
+            errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
             logging.warning(errorText)
             write_to_logs(errorText)
             return
-        rrScraper=RoyalRoadScraper()
+        sbScraper=SpaceBattlesScraper()
         
+        existingPages=sbScraper.fetch_chapter_list(mainBookURL)
+        if not existingPages:
+            errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+
+        try:
+            sbScraper.fetch_cover_image(mainBookURL, book_title)
+        except Exception as e:
+            errorText=f"Failed to fetch cover image. Function fetch_cover_image Error: {e}"
+            write_to_logs(errorText)
+        
+              
         toc_list = []
         image_counter=0
-        current_image_counter=0
         try:
-            for chapter_url in book_chapter_urls:
-                logging.error(chapter_url)
-                soup = await rrScraper.get_soup(chapter_url)
-                #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
+            for pageNum in range (1, existingPages+1):
+                page_url = f"{mainBookURL}page-{pageNum}/"
+                logging.warning(f"Processing page: {page_url}")
+                await asyncio.sleep(1)
+                soup = await sbScraper.get_soup(page_url)
+                #logging.warning(soup)
                 
-                def extract_chapter_ID(chapter_url):
-                    import re
-                    match = re.search(r'/(\d+)/?$', chapter_url)
-                    if match:
-                        return match.group(1)
-
-                chapter_id = extract_chapter_ID(chapter_url)
-                chapter_title = await rrScraper.fetch_chapter_title(soup)
-                chapter_title = remove_invalid_characters(chapter_title)
-                # logging.warning(chapter_id)
-                # logging.warning(chapter_title)
-                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
-                #logging.warning(chapter_content)
-                #chapter_conte_soup appears to not be working?
-                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
-                #write_to_logs(str(chapter_content_soup).encode("ascii", "ignore").decode("ascii"))
-                #logging.error(chapter_content_soup)
-                images=chapter_content_soup.find_all('img')
-                images=[image['src'] for image in images]
-                image_dir = f"./books/raw/temporary/"
                 
-                #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
-                if images:
-                    current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
                 
-                logging.warning(chapter_title)
-                logging.warning(file_chapter_title)
+                threadmarkArticles=soup.find_all("article",{"class":"message"})
+                if not threadmarkArticles:
+                    errorText=f"Failed to retrieve threadmark body. Function produce_custom_epub Error: No threadmark body found for page {pageNum}."
+                    write_to_logs(errorText)
+                    continue
+                #logging.warning(threadmarkBody)
                 
-                #This function is not working for some odd reason.
-                chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
-                logging.error("This should be a chapter object below this line.")
-                logging.error(chapter)
-                toc_list.append(chapter)
-                new_epub.add_item(chapter)
+                if threadmarkArticles:
+                    for threadmarkArticle in threadmarkArticles:
+                        threadmarkTitle=threadmarkArticle.find("span",{"class":"threadmarkLabel"})
+                        if not threadmarkTitle:
+                            errorText=f"Failed to retrieve threadmark title. Function produce_custom_epub Error: No threadmark title found for page {pageNum}."
+                            write_to_logs(errorText)
+                            continue
+                        chapter_title = threadmarkTitle.get_text()
+                        chapter_title = remove_tags_from_title(chapter_title)
+                        logging.warning(f"Chapter Title: {chapter_title}")
+                        
+                        if (chapter_title in book_chapter_titles):
+                            file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(threadmarkArticle, book_title, pageNum, image_counter)
+                            if not file_chapter_title:
+                                errorText=f"Failed to process threadmark article. Function produce_custom_epub Error: No valid chapter title found for page {pageNum}."
+                                write_to_logs(errorText)
+                                continue
+    
+                            stringChapterContent=str(chapter_content)
+                            pageContent+=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
+                            #fileTitle=book_title+" - "+str(pageNum)
+                            pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
+                            chapter=self.create_epub_chapter(chapter_title, file_chapter_title, pageContent, css)                            
+                            toc_list.append(chapter)
+                            new_epub.add_item(chapter)
+            
         except Exception as e:
-            errorText=f"Failed to process chapter for custom epub. Function produce_custom_epub Error: {e}"
+            errorText=f"Failed to process chapter for custom epub. Function spacebattles produce_custom_epub Error: {e}"
             write_to_logs(errorText)
         dirLocation=f"./books/raw/temporary/cover_image.png"
         cover_image=None
@@ -2841,7 +2923,8 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
         "bookDescription": description,
         "latestChapterTitle": latestChapterTitle,
         "chapterTitles": listofChapterTitles,
-        "chapterUrls": listofChapters
+        "chapterUrls": listofChapters,
+        "mainURL": url,
     }
 
 
@@ -2921,7 +3004,7 @@ async def spacebattles_search_interface(title:str, sortby: str, direction: str,a
 # logging.warning(result)
 
 
-async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls):
+async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls, mainBookURL):
     if selectedSite=="royalroad":
         epub_producer=RoyalRoadEpubProducer()
         prefix="rr"
@@ -2974,7 +3057,7 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
     new_epub=await instantiate_new_epub(bookID,bookTitle,bookAuthor)
     
 
-    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls)
+    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls, mainBookURL)
     logging.error(dirLocation)    
     return dirLocation
 # scraper = SpaceBattlesScraper()
