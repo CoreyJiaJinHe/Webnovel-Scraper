@@ -42,7 +42,8 @@ function BookScraperPage() {
         "Popularity",
         "Relevance"];
 
-    const spacebattlesSortOptions = ["Title","Reply Count", "View Count", "Last Threadmark", "Watchers"]
+    const spacebattlesSortOptionsDefault = ["Title", "Reply Count", "View Count", "Last Threadmark", "Watchers"];
+    const spacebattlesSortOptionsTrueSearch = ["Relevance", "Date", "Most Recent", "Most Replies", "Words"];
 
     const [currentSelect, setCurrentSelect]=useState("Select...")
 
@@ -141,6 +142,11 @@ function BookScraperPage() {
                 case "View Count": sortValue = "view_count"; break;
                 case "Last Threadmark": sortValue = "last_threadmark"; break;
                 case "Watchers": sortValue = "watchers"; break;
+                case "Relevance": sortValue = "relevance"; break;
+                case "Date": sortValue = "date"; break;
+                case "Most Recent": sortValue = "last_update"; break;
+                case "Most Replies": sortValue = "replies"; break;
+                case "Words": sortValue = "word_count"; break;
                 default: sortValue = "";
                 }
             }
@@ -549,7 +555,7 @@ function BookScraperPage() {
                                             style={{ marginRight: "0.5rem" }}
                                         >
                                             <option value="">Select...</option>
-                                            {spacebattlesSortOptions.map(opt => (
+                                            {(!!searchConditions["true_search"] ? spacebattlesSortOptionsTrueSearch : spacebattlesSortOptionsDefault).map(opt => (
                                                 <option key={opt} value={opt}>{opt}</option>
                                             ))}
                                         </select>
@@ -635,33 +641,99 @@ function BookScraperPage() {
                                         >-</button>
                                     </div>
                                     {/* Threadmark Status checkboxes */}
-                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
-                                        Threadmark Status:
-                                        <div style={{ display: "flex", flexDirection: "column", marginTop: "0.3rem" }}>
-                                            {["completed", "ongoing", "hiatus", "dropped"].map(status => (
-                                                <label key={status} style={{ marginBottom: "0.3rem", fontWeight: "normal" }}>
+                                    {!searchConditions["true_search"] && (
+                                        <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                            Threadmark Status:
+                                            <div style={{ display: "flex", flexDirection: "column", marginTop: "0.3rem" }}>
+                                                {["completed", "ongoing", "hiatus", "dropped"].map(status => (
+                                                    <label key={status} style={{ marginBottom: "0.3rem", fontWeight: "normal" }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={Array.isArray(searchConditions["threadmark_status"])
+                                                                ? searchConditions["threadmark_status"].includes(status)
+                                                                : false}
+                                                            onChange={e => {
+                                                                setSearchConditions(prev => {
+                                                                    let arr = Array.isArray(prev["threadmark_status"]) ? [...prev["threadmark_status"]] : [];
+                                                                    if (e.target.checked) {
+                                                                        if (!arr.includes(status)) arr.push(status);
+                                                                    } else {
+                                                                        arr = arr.filter(s => s !== status);
+                                                                    }
+                                                                    return { ...prev, threadmark_status: arr };
+                                                                });
+                                                            }}
+                                                        />
+                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </label>
+                                    )}
+                                    {/*Search Scope Options */}
+                                    {!!searchConditions["true_search"] && (
+                                        <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                            Search Scope:
+                                            <div style={{ display: "flex", flexDirection: "column", marginTop: "0.3rem" }}>
+                                                <label style={{ marginBottom: "0.3rem", fontWeight: "normal" }}>
                                                     <input
                                                         type="checkbox"
-                                                        checked={Array.isArray(searchConditions["threadmark_status"])
-                                                            ? searchConditions["threadmark_status"].includes(status)
-                                                            : false}
+                                                        name="search_scope"
+                                                        value="c[content]"
+                                                        checked={!!(searchConditions.search_scope && searchConditions.search_scope["c[content]"])}
                                                         onChange={e => {
                                                             setSearchConditions(prev => {
-                                                                let arr = Array.isArray(prev["threadmark_status"]) ? [...prev["threadmark_status"]] : [];
+                                                                const updated = { ...prev };
+                                                                const scope = { ...(updated.search_scope || {}) };
                                                                 if (e.target.checked) {
-                                                                    if (!arr.includes(status)) arr.push(status);
+                                                                    scope["c[content]"] = "thread";
                                                                 } else {
-                                                                    arr = arr.filter(s => s !== status);
+                                                                    delete scope["c[content]"];
                                                                 }
-                                                                return { ...prev, threadmark_status: arr };
+                                                                // Remove search_scope if empty
+                                                                if (Object.keys(scope).length === 0) {
+                                                                    delete updated.search_scope;
+                                                                } else {
+                                                                    updated.search_scope = scope;
+                                                                }
+                                                                return updated;
                                                             });
                                                         }}
+                                                        style={{ marginRight: "0.5rem" }}
                                                     />
-                                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                                    Search titles and first posts only
                                                 </label>
-                                            ))}
-                                        </div>
-                                    </label>
+                                                <label style={{ marginBottom: "0.3rem", fontWeight: "normal" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="search_scope"
+                                                        value="c[title_only]"
+                                                        checked={!!(searchConditions.search_scope && searchConditions.search_scope["c[title_only]"])}
+                                                        onChange={e => {
+                                                            setSearchConditions(prev => {
+                                                                const updated = { ...prev };
+                                                                const scope = { ...(updated.search_scope || {}) };
+                                                                if (e.target.checked) {
+                                                                    scope["c[title_only]"] = "1";
+                                                                } else {
+                                                                    delete scope["c[title_only]"];
+                                                                }
+                                                                // Remove search_scope if empty
+                                                                if (Object.keys(scope).length === 0) {
+                                                                    delete updated.search_scope;
+                                                                } else {
+                                                                    updated.search_scope = scope;
+                                                                }
+                                                                return updated;
+                                                            });
+                                                        }}
+                                                        style={{ marginRight: "0.5rem" }}
+                                                    />
+                                                    Titles only
+                                                </label>
+                                            </div>
+                                        </label>
+                                    )}
                                     {/* Direction toggle */}
                                     <label style={{ display: "block", marginBottom: "0.5rem" }}>
                                         Direction:&nbsp;
@@ -673,6 +745,17 @@ function BookScraperPage() {
                                             <option value="asc">Ascending</option>
                                             <option value="desc">Descending</option>
                                         </select>
+                                    </label>
+                                    {/* ...existing SpaceBattles search options... */}
+                                    {/* True Search Checkbox */}
+                                    <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!searchConditions["true_search"]}
+                                            onChange={e => handleConditionChange("true_search", e.target.checked)}
+                                            style={{ marginRight: "0.5rem" }}
+                                        />
+                                        True Search
                                     </label>
                                 </div>
                             )}

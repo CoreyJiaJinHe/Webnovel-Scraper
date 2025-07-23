@@ -44,6 +44,8 @@ import datetime
 import logging
 import asyncio
 import io
+from word2number import w2n
+
 from ebooklib import epub 
 from PIL import Image, ImageChops
 import aiohttp
@@ -94,6 +96,7 @@ from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+logging.getLogger('seleniumwire').setLevel(logging.WARNING)
 
 firefox_options = FirefoxOptions()
 
@@ -838,11 +841,32 @@ class SpaceBattlesScraper():
                 
                 chapterTable=soup.find("div",{"class":"structItemContainer"})
                 rows=chapterTable.find_all("li")
-                
+                logging.warning(rows)
                 latestChapter=rows[len(rows)-1]
                 latestChapterTitle=latestChapter.get_text()
-                match=re.search(r'\b\d+(?:-\d+)?\b',latestChapterTitle)
-                latestChapterID=match.group()
+                logging.warning(latestChapterTitle)
+                
+                
+                match = re.search(
+                    r'\b(\d+(?:-\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|'
+                    r'eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|'
+                    r'thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)\b',
+                    latestChapterTitle,
+                    re.IGNORECASE
+                )
+                latestChapterID = None
+                if match:
+                    value = match.group(1).lower()
+                    try:
+                        # Try to convert directly to int (for digit matches)
+                        latestChapterID = int(value)
+                    except ValueError:
+                        try:
+                            # If not a digit, convert written number to int
+                            latestChapterID = w2n.word_to_num(value)
+                        except Exception:
+                            latestChapterID = value  # fallback: keep as string if conversion fails
+                    
             
                 try:
                     self.fetch_cover_image(soup, bookTitle)
@@ -1163,8 +1187,8 @@ class SpaceBattlesScraper():
 
 
     async def query_site(self,title:str,additionalConditions: dict, cookie):
-        isSearchSearch = additionalConditions.get("isSearchSearch", False)
-        sortby= additionalConditions.get("sortby", "date")
+        isSearchSearch = additionalConditions.get("true_search", False)
+        sortby= additionalConditions.get("order", None)
         
         def normalize_title(title: str) -> str:
             """Convert spaces in a title to underscores."""
@@ -1173,9 +1197,9 @@ class SpaceBattlesScraper():
         title = normalize_title(title)
         if (isSearchSearch): #This will decide what sort of search.
             #the first search is a search of the forums, the second is a filter of the forums
-            return await self.query_spacebattles(title,sortby, additionalConditions)
+            return await self.query_spacebattles_search_version(title,sortby, additionalConditions)
         else:
-            return await self.query_spacebattles_version_two(title,sortby,additionalConditions)
+            return await self.query_spacebattles_filter_version(title,sortby,additionalConditions)
     
     #https://forums.spacebattles.com/search/104090354/?q=New+Normal&t=post&c[child_nodes]=1&c[nodes][0]=18&c[title_only]=1&o=date 
     #Basic format of search query
@@ -1190,10 +1214,10 @@ class SpaceBattlesScraper():
     #c[title_only]=1 or 0.
     #c[users]="Name"
     #o=date/word_count/relevance
-    async def query_spacebattles(self,title: str, sortby: str, additionalConditions: dict):
+    async def query_spacebattles_search_version(self,title: str, sortby: str, additionalConditions: dict):
         try:
             if (title.isspace() or title==""):
-                errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
+                errorText=f"Failed to search title. Function query_spacebattles_search_version Error: No title inputted"
                 write_to_logs(errorText)
                 return "Invalid Title"
             #&t=post&c[child_nodes]=1&c[nodes][0]=18 is for forum: Creative Writing
@@ -1202,14 +1226,11 @@ class SpaceBattlesScraper():
             for item in additionalConditions:
                 querylink+=f"&{item}={additionalConditions[item]}"
                 logging.warning(querylink)
-            if (sortby not in ["date", "word_count", "relevance"]):
-                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles Error: {sortby}"
+            if (sortby not in ["relevance","date",  "last_update", "replies", "word_count"]):
+                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles_search_version Error: {sortby}"
                 write_to_logs(errorText)
                 sortby = "date"  # Default sort-by option
-                querylink+=f"&o={sortby}"
-                
-            else:
-                querylink+=f"&o={sortby}"
+            querylink+=f"&o={sortby}"
             logging.warning(querylink)
             
             async def get_soup(url):
@@ -1218,6 +1239,9 @@ class SpaceBattlesScraper():
                     driver.install_addon(path_to_extension, temporary=True)
                     driver.request_interceptor=interception
                     driver.get(url)
+                    WebDriverWait(driver, 10).until(
+                        lambda d: d.execute_script("return document.readyState") == "complete"
+                    )
                     await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
                     soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
                     driver.close()
@@ -1240,7 +1264,8 @@ class SpaceBattlesScraper():
                 bookLinks=bookRows[0].find("a")['href']
                 firstResult=bookLinks
                 #formatting
-                resultLink=f"https://forums.spacebattles.com/threads{firstResult}"
+                resultLink = f"https://forums.spacebattles.com{firstResult}"
+                resultLink = re.sub(r'(#|\?).*$', '', resultLink)
                 return resultLink
             except Exception as error:
                 errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_royalroad Error: {error}"
@@ -1260,7 +1285,7 @@ class SpaceBattlesScraper():
     #&threadmark_index_statuses[2]=hiatus
     #min_word_count=0
     #max_word_count=10000000
-    async def query_spacebattles_version_two(self,title: str, sortby: str, additionalConditions: dict):
+    async def query_spacebattles_filter_version(self,title: str, sortby: str, additionalConditions: dict):
         try:
             if (title.isspace() or title==""):
                 errorText=f"Failed to search title. Function query_spacebattles Error: No title inputted"
@@ -1269,13 +1294,13 @@ class SpaceBattlesScraper():
             
             direction = additionalConditions.get("direction", "desc")
             if direction not in ["asc", "desc"]:
-                errorText=f"Invalid direction condition. Continuing on with default. Function query_spacebattles_version_two Error: {direction}"
+                errorText=f"Invalid direction condition. Continuing on with default. Function query_spacebattles_filter_version Error: {direction}"
                 write_to_logs(errorText)
                 direction = "desc"
             
             querylink = f"https://forums.spacebattles.com/forums/creative-writing.18/?tags[0]={title}"
             if (sortby not in ["title", "reply_count", "view_count", "last_threadmark", "watchers"] and direction not in ["asc", "desc"]):
-                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles_version_two Error: {sortby}"
+                errorText=f"Invalid sort-by condition. Continuing on with default. Function query_spacebattles_filter_version Error: {sortby}"
                 write_to_logs(errorText)
                 sortby = "last_threadmark"  # Default sort-by option
                 querylink+=f"&order={sortby}&direction=desc"
@@ -2880,22 +2905,33 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
 
     else:
         def adapt_search_conditions(search_conditions):
-            adapted_conditions = []
-            if not search_conditions:
-                return search_conditions #Remain empty. There are default conditions built into the existing search.
-            else:
-                threadmark_status = search_conditions.get("threadmark_status", [])
-                if isinstance(threadmark_status, list):
-                    for idx, status in enumerate(threadmark_status):
-                        adapted_conditions[f"threadmark_index_statuses[{idx}]"] = status
-                if "min_word_count" in search_conditions:
-                    adapted_conditions.append(f"min_word_count={search_conditions['min_word_count']}")
-                if "max_word_count" in search_conditions:
-                    adapted_conditions.append(f"max_word_count={search_conditions['max_word_count']}")
-                if "sort_by" in search_conditions:
-                    adapted_conditions.append(f"order={search_conditions['sort_by']}")
-                if "direction" in search_conditions:
-                    adapted_conditions.append(f"direction={search_conditions['direction']}")
+            """
+            Converts search_conditions dict to the adapted format for SpaceBattles/RoyalRoad queries.
+            Only includes keys that are present and valid.
+            """
+            adapted_conditions = {}
+            if not isinstance(search_conditions, dict) or not search_conditions:
+                return adapted_conditions  # Return empty dict if no conditions
+
+            # Handle threadmark_status as indexed keys if it's a list
+            threadmark_status = search_conditions.get("threadmark_status", [])
+            if isinstance(threadmark_status, list):
+                for idx, status in enumerate(threadmark_status):
+                    adapted_conditions[f"threadmark_index_statuses[{idx}]"] = status
+
+            search_scope = search_conditions.get("search_scope", "title")
+            if isinstance(search_scope, dict):
+                for k, v in search_scope.items():
+                    adapted_conditions[k] = v
+
+            # Directly copy over other relevant keys if present
+            for key in ["min_word_count", "max_word_count", "sort_by", "direction", "true_search"]:
+                if key in search_conditions:
+                    # For "sort_by", convert to "order" as required by some endpoints
+                    if key == "sort_by":
+                        adapted_conditions["order"] = search_conditions[key]
+                    else:
+                        adapted_conditions[key] = search_conditions[key]
                 
             return adapted_conditions
         searchConditions=adapt_search_conditions(searchConditions)
