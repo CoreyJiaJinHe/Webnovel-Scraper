@@ -660,7 +660,7 @@ class RoyalRoadEpubProducer():
     #DONE? TODO: Fix this. This is currently broken with an 'NoneType' error.
     #
     
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL):
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
         if not book_chapter_urls:
             errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
@@ -694,13 +694,18 @@ class RoyalRoadEpubProducer():
                 chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
                 #write_to_logs(str(chapter_content_soup).encode("ascii", "ignore").decode("ascii"))
                 #logging.error(chapter_content_soup)
-                images=chapter_content_soup.find_all('img')
-                images=[image['src'] for image in images]
-                image_dir = f"./books/raw/temporary/"
-                
-                #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
-                if images:
-                    current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
+                if (additionalConditions.get("exclude_images", False)):
+                    # Remove images if exclude_images is True
+                    for img in chapter_content_soup.find_all('img'):
+                        img.decompose()
+                else:
+                    images=chapter_content_soup.find_all('img')
+                    images=[image['src'] for image in images]
+                    image_dir = f"./books/raw/temporary/"
+                    
+                    #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
+                    if images:
+                        current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
                 
                 logging.warning(chapter_title)
                 logging.warning(file_chapter_title)
@@ -1339,11 +1344,11 @@ class SpaceBattlesScraper():
                         return resultLink
                 return "No Results Found"
             except Exception as e:
-                errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_spacebattles_version_two Error: {e}"
+                errorText=f"Search failed. Most likely reason: There wasn't any search results. Function query_spacebattles_filter_version Error: {e}"
                 write_to_logs(errorText)
                 return "No Results Found"
         except Exception as e:
-            errorText=f"Improper query attempt. Function query_spacebattles_version_two Error: {e} How did you even do this?"
+            errorText=f"Improper query attempt. Function query_spacebattles_filter_version Error: {e} How did you even do this?"
             write_to_logs(errorText)
             return "Invalid Option"
         #These need to be added at the end to specify the forums.
@@ -1351,7 +1356,7 @@ class SpaceBattlesScraper():
 
     
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
-    async def process_new_chapter_non_saved(self, soup, book_title,chapter_id,image_count):
+    async def process_new_chapter_non_saved(self, soup, book_title,chapter_id,image_count, exclude_images):
         try:
             soup = soup
             chapter_title = await self.fetch_chapter_title(soup)
@@ -1369,29 +1374,32 @@ class SpaceBattlesScraper():
             
             currentImageCount=image_count
             # Process images
-            
-            images=[]
-            seen = set()
-            for image in chapter_content.find_all('img'):
-                # Prefer a valid http(s) URL from data-src or src
-                img_url = None
-                for attr in ['data-src', 'src']:
-                    candidate = image.get(attr)
-                    if candidate and re.match(r'^https?://', candidate):
-                        img_url = candidate
-                        break
-                    if img_url and img_url not in seen:
-                        images.append(img_url)
-                        seen.add(img_url)
-            image_dir = f"./books/raw/temporary/images/"
-            #Do not save these images permanent. Always overwrite.
-            if images:
-                start_idx = image_counter  # Save the starting index
-                image_counter = await self.save_images_in_chapter(images, image_dir, image_counter)
-                # Replace all img srcs with local file path
-                for idx, img in enumerate(chapter_content.find_all('img')):
-                    if idx < len(images):
-                        img['src'] = f"images/image_{start_idx + idx}.png"
+            if exclude_images:
+                for img in chapter_content.find_all('img'):
+                    img.decompose()
+            else:
+                images=[]
+                seen = set()
+                for image in chapter_content.find_all('img'):
+                    # Prefer a valid http(s) URL from data-src or src
+                    img_url = None
+                    for attr in ['data-src', 'src']:
+                        candidate = image.get(attr)
+                        if candidate and re.match(r'^https?://', candidate):
+                            img_url = candidate
+                            break
+                        if img_url and img_url not in seen:
+                            images.append(img_url)
+                            seen.add(img_url)
+                image_dir = f"./books/raw/temporary/images/"
+                #Do not save these images permanent. Always overwrite.
+                if images:
+                    start_idx = image_counter  # Save the starting index
+                    image_counter = await self.save_images_in_chapter(images, image_dir, image_counter)
+                    # Replace all img srcs with local file path
+                    for idx, img in enumerate(chapter_content.find_all('img')):
+                        if idx < len(images):
+                            img['src'] = f"images/image_{start_idx + idx}.png"
             
             file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
             
@@ -1582,7 +1590,7 @@ class SpaceBattlesEpubProducer():
 
     #TODO: Modify to work with specific Threadmarks
     #TODO: Test if it works
-    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_titles, mainBookURL):
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_titles, mainBookURL, additionalConditions):
         if not book_chapter_titles:
             errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
             logging.warning(errorText)
@@ -1606,6 +1614,7 @@ class SpaceBattlesEpubProducer():
               
         toc_list = []
         image_counter=0
+        exclude_images= additionalConditions.get("exclude_images", False)
         try:
             for pageNum in range (1, existingPages+1):
                 page_url = f"{mainBookURL}page-{pageNum}/"
@@ -1635,7 +1644,7 @@ class SpaceBattlesEpubProducer():
                         logging.warning(f"Chapter Title: {chapter_title}")
                         
                         if (chapter_title in book_chapter_titles):
-                            file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(threadmarkArticle, book_title, pageNum, image_counter)
+                            file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(threadmarkArticle, book_title, pageNum, image_counter, exclude_images)
                             if not file_chapter_title:
                                 errorText=f"Failed to process threadmark article. Function produce_custom_epub Error: No valid chapter title found for page {pageNum}."
                                 write_to_logs(errorText)
@@ -2862,16 +2871,12 @@ async def retrieve_from_royalroad_follow_list():
 
 
 async def search_page(input: str, selectedSite: str, searchConditions:dict, cookie):
-    
     if "royalroad"in selectedSite:
         scraper=RoyalRoadScraper()
-        prefix="rr"
     elif "spacebattles" in selectedSite:
         scraper=SpaceBattlesScraper()
-        prefix="sb"
     elif "foxaholic" in selectedSite:
         scraper=FoxaholicScraper()
-        prefix="fx"
         if (cookie is None):
             errorText="Function search_page. Error: Cookie is required for Foxaholic. Please provide a cookie."
             logging.warning(errorText)
@@ -2879,7 +2884,6 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
             return None
     elif "novelbin" in selectedSite:
         scraper=NovelBinScraper()
-        prefix="nb"
         if (cookie is None):
             errorText="Function search_page. Error: Cookie is required for NovelBin. Please provide a cookie."
             logging.warning(errorText)
@@ -3017,7 +3021,7 @@ async def spacebattles_search_interface(title:str, sortby: str, direction: str,a
     
     
     #result = await spacebattles_scraper.query_spacebattles(title, sortby, direction, additionalConditions)
-    result = await spacebattles_scraper.query_spacebattles_version_two(title, sortby, direction, additionalConditions)
+    result = await spacebattles_scraper.query_spacebattles_filter_version(title, sortby, direction, additionalConditions)
     #print(result)  # Should print the first search result link or an error message
     return result
     #returns a link
@@ -3039,20 +3043,33 @@ async def spacebattles_search_interface(title:str, sortby: str, direction: str,a
 
 # logging.warning(result)
 
+class MissingBookDataException(Exception):
+    def __init__(self, missing_keys):
+        message = f"Missing required keys in book dict: {', '.join(missing_keys)}"
+        super().__init__(message)
+        self.missing_keys = missing_keys
 
-async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls, mainBookURL):
+
+async def search_page_scrape_interface(book: dict, cookie: str, additionalConditions: dict):
+    try:
+        selectedSite=book["selectedSite"]
+        bookID=book["bookID"]
+        bookTitle=book["bookTitle"]
+        bookAuthor=book["bookAuthor"]
+        book_chapter_urls=book["bookChapterUrls"]
+        mainBookURL=book["mainBookURL"]
+    except KeyError as e:
+        missing = [str(e)]
+        raise MissingBookDataException(missing)
+    
+    
     if selectedSite=="royalroad":
         epub_producer=RoyalRoadEpubProducer()
-        prefix="rr"
     elif selectedSite=="forums.spacebattles":
         epub_producer=SpaceBattlesEpubProducer()
-        prefix="sb"
     #TODO: Make the rest of it work by copying the royalroad method
     
     
-    # elif selectedSite=="spacebattles":
-    #     epub_producer=SpaceBattlesEpubProducer()
-    #     prefix="sb"
     # elif selectedSite=="foxaholic":
     #     epub_producer=FoxaholicEpubProducer()
     #     prefix="fx"
@@ -3093,7 +3110,7 @@ async def search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSi
     new_epub=await instantiate_new_epub(bookID,bookTitle,bookAuthor)
     
 
-    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls, mainBookURL)
+    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls, mainBookURL, additionalConditions)
     logging.error(dirLocation)    
     return dirLocation
 # scraper = SpaceBattlesScraper()

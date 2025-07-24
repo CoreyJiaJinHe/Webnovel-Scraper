@@ -349,6 +349,7 @@ async def scrapeBook(request: Request):
         cookie = data.get("cookie",[])
         book_chapter_urls = data.get("book_chapter_urls", [])
         mainBookURL = data.get("mainBookURL", "")
+        additionalConditions = data.get("additionalConditions", {})
 
         if (not bookTitle or not selectedSite or not book_chapter_urls or not mainBookURL):
             return JSONResponse(content={"error": "Missing bookTitle, siteHost, selectedSite or mainBookURL"}, status_code=400)
@@ -357,7 +358,16 @@ async def scrapeBook(request: Request):
             return JSONResponse(content={"error": "Selected site not in book chapter URLs"}, status_code=400)
         logging.error(f"Scraping book: {bookTitle} from {selectedSite}")
         #return JSONResponse(content={"message": "Scraping started"}, status_code=200)
-        dirLocation = await refactor.search_page_scrape_interface(bookID, bookTitle, bookAuthor, selectedSite, cookie, book_chapter_urls, mainBookURL)
+        book = {
+            "bookID": bookID,
+            "bookName": bookTitle,
+            "bookAuthor": bookAuthor,
+            "websiteHost": selectedSite,
+            "book_chapter_urls": book_chapter_urls,
+            "mainBookURL": mainBookURL,
+        }
+        
+        dirLocation = await refactor.search_page_scrape_interface(book, cookie, mainBookURL)
 
 
         fileName=bookTitle

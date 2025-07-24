@@ -36,7 +36,8 @@ function BookScraperPage() {
 
     const [searchConditions, setSearchConditions] = useState({});
 
-    
+    const [scrapeConditions, setScrapeConditions] = useState({});
+
 
     const royalroadSortOptions = [
         "Popularity",
@@ -293,10 +294,11 @@ function BookScraperPage() {
         const selectedIndices = checkedChapters
             .map((checked, idx) => checked ? idx : -1)
             .filter(idx => idx !== -1);
-
+        console.log(scrapeConditions);
         // Get selected chapter URLs and titles
         const selectedUrls = selectedIndices.map(idx => chapterUrls[idx]);
         const selectedTitles = selectedIndices.map(idx => book.chapterTitles[idx]);
+        return;
         try {
             const response = await axios.post(`${API_URL}/scrape_book`, {
                     bookID: book.bookID,
@@ -305,7 +307,9 @@ function BookScraperPage() {
                     selectedSite: selectedSite,
                     cookie: cloudflareCookie,
                     book_chapter_urls: selectedUrls,
-                    mainBookURL: mainBookURL
+                    book_chapter_titles: selectedTitles,
+                    mainBookURL: mainBookURL,
+                    scrapeConditions: scrapeConditions,
                 },{responseType:'blob'},{
                 withCredentials: true
             });
@@ -515,6 +519,33 @@ function BookScraperPage() {
                                         style={{ width: '100%', marginBottom: '0.5rem', marginTop: '0.5rem', border: '1px solid #ccc', padding: '0.5rem' }}
                                         onChange={e => setCustomBookName(e.target.value)}
                                     />
+                                {/* Scrape Condition: Include/Exclude Images */}
+                                    <label
+                                        style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            padding: "0.4rem 1rem",
+                                            borderRadius: "6px",
+                                            marginTop: "0.5rem",
+                                            marginBottom: "0.5rem",
+                                            background: scrapeConditions.exclude_images ? "#d32f2f" : "#43a047",
+                                            color: "white",
+                                            fontWeight: "bold",
+                                            cursor: "pointer",
+                                            transition: "background 0.2s"
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={!!scrapeConditions.exclude_images}
+                                            onChange={e => setScrapeConditions(prev => ({
+                                                ...prev,
+                                                exclude_images: e.target.checked
+                                            }))}
+                                            style={{ marginRight: "0.7rem" }}
+                                        />
+                                        {scrapeConditions.exclude_images ? "Exclude Images" : "Include Images"}
+                                    </label>
                                 </>
                             ) : (
                                 <div style={{ minHeight: "4rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -525,7 +556,7 @@ function BookScraperPage() {
                                 </div>
                             )}
                         </div>
-                        {/* New card panel for search conditions */}
+                        {/* Card panel for search conditions */}
                         <div className="book-scraper-main-search-card" style={{ marginTop: "1rem", color: "black" }}>
                             <h2>Search Options</h2>
                             {selectedSite === "royalroad" && (
@@ -772,6 +803,15 @@ function BookScraperPage() {
                                     if (book && Array.isArray(book.chapterTitles)) {
                                         const allChecked = checkedChapters.every(Boolean);
                                         setCheckedChapters(new Array(book.chapterTitles.length).fill(!allChecked));
+                                        setScrapeConditions(prev => {
+                                            const updated = { ...prev };
+                                            if (!allChecked) {
+                                                updated.select_all = true;
+                                            } else {
+                                                delete updated.select_all;
+                                            }
+                                            return updated;
+                                        });
                                     }
                                 }}
                             >
