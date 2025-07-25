@@ -258,17 +258,28 @@ function BookScraperPage() {
             if (response.statusText === "OK") {
                 setBook(response.data);
                 setSearchSuccess(true);
+                setMainBookURL(response.data.mainURL || ""); // Set main URL if available
 
-                const chapters = response.data.chapterTitles;
-                const urls = response.data.chapterUrls;
-                if (Array.isArray(response.data.chapterTitles) && Array.isArray(response.data.chapterUrls)) {
-                    setCheckedChapters(new Array(response.data.chapterTitles.length).fill(false));
-                    setChapterUrls(response.data.chapterUrls);
-                    setMainBookURL(response.data.mainURL || ""); // Set main URL if available
+                console.log(response.data)
+                let chapters = response.data.chapterTitles;
+                let urls = response.data.chapterUrls;
+                // console.log(chapters)
+                // console.log(urls)
+                // Exception handling for SpaceBattles
+                if (selectedSite === "forums.spacebattles") {
+                    // If urls is not an array of valid URLs, use chapters as URLs (or fill with nulls)
+                    if (!Array.isArray(urls) || urls.some(u => typeof u !== "string" || u === "")) {
+                        // SpaceBattles: chapters are items on one page, so URLs are not used
+                        urls = new Array(chapters.length).fill(null);
+                    }
+                }
+
+                if (Array.isArray(chapters) && Array.isArray(urls)) {
+                    setCheckedChapters(new Array(chapters.length).fill(false));
+                    setChapterUrls(urls);
                 } else {
                     setCheckedChapters([]);
                     setChapterUrls([]);
-                    setMainBookURL("");
                 }
             }
             else{
@@ -298,21 +309,21 @@ function BookScraperPage() {
         // Get selected chapter URLs and titles
         const selectedUrls = selectedIndices.map(idx => chapterUrls[idx]);
         const selectedTitles = selectedIndices.map(idx => book.chapterTitles[idx]);
-        return;
+        console.log("Selected URLs:", selectedUrls);
+        console.log("Selected Titles:", selectedTitles);
+        console.log("mainBookURL:", mainBookURL);
         try {
             const response = await axios.post(`${API_URL}/scrape_book`, {
-                    bookID: book.bookID,
-                    bookAuthor: book.bookAuthor,
-                    bookTitle: book.bookTitle,
-                    selectedSite: selectedSite,
-                    cookie: cloudflareCookie,
+                    bookID: book?.bookID || "",
+                    bookAuthor: book?.bookAuthor || "",
+                    bookTitle: book?.bookTitle || "",
+                    selectedSite: selectedSite || "",
+                    cookie: cloudflareCookie || "",
                     book_chapter_urls: selectedUrls,
                     book_chapter_titles: selectedTitles,
-                    mainBookURL: mainBookURL,
-                    scrapeConditions: scrapeConditions,
-                },{responseType:'blob'},{
-                withCredentials: true
-            });
+                    mainBookURL: mainBookURL || "",
+                    scrapeConditions: scrapeConditions || {},
+                },{responseType:'blob' , withCredentials: true});
             if (response.statusText === "OK" && response.data.Response !== "False") {
                 let fileName=book.bookTitle+".epub";
                 if (customBookName.trim() !== '') {
@@ -815,8 +826,11 @@ function BookScraperPage() {
                                     }
                                 }}
                             >
-                                {book && Array.isArray(book.chapterTitles) && checkedChapters.every(Boolean) ? "Unselect All" : "Select All"}
-                            </button>
+                            {(book && Array.isArray(book.chapterTitles) && checkedChapters.length > 0 && checkedChapters.every(Boolean))
+                                ? "Unselect All"
+                                : "Select All"
+                            }
+                                </button>
                             {book && Array.isArray(book.chapterTitles) ? (
                                 <ul style={{ listStyle: "none", padding: 0, maxHeight: 500, overflowY: 'auto' }}>
                                 {book.chapterTitles.map((chapter, idx) => (

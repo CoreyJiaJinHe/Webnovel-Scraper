@@ -811,7 +811,7 @@ class SpaceBattlesScraper():
             write_to_logs(errorText)
 
     def normalize_spacebattles_url(self, url: str) -> str:
-        # Find the last occurrence of digits/ and trim everything after
+        """Find the last occurrence of digits/ and trim everything after"""
         match = re.search(r'(\d+/)', url)
         if match:
             idx = url.find(match.group(1)) + len(match.group(1))
@@ -819,6 +819,17 @@ class SpaceBattlesScraper():
         # Ensure it ends with threadmarks?per_page=200
         if not url.endswith('threadmarks?per_page=200'):
             url += 'threadmarks?per_page=200'
+        return url
+    
+    def threadmarks_to_reader(self, url: str) -> str:
+        """
+        Replace 'threadmarks?per_page=200' at the end of a SpaceBattles thread URL with 'reader/'.
+        """
+        if url.endswith('threadmarks?per_page=200'):
+            url = url[: -len('threadmarks?per_page=200')]
+            if not url.endswith('/'):
+                url += '/'
+            url += 'reader/'
         return url
     
     async def fetch_novel_data(self,url):
@@ -888,17 +899,8 @@ class SpaceBattlesScraper():
     #Page numbers are to generated under the assumption that each page can hold 10 threadmarks.
     async def fetch_chapter_list(self,url):
         url=self.normalize_spacebattles_url(url)
-        def threadmarks_to_reader(url: str) -> str:
-            """
-            Replace 'threadmarks?per_page=200' at the end of a SpaceBattles thread URL with 'reader/'.
-            """
-            if url.endswith('threadmarks?per_page=200'):
-                url = url[: -len('threadmarks?per_page=200')]
-                if not url.endswith('/'):
-                    url += '/'
-                url += 'reader/'
-            return url
-        url = threadmarks_to_reader(url)
+        
+        url = self.threadmarks_to_reader(url)
         logging.warning(url)
         
         soup=await self.get_soup(url)
@@ -1598,7 +1600,7 @@ class SpaceBattlesEpubProducer():
             return
         sbScraper=SpaceBattlesScraper()
         
-        existingPages=sbScraper.fetch_chapter_list(mainBookURL)
+        existingPages=await sbScraper.fetch_chapter_list(mainBookURL)
         if not existingPages:
             errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
             logging.warning(errorText)
@@ -1606,18 +1608,20 @@ class SpaceBattlesEpubProducer():
             return
 
         try:
-            sbScraper.fetch_cover_image(mainBookURL, book_title)
+            await sbScraper.fetch_cover_image(mainBookURL, book_title)
         except Exception as e:
             errorText=f"Failed to fetch cover image. Function fetch_cover_image Error: {e}"
             write_to_logs(errorText)
         
+        url = sbScraper.normalize_spacebattles_url(mainBookURL)
+        url = sbScraper.threadmarks_to_reader(url)
               
         toc_list = []
         image_counter=0
         exclude_images= additionalConditions.get("exclude_images", False)
         try:
             for pageNum in range (1, existingPages+1):
-                page_url = f"{mainBookURL}page-{pageNum}/"
+                page_url = f"{url}page-{pageNum}/"
                 logging.warning(f"Processing page: {page_url}")
                 await asyncio.sleep(1)
                 soup = await sbScraper.get_soup(page_url)
@@ -1651,13 +1655,28 @@ class SpaceBattlesEpubProducer():
                                 continue
     
                             stringChapterContent=str(chapter_content)
-                            pageContent+=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
+                            pageContent=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
                             #fileTitle=book_title+" - "+str(pageNum)
-                            pageContent=bs4.BeautifulSoup(pageContent,'html.parser')
-                            chapter=self.create_epub_chapter(chapter_title, file_chapter_title, pageContent, css)                            
+                            pageContent=bs4.BeautifulSoup(str(pageContent),'html.parser')
+                            logging.warning(pageContent)
+                            logging.warning(file_chapter_title)
+                            
+                            chapter_content=pageContent.encode('ascii')
+                            #It needs to be encoded. No idea why again.
+                            chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)                            
                             toc_list.append(chapter)
                             new_epub.add_item(chapter)
-            
+                            
+                            # Remove the found title from book_chapter_titles
+                            book_chapter_titles.remove(chapter_title)
+                            
+                            # If no more titles to scrape, break out of the page loop
+                            if not book_chapter_titles:
+                                logging.warning("All requested chapter titles have been scraped. Ending loop early.")
+                                break
+                if not book_chapter_titles:
+                    logging.warning("All requested chapter titles have been scraped. Ending loop early.")
+                    break                
         except Exception as e:
             errorText=f"Failed to process chapter for custom epub. Function spacebattles produce_custom_epub Error: {e}"
             write_to_logs(errorText)
@@ -1685,9 +1704,9 @@ class SpaceBattlesEpubProducer():
         new_epub.spine = toc_list
         new_epub.add_item(epub.EpubNcx())
         new_epub.add_item(epub.EpubNav())
-
+        dirLocation="./books/epubs/temporary/"+book_title+".epub"
         try:
-            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            
             if (check_directory_exists(dirLocation)):
                 os.remove(dirLocation)
             epub.write_epub(dirLocation,new_epub)
@@ -3052,25 +3071,25 @@ class MissingBookDataException(Exception):
 
 async def search_page_scrape_interface(book: dict, cookie: str, additionalConditions: dict):
     try:
-        selectedSite=book["selectedSite"]
         bookID=book["bookID"]
         bookTitle=book["bookTitle"]
         bookAuthor=book["bookAuthor"]
-        book_chapter_urls=book["bookChapterUrls"]
+        websiteHost=book["websiteHost"]
+        book_chapter_urls=book["book_chapter_urls"]
         mainBookURL=book["mainBookURL"]
     except KeyError as e:
         missing = [str(e)]
         raise MissingBookDataException(missing)
-    
-    
-    if selectedSite=="royalroad":
+
+
+    if websiteHost=="royalroad":
         epub_producer=RoyalRoadEpubProducer()
-    elif selectedSite=="forums.spacebattles":
+    elif websiteHost=="forums.spacebattles":
         epub_producer=SpaceBattlesEpubProducer()
     #TODO: Make the rest of it work by copying the royalroad method
     
     
-    # elif selectedSite=="foxaholic":
+    # elif websiteHost=="foxaholic":
     #     epub_producer=FoxaholicEpubProducer()
     #     prefix="fx"
     #     if (cookie is None):
@@ -3078,7 +3097,7 @@ async def search_page_scrape_interface(book: dict, cookie: str, additionalCondit
     #         logging.warning(errorText)
     #         write_to_logs(errorText)
     #         return None
-    # elif selectedSite=="novelbin":
+    # elif websiteHost=="novelbin":
     #     epub_producer=NovelBinEpubProducer()
     #     prefix="nb"
     #     if (cookie is None):

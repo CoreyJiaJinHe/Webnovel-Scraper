@@ -348,26 +348,42 @@ async def scrapeBook(request: Request):
         selectedSite = data.get("selectedSite")
         cookie = data.get("cookie",[])
         book_chapter_urls = data.get("book_chapter_urls", [])
+        book_chapter_titles= data.get("book_chapter_titles", [])
         mainBookURL = data.get("mainBookURL", "")
         additionalConditions = data.get("additionalConditions", {})
+        
+        if (not bookTitle or not mainBookURL):
+            errorText = "Missing bookTitle or mainBookURL"
+            write_to_logs(errorText)
+            return JSONResponse(content={"error": errorText}, status_code=400)
 
-        if (not bookTitle or not selectedSite or not book_chapter_urls or not mainBookURL):
-            return JSONResponse(content={"error": "Missing bookTitle, siteHost, selectedSite or mainBookURL"}, status_code=400)
-        if not any(selectedSite in str(url) for url in book_chapter_urls):
-            logging.error(f"Selected site {selectedSite} not in book_chapter_urls: {book_chapter_urls}")
-            return JSONResponse(content={"error": "Selected site not in book chapter URLs"}, status_code=400)
+        if selectedSite == "forums.spacebattles":
+            # Check if book_chapter_urls is a list of undefined elements
+            if isinstance(book_chapter_urls, list) and all(x is None or x == "undefined" for x in book_chapter_urls):
+                logging.warning("book_chapter_urls is undefined for SpaceBattles, swapping with book_chapter_titles.")
+                if not book_chapter_titles:
+                    errorText = "book_chapter_titles is also undefined for SpaceBattles."
+                    write_to_logs(errorText)
+                    return JSONResponse(content={"error": errorText}, status_code=400)
+                book_chapter_urls = book_chapter_titles                
+        else:
+            if not any(selectedSite in str(url) for url in book_chapter_urls):
+                errorText=(f"Selected site {selectedSite} not in book_chapter_urls: {book_chapter_urls}")
+                write_to_logs(errorText)
+                return JSONResponse(content={"error": errorText}, status_code=400)
+        
         logging.error(f"Scraping book: {bookTitle} from {selectedSite}")
         #return JSONResponse(content={"message": "Scraping started"}, status_code=200)
         book = {
             "bookID": bookID,
-            "bookName": bookTitle,
+            "bookTitle": bookTitle,
             "bookAuthor": bookAuthor,
             "websiteHost": selectedSite,
             "book_chapter_urls": book_chapter_urls,
             "mainBookURL": mainBookURL,
         }
         
-        dirLocation = await refactor.search_page_scrape_interface(book, cookie, mainBookURL)
+        dirLocation = await refactor.search_page_scrape_interface(book, cookie, additionalConditions)
 
 
         fileName=bookTitle
@@ -380,8 +396,10 @@ async def scrapeBook(request: Request):
         return FileResponse(path=dirLocation, filename=fileName, headers=headers, status_code=200)
     except Exception as e:
         logging.error(f"Error in scrape_Book: {e}")
-        return JSONResponse(content={"error": "Invalid request"}, status_code=400)
-    
+        errorText = f"Error in scrape_Book: {e}"
+        write_to_logs(errorText)
+        return JSONResponse(content={"error": errorText}, status_code=400)
+
 
 #DONE: Write hashing function for passwords
 #DONE:Create user login function

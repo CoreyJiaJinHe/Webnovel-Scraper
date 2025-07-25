@@ -69,7 +69,7 @@ OnlineBookEditorPage TODO
 //Also make it so that I can delete files from said page
 //Make sure I am a developer to access this page
 //Books are opened via search of their name, fuzzy search.
-
+//Make it so that I can change the 'source' / 'websiteHost' of the book from this page as well.
 
 mainModule.py TODO
 // #DONE TODO: If the book already exists, we should check if the latest chapter is the same as the one in the database.
