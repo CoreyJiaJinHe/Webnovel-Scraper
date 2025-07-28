@@ -162,7 +162,7 @@ def delete_from_Chapter_List(deleteRange,existingChapterList):
 
 
 
-    
+
 class RoyalRoadScraper():
     async def get_soup(self,url):
         try:
@@ -1627,59 +1627,70 @@ class SpaceBattlesEpubProducer():
                 soup = await sbScraper.get_soup(page_url)
                 #logging.warning(soup)
                 
-                
-                
-                threadmarkArticles=soup.find_all("article",{"class":"message"})
+                found_titles = []
+                for span in soup.find_all("span", {"class": "threadmarkLabel"}):
+                    title = span.get_text(strip=True)
+                    found_titles.append(title)
+
+                # Check which found_titles are in book_chapter_titles
+                matched_titles = [title for title in found_titles if title in book_chapter_titles]
+                if not matched_titles:
+                    # No requested chapters on this page, move to next page
+                    continue
+
+                threadmarkArticles = soup.find_all("article", {"class": "message"})
                 if not threadmarkArticles:
-                    errorText=f"Failed to retrieve threadmark body. Function produce_custom_epub Error: No threadmark body found for page {pageNum}."
+                    errorText = f"Failed to retrieve threadmark body. Function produce_custom_epub Error: No threadmark body found for page {pageNum}."
                     write_to_logs(errorText)
                     continue
                 #logging.warning(threadmarkBody)
                 
-                if threadmarkArticles:
-                    for threadmarkArticle in threadmarkArticles:
-                        threadmarkTitle=threadmarkArticle.find("span",{"class":"threadmarkLabel"})
-                        if not threadmarkTitle:
-                            errorText=f"Failed to retrieve threadmark title. Function produce_custom_epub Error: No threadmark title found for page {pageNum}."
+                for threadmarkArticle in threadmarkArticles:
+                    threadmarkTitle=threadmarkArticle.find("span",{"class":"threadmarkLabel"})
+                    if not threadmarkTitle:
+                        errorText=f"Failed to retrieve threadmark title. Function produce_custom_epub Error: No threadmark title found for page {pageNum}."
+                        write_to_logs(errorText)
+                        continue
+                    chapter_title = remove_tags_from_title(threadmarkTitle.get_text())
+                    logging.warning(f"Processing chapter: {chapter_title}")
+                    
+                    if chapter_title in matched_titles:
+                        file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(
+                            threadmarkArticle, book_title, pageNum, image_counter, exclude_images
+                        )
+                        if not file_chapter_title:
+                            errorText = f"Failed to process threadmark article. Function produce_custom_epub Error: No valid chapter title found for page {pageNum}."
                             write_to_logs(errorText)
                             continue
-                        chapter_title = threadmarkTitle.get_text()
-                        chapter_title = remove_tags_from_title(chapter_title)
-                        logging.warning(f"Chapter Title: {chapter_title}")
+
+                        stringChapterContent=str(chapter_content)
+                        pageContent=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
+                        #fileTitle=book_title+" - "+str(pageNum)
+                        pageContent=bs4.BeautifulSoup(str(pageContent),'html.parser')
+                        logging.warning(pageContent)
+                        logging.warning(file_chapter_title)
                         
-                        if (chapter_title in book_chapter_titles):
-                            file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(threadmarkArticle, book_title, pageNum, image_counter, exclude_images)
-                            if not file_chapter_title:
-                                errorText=f"Failed to process threadmark article. Function produce_custom_epub Error: No valid chapter title found for page {pageNum}."
-                                write_to_logs(errorText)
-                                continue
-    
-                            stringChapterContent=str(chapter_content)
-                            pageContent=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
-                            #fileTitle=book_title+" - "+str(pageNum)
-                            pageContent=bs4.BeautifulSoup(str(pageContent),'html.parser')
-                            logging.warning(pageContent)
-                            logging.warning(file_chapter_title)
-                            
-                            chapter_content=pageContent.encode('ascii')
-                            #It needs to be encoded. No idea why again.
-                            chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)                            
-                            toc_list.append(chapter)
-                            new_epub.add_item(chapter)
-                            
-                            # Remove the found title from book_chapter_titles
-                            book_chapter_titles.remove(chapter_title)
-                            
-                            # If no more titles to scrape, break out of the page loop
-                            if not book_chapter_titles:
-                                logging.warning("All requested chapter titles have been scraped. Ending loop early.")
-                                break
+                        chapter_content=pageContent.encode('ascii')
+                        #It needs to be encoded. No idea why again.
+                        chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)                            
+                        toc_list.append(chapter)
+                        new_epub.add_item(chapter)
+                        
+                        # Remove the found title from book_chapter_titles
+                        book_chapter_titles.remove(chapter_title)
+                        
+                        # If no more titles to scrape, break out of the page loop
+                        if not book_chapter_titles:
+                            logging.warning("All requested chapter titles have been scraped. Ending loop early.")
+                            break
                 if not book_chapter_titles:
                     logging.warning("All requested chapter titles have been scraped. Ending loop early.")
                     break                
         except Exception as e:
             errorText=f"Failed to process chapter for custom epub. Function spacebattles produce_custom_epub Error: {e}"
             write_to_logs(errorText)
+            
+        
         dirLocation=f"./books/raw/temporary/cover_image.png"
         cover_image=None
         if os.path.exists(dirLocation):

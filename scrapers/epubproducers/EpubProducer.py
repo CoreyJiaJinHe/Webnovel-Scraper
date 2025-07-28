@@ -28,7 +28,6 @@ class EpubProducer:
     async def extract_chapter_ID(self,chapter_url):
         raise NotImplementedError("Subclasses must implement this method.")
     
-    #TODO: This needs modifying
     async def retrieve_images_in_chapter(self,images_url,image_dir,image_count,new_epub):
         current_image_count=image_count
         try:
@@ -73,15 +72,14 @@ class EpubProducer:
         with open(dir_location, "r") as f:
             return f.read()
 
-    # def extract_chapter_ID(self, chapter_url):
-    #     return chapter_url.split("/")[-2]
-
     def extract_chapter_title(self, dir_location):
         return os.path.basename(dir_location).split(" - ")[-1].replace(".html", "")
 
     def create_epub_chapter(self, chapter_title,file_chapter_title,chapter_content, css):
         try:
-            chapter_content=chapter_content.encode('ascii')
+            if not isinstance(chapter_content, str):
+                chapter_content = str(chapter_content)
+            #chapter_content=chapter_content.encode('ascii')
             chapter=epub.EpubHtml(title=chapter_title,file_name=file_chapter_title+'.xhtml',lang='en')
             chapter.set_content(chapter_content)
             chapter.add_item(css)
@@ -93,11 +91,16 @@ class EpubProducer:
     def add_cover_image(self, book_title, new_epub):
         img = retrieve_cover_from_storage(book_title)
         if img:
-            b = io.BytesIO()
-            img.save(b, "png")
-            b_image = b.getvalue()
-            cover_item = epub.EpubItem(uid="cover_image", file_name="images/cover_image.png", media_type="image/png", content=b_image)
-            new_epub.add_item(cover_item)
+            b=io.BytesIO()
+            try:
+                img.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
 
     def finalize_epub(self, new_epub, toc_list, book_title, chapter_metadata):
         self.write_order_of_contents(book_title, chapter_metadata)
@@ -116,6 +119,7 @@ class EpubProducer:
                 logging.warning(data)
                 f.write(";".join(str(data))+ "\n")
 
+    #This is a common function that can be used by all EpubProducer classes, unless it is Spacebattles. In that case, it will be overridden.
     async def produce_epub(self, url, book_title, css, new_epub):
         already_saved_chapters = self.get_existing_order_of_contents(book_title)
         chapter_list = await self.fetch_chapter_list(url)
@@ -131,10 +135,7 @@ class EpubProducer:
                 chapter_content = self.get_chapter_contents_from_saved(dir_location)
                 chapter_title = self.extract_chapter_title(dir_location)
                 chapter_content_soup=bs4.BeautifulSoup(chapter_content,'html.parser')
-                
-                
-                
-                #TODO: THIS NEEDS MODIFYING
+                # Extract images from the chapter content
                 images=chapter_content_soup.find_all('img')
                 images=[image['src'] for image in images]
                 image_dir = f"./books/raw/{book_title}/"
@@ -191,4 +192,7 @@ class EpubProducer:
         except Exception as e:
             errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
             write_to_logs(errorText)
+            
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
+        raise NotImplementedError("Subclasses must implement this method.")
             

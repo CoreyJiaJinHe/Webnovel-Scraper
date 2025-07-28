@@ -11,64 +11,126 @@ import aiohttp
 import EpubProducer
 from scrapers.RoyalRoadScraper import RoyalRoadScraper
 from common import(
-    store_chapter
+    store_chapter,
+    write_to_logs, 
+    check_directory_exists, 
+    make_directory, 
+    remove_tags_from_title, 
+    store_chapter, 
+    retrieve_cover_from_storage, 
+    storeEpub, 
+    basicHeaders,
+    
+    setCookie,
+    get_first_last_chapter,
+    remove_invalid_characters,
+    create_epub_directory_url,
+    
+    interception,
+    generate_new_ID
 )
 
-
-
-
 class RoyalRoadEpubProducer(EpubProducer):
-    async def fetch_chapter_list(self, url):
-        scraper = RoyalRoadScraper()
-        return await scraper.fetch_chapter_list(url)
+    #Unique ChapterID extraction for RoyalRoad
+    def extract_chapter_ID(self, chapter_url):
+        return chapter_url.split(";")[0]
 
-    async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
-        scraper = RoyalRoadScraper()
-        soup = await scraper.get_soup(chapter_url)
-        #logging.warning(soup)
-        chapter_title = await scraper.fetch_chapter_title(soup)
-        #logging.warning(chapter_title)
-        chapter_content = await scraper.fetch_chapter_content(soup)
-        # Save chapter content
+    async def produce_epub(self, book_title, css, new_epub):
+        return await EpubProducer.produce_epub(self, book_title, css, new_epub)
+
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
+        if not book_chapter_urls:
+            errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        rrScraper=RoyalRoadScraper()
         
-        
-        
-        hyperlinks=chapterContent.find_all('a',{'class':'link'})
-        for link in hyperlinks:
-            if ("emoji" in link):
-                link.extract() #Remove emoji links
-            if 'imgur' in link['href']:
-                p_text=link.get_text()
-                imgur_url=link['href']
-                if not imgur_url.startswith('https://i.imgur.com/'):
-                    match = re.search(r'(https?://)?(www\.)?imgur\.com/([a-zA-Z0-9]+)', imgur_url)
+        toc_list = []
+        image_counter=0
+        current_image_counter=0
+        try:
+            for chapter_url in book_chapter_urls:
+                logging.error(chapter_url)
+                soup = await rrScraper.get_soup(chapter_url)
+                #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
+                
+                def extract_chapter_ID(chapter_url):
+                    import re
+                    match = re.search(r'/(\d+)/?$', chapter_url)
                     if match:
-                        imgur_id = match.group(3)  # Extract the unique Imgur ID
-                        imgur_url = f"https://i.imgur.com/{imgur_id}.png"  # Convert to i.imgur.com format
-                p_tag=bs4.BeautifulSoup(f"<p>{p_text}</p><div><img class=\"image\" src={imgur_url}></div>", 'html.parser')
-                link.replace_with(p_tag)
-                chapterContent=bs4.BeautifulSoup(str(chapterContent),'html.parser')
-        
-        
-        
-        currentImageCount=image_count
-        # Process images
-        images=chapter_content.find_all('img')
-        images=[image['src'] for image in images]
-        logging.warning(images)
-        image_dir = f"./books/raw/{book_title}/images/"
-        if images:
-            image_count = await self.save_images_in_chapter(images, image_dir, image_count, new_epub)
-            for img,image in zip(chapter_content.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
-                currentImageCount+=1
-        
-        encoded_chapter_content=chapter_content.encode('ascii')
-        
-        store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
+                        return match.group(1)
 
-        return chapter_title, chapter_content, image_count
+                chapter_id = extract_chapter_ID(chapter_url)
+                chapter_title = await rrScraper.fetch_chapter_title(soup)
+                chapter_title = remove_invalid_characters(chapter_title)
+                # logging.warning(chapter_id)
+                # logging.warning(chapter_title)
+                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+                #logging.warning(chapter_content)
+                #chapter_conte_soup appears to not be working?
+                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+                #write_to_logs(str(chapter_content_soup).encode("ascii", "ignore").decode("ascii"))
+                #logging.error(chapter_content_soup)
+                if (additionalConditions.get("exclude_images", False)):
+                    # Remove images if exclude_images is True
+                    for img in chapter_content_soup.find_all('img'):
+                        img.decompose()
+                else:
+                    images=chapter_content_soup.find_all('img')
+                    images=[image['src'] for image in images]
+                    image_dir = f"./books/raw/temporary/"
+                    
+                    #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
+                    if images:
+                        current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
+                
+                logging.warning(chapter_title)
+                logging.warning(file_chapter_title)
+                
+                #This function is not working for some odd reason.
+                chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
+                logging.error("This should be a chapter object below this line.")
+                logging.error(chapter)
+                toc_list.append(chapter)
+                new_epub.add_item(chapter)
+        except Exception as e:
+            errorText=f"Failed to process chapter for custom epub. Function produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
+        
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
 
-    #Extracts the chapter ID from the URL. Royalroad has unique IDs that increase with each chapter.
-    async def extract_chapter_ID(self,chapter_url):
-        return chapter_url.split("/")[-2]
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+
+        try:
+            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
+
+

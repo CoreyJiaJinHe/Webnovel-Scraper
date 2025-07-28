@@ -1,18 +1,37 @@
 import bs4
 import aiohttp
 from common import write_to_logs, basicHeaders
+import os
+import logging
+import asyncio
+import re
 
 class Scraper:
     async def fetch_novel_data(self,url):
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
     async def fetch_chapter_list(self,url):
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
     async def fetch_chapter_content(self,soup):
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
     async def fetch_chapter_title(self,soup):
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement this method.")
+    
+    async def fetch_cover_image(self, soup, bookTitle):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    async def process_new_book(self, book_url, book_title):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    async def process_new_chapter_non_saved(self, chapter_url, book_title, chapter_id, image_count):
+        raise NotImplementedError("Subclasses must implement this method.")
+    
+    async def query_site(self, title, additionalConditions, cookie):
+        raise NotImplementedError("Subclasses must implement this method.")
+    
     async def get_soup(self,url):
-        
         try:
             async with aiohttp.ClientSession(headers = basicHeaders) as session:
                 async with session.get(url) as response:
@@ -27,5 +46,68 @@ class Scraper:
                         write_to_logs(errorText)
         except Exception as e:
             errorText=f"Failed to get soup. Function get_soup Error: {e}, {url}"
-
-
+            write_to_logs(errorText)
+    
+    def write_order_of_contents(self, book_title, chapter_metadata):
+        file_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        logging.warning(chapter_metadata)
+        with open(file_location, "w") as f:
+            for data in chapter_metadata:
+                if isinstance(data, str):
+                    data = data.strip().split(";")
+                logging.warning(data)
+                f.write(";".join(map(str, data))+ "\n")
+    #These two function are from epubproducer. They are common.
+    def get_existing_order_of_contents(self, book_title):
+        # Default implementation
+        dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dir_location):
+            with open(dir_location, "r") as f:
+                return f.readlines()
+        return []
+    def check_if_chapter_exists(self, chapter_id, saved_chapters):
+        for chapter in saved_chapters:
+            if str(chapter_id) in chapter:
+                return True
+        return False
+    async def save_images_in_chapter(self, img_urls, save_directory, image_count):
+        if not os.path.exists(save_directory):
+            os.makedirs(save_directory)
+        #logging.warning(img_urls)
+        try:
+            for img_url in img_urls:
+                image_path = f"{save_directory}image_{image_count}.png"
+                if not os.path.exists(image_path):
+                    async with aiohttp.ClientSession(headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",}) as session:
+                        if not isinstance(img_url,str):
+                            img_url=img_url["src"]
+                        async with session.get(img_url) as response:
+                            if response.status == 200:
+                                response=await response.content.read()
+                                with open(image_path, "wb") as f:
+                                    f.write(response)
+                        image_count += 1
+                await asyncio.sleep(0.5)
+            return image_count
+        except Exception as e:
+            errorText=f"Failed to get save image. Function save_images_in_chapter Error: {e}"
+            write_to_logs(errorText)
+            
+    
+    async def remove_junk_links_from_soup(self, chapter_content):
+        hyperlinks=chapter_content.find_all('a',{'class':'link'})
+        for link in hyperlinks:
+            if ("emoji" in link):
+                link.extract() #Remove emoji links
+            if 'imgur' in link['href']:
+                p_text=link.get_text()
+                imgur_url=link['href']
+                if not imgur_url.startswith('https://i.imgur.com/'):
+                    match = re.search(r'(https?://)?(www\.)?imgur\.com/([a-zA-Z0-9]+)', imgur_url)
+                    if match:
+                        imgur_id = match.group(3)  # Extract the unique Imgur ID
+                        imgur_url = f"https://i.imgur.com/{imgur_id}.png"  # Convert to i.imgur.com format
+                p_tag=bs4.BeautifulSoup(f"<p>{p_text}</p><div><img class=\"image\" src={imgur_url}></div>", 'html.parser')
+                link.replace_with(p_tag)
+                chapter_content=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+        return chapter_content
