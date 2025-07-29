@@ -88,6 +88,7 @@ class EpubProducer:
             errorText=f"Failed to create chapter to add to epub. Function create_epub_chapter Error: {error}"
             write_to_logs(errorText)
 
+    #Maybe modify this to work with a general directory location instead of a book title. It may be more efficient.
     def add_cover_image(self, book_title, new_epub):
         img = retrieve_cover_from_storage(book_title)
         if img:

@@ -84,11 +84,12 @@ class RoyalRoadEpubProducer(EpubProducer):
                     #TODO: Image counter error. After saving X images, we start at X instead of starting at 0.
                     if images:
                         current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
+                        #No need to update the image sources in the soup. It has already been done as part of process_new_chapter_non_saved.
                 
                 logging.warning(chapter_title)
                 logging.warning(file_chapter_title)
                 
-                #This function is not working for some odd reason.
+                #This function is ~~not~~ working for some odd reason. It is working now
                 chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
                 logging.error("This should be a chapter object below this line.")
                 logging.error(chapter)

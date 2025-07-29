@@ -2538,10 +2538,72 @@ class NovelBinScraper():
         chapterID=int(first_number)*10000+int(chapterID)
         return str(chapterID)
 
-
-
-
-
+    async def query_site(self, title, additionalConditions,cookie):
+        return await self.query_novelbin(title)
+        
+        
+    async def query_novelbin(self, title):
+        if (title.isspace() or title==""):
+            errorText=f"Failed to search title. Function query_novelbin Error: No title inputted"
+            write_to_logs(errorText)
+            return "Invalid Title"
+        querylink=f"https://novelbin.com/search?keyword={title}"
+        soup= await self.get_soup(querylink)
+        try:
+            resultContainer=soup.find ("div",{"class":"list-novel"})
+            if not resultContainer:
+                errorText=f"Failed to find result container. Function query_novelbin Error: No results found for the title {title}"
+                write_to_logs(errorText)
+                return "No Results Found"
+            resultRows=resultContainer.find_all("div",{"class":"row"})
+            bookTitles=resultRows.find_all("h3",{"class":"novel-title"})
+            bookLinks=resultRows.find_all("a",{"class":"novel-link"})
+            firstResult=bookLinks[0]["href"]
+            return firstResult
+        except Exception as error:
+            errorText=f"Failed to query novelbin. Function query_novelbin Error: {error}"
+            write_to_logs(errorText)
+            return "Error Occurred"
+            
+    async def process_new_chapter_non_saved(self, chapter_url, book_title, chapter_id, image_count):
+        try:
+            soup = await self.get_soup(chapter_url)
+            chapter_title = await self.fetch_chapter_title(soup)
+            chapter_content = await self.fetch_chapter_content(soup)
+            chapter_content = await self.remove_junk_links_from_soup(chapter_content)
+            #logging.warning(chapter_content)
+            #logging.warning(chapter_title)
+            currentImageCount=image_count
+            # Process images
+            images=chapter_content.find_all('img')
+            images=[image['src'] for image in images]
+            logging.warning("The warning below is for images.")
+            logging.warning(images)
+            #Do not save these images permanent. Always overwrite.
+            image_dir = f"./books/raw/temporary/images/"
+            if images:
+                image_count = await self.save_images_in_chapter(images, image_dir, image_count)
+                for img,image in zip(chapter_content.find_all('img'),images):
+                    img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                    currentImageCount+=1
+            
+            file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+            
+            return file_chapter_title, currentImageCount, chapter_content
+        except Exception as e:
+            errorText=f"Failed to process new chapter. Function process_new_chapter_non_saved Error: {e}"
+            write_to_logs(errorText)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 class NovelBinEpubProducer():
     #These two function are from epubproducer. They may become a 'common' function
@@ -2681,8 +2743,83 @@ class NovelBinEpubProducer():
         self.finalize_epub(new_epub, toc_list, book_title)
 
 
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions)
+        if not book_chapter_urls:
+            errorText="Function produce_custom_epub. Error: No chapters provided for the custom epub."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        
+        nbScraper= NovelBinScraper()
+        toc_list=[]
+        image_counter=0
+        current_image_counter=0
 
+        try:
+            for chapter_url in book_chapter_urls:
+                logging.error (chapter_url)
+                soup=await nbScraper.get_soup(chapter_url)
+                
+                chapter_id= await nbScraper.extract_chapter_ID(chapter_url)
+                chapter_title=await nbScraper.fetch_chapter_title(soup)
+                chapter_title = remove_invalid_characters(chapter_title)
+                
+                file_chapter_title, image_counter, chapter_content = await nbScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id, image_counter)  
+                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+                
+                if (additionalConditions.get("exclude_images", False)):
+                    for img in chapter_content_soup.find_all('img'):
+                        img.decompose()
+                else:
+                    images=chapter_content_soup.find_all('img')
+                    images=[image['src'] for image in images]
+                    image_dir = f"./books/raw/temporary/"
+                    if images:
+                        current_image_counter=await self.retrieve_images_in_chapter(images, image_dir, current_image_counter, new_epub)
+                chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
+                toc_list.append(chapter)
+                new_epub.add_item(chapter)
+        except Exception as e:
+            errorText=f"Failed to produce custom epub. Function produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
+            return
+        
+        
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
 
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+
+        try:
+            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
+                
 
 
 
@@ -2971,7 +3108,6 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
         searchConditions=adapt_search_conditions(searchConditions)
         
         #If input is not a URL, treat it as a search query
-        #default search query will be Royalroad
         #I need to standardize the query_site function 
         url=await scraper.query_site(input.strip(), searchConditions,cookie)
         logging.warning(f"Search URL: {url}")

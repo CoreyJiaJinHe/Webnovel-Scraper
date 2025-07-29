@@ -6,102 +6,183 @@ import asyncio
 import logging
 import re
 
+from dotenv import load_dotenv, find_dotenv
 
+env_path = find_dotenv()
+load_dotenv(env_path, override=True)
+logLocation=os.getenv("logs")
 
-def test_compare_images():
-    img1_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image.png')
-    img2_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image - Copy.png')
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from seleniumwire import webdriver
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+logging.getLogger('seleniumwire').setLevel(logging.WARNING)
+import bs4
+firefox_options = FirefoxOptions()
 
-    if not os.path.exists(img1_path):
-        print(f"File not found: {img1_path}")
-        return
-    if not os.path.exists(img2_path):
-        print(f"File not found: {img2_path}")
-        return
+# Path to .xpi extension file
+path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
 
+basicHeaders={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
+    "Accept-Encoding": "gzip, deflate, br",
+    "cookie": "cf_clearance=jmBzhtY.V13RoM4LZ9yjMeu..PVR2JJL4uULCtTpHu0-1753819000-1.2.1.1-OwVqAu5q0mfU3dvvHEaLaCuWZGrWWDsx1m32nOQc4szC6pp5WaY1WAs1Y1gDOHEkS5uynZ2RlJChHNeE4gW7PV4aCBnG1zjHQc5SS72ILgnrKVOdlD9s9_dXwfo7fC.hqTUmK9fqRgI2.XZ5SSXvYjdXT9L_E0DT6tvM8ZKnnVKZ41VaoscTz4zD31xGLuoce62eht1krkOwsEQqV.OxrnFYxxFzSLDjUNaNoblGuYk;_csrf=1oo4rZymlY8P6PkfYrnnsI3q"
+}
+
+def interception (request):
+    global cookie
+    del request.headers['User-Agent']
+    del request.headers['Accept']
+    del request.headers['Accept-Language']
+    del request.headers['Accept-Encoding']
+    del request.headers['Cookie']
+    
+    request.headers['User-Agent']=basicHeaders["User-Agent"]
+    request.headers['Accept']=basicHeaders["Accept"]
+    request.headers['Accept-Language']=basicHeaders["Accept-Language"]
+    request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
+    #request.headers['Cookie']=basicHeaders["cookie"]
+
+async def open_link(url):
     try:
-        img1 = Image.open(img1_path)
-        img2 = Image.open(img2_path)
-        diff = ImageChops.difference(img1, img2)
-        if not diff.getbbox():
-            #logging.warning("Images are the same.")
-            return True
+        driver = webdriver.Firefox(options=firefox_options)
+        
+        path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
+        if not path_to_extension:
+            logging.warning("LOCAL_ADBLOCK_EXTENSION environment variable is not set.")
         else:
-            #logging.warning("Images are different.")
-            return False
+            # Now safe to use path_to_extension
+            driver.install_addon(path_to_extension, temporary=True)
+        
+        driver.install_addon(path_to_extension, temporary=True)
+        driver.request_interceptor=interception
+        driver.get(url)
+
+        WebDriverWait(driver, 10).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+        soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
+        logging.warning(soup)
+        driver.close()
+        logging.warning(f"Opened link: {url}")
     except Exception as e:
-        #logging.warning(f"Images are different (exception occurred: {e})")
-        return False
+        logging.warning(f"Error opening link {url}: {e}")
+        soup = None
 
-async def download_file(url, filename):
-    async with aiohttp.ClientSession(headers = {
-            'User-agent': 'Image Bot'}) as session:
-        async with session.get(url) as response:
-            logging.warning(response.status)
-            if response.status !=200:
-                logging.warning("Failed to connect")
-            logging.warning(response.content)
-            with open(filename, "wb") as f: 
-                chunk_size = 4096
-                async for data in response.content.iter_chunked(chunk_size):
-                    f.write(data)
+asyncio.run(open_link("https://novelbin.com/b/alantina-online-the-greatest-sword-mage-reborn-as-a-weak-npc/chapter-78-rare-drops-part-1"))
 
-#asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
-
-
-def test():
-    urls=["https://www.royalroad.com/fiction/82591/magic-murder-cube-marine",
-    "https://novelbin.me/novel-book/raising-orphans-not-assassins",
-    "https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/",
-    "https://forums.spacebattles.com/threads/quahinium-industries-shipworks-kancolle-si.1103320/",
-    "https://novelbin.com/b/"
-    ]
-    root_domains=[]
-    for url in urls:
-        match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", url)
-        if match:
-            root_domains.append(match.group(1))
-    logging.warning(root_domains)
-test()
-
-
-
-async def updateEpub(novelURL,bookTitle):
-    already_saved_chapters=get_existing_order_of_contents(bookTitle)
-    chapterMetaData=list()
-    imageCount=0
-    logging.warning("Finding chapters not stored")
-    logging.warning(await RoyalRoad_Fetch_Chapter_List(novelURL))
-    for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
-        chapterID=extract_chapter_ID(url)
-        if not (check_if_chapter_exists(chapterID,already_saved_chapters)):
-            soup=await getSoup(url)
-            chapterTitle=await fetch_Chapter_Title(soup)
-            logging.warning(url)
-            fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
-            chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
-            chapterContent=await RoyalRoad_Fetch_Chapter(soup)
-            if chapterContent:
-                images=chapterContent.find_all('img')
-                images=[image['src'] for image in images]
-                imageDir=f"./books/raw/{bookTitle}/images/"
-                currentImageCount=imageCount
-                #logging.warning(images)
-                if (images):
-                    imageCount=await save_images_in_chapter(images,imageDir,imageCount)
-                    for img,image in zip(chapterContent.find_all('img'),images):
-                        img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+async def open_link(url):
+    try:
+        async with aiohttp.ClientSession(headers=basicHeaders) as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    return await response.text()
                 else:
-                    logging.warning("Chapter has no images")
-            else:
-                logging.warning("chapterContent is None")
+                    logging.warning(f"Failed to open link: {url}, Status: {response.status}")
+    except Exception as e:
+        logging.warning(f"Error opening link {url}: {e}")
+
+asyncio.run(open_link("https://novelbin.com/b/alantina-online-the-greatest-sword-mage-reborn-as-a-weak-npc/chapter-78-rare-drops-part-1"))
+
+# def test_compare_images():
+#     img1_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image.png')
+#     img2_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image - Copy.png')
+
+#     if not os.path.exists(img1_path):
+#         print(f"File not found: {img1_path}")
+#         return
+#     if not os.path.exists(img2_path):
+#         print(f"File not found: {img2_path}")
+#         return
+
+#     try:
+#         img1 = Image.open(img1_path)
+#         img2 = Image.open(img2_path)
+#         diff = ImageChops.difference(img1, img2)
+#         if not diff.getbbox():
+#             #logging.warning("Images are the same.")
+#             return True
+#         else:
+#             #logging.warning("Images are different.")
+#             return False
+#     except Exception as e:
+#         #logging.warning(f"Images are different (exception occurred: {e})")
+#         return False
+
+# async def download_file(url, filename):
+#     async with aiohttp.ClientSession(headers = {
+#             'User-agent': 'Image Bot'}) as session:
+#         async with session.get(url) as response:
+#             logging.warning(response.status)
+#             if response.status !=200:
+#                 logging.warning("Failed to connect")
+#             logging.warning(response.content)
+#             with open(filename, "wb") as f: 
+#                 chunk_size = 4096
+#                 async for data in response.content.iter_chunked(chunk_size):
+#                     f.write(data)
+
+# #asyncio.run(download_file("https://i.imgur.com/Kd5ERk2.jpg", "image.jpg"))
+
+
+# def test():
+#     urls=["https://www.royalroad.com/fiction/82591/magic-murder-cube-marine",
+#     "https://novelbin.me/novel-book/raising-orphans-not-assassins",
+#     "https://www.foxaholic.com/novel/hikikomori-vtuber-wants-to-tell-you-something/",
+#     "https://forums.spacebattles.com/threads/quahinium-industries-shipworks-kancolle-si.1103320/",
+#     "https://novelbin.com/b/"
+#     ]
+#     root_domains=[]
+#     for url in urls:
+#         match = re.search(r"https://(?:www\.)?([A-Za-z0-9.-]+)", url)
+#         if match:
+#             root_domains.append(match.group(1))
+#     logging.warning(root_domains)
+# test()
+
+
+
+# async def updateEpub(novelURL,bookTitle):
+#     already_saved_chapters=get_existing_order_of_contents(bookTitle)
+#     chapterMetaData=list()
+#     imageCount=0
+#     logging.warning("Finding chapters not stored")
+#     logging.warning(await RoyalRoad_Fetch_Chapter_List(novelURL))
+#     for url in await RoyalRoad_Fetch_Chapter_List(novelURL):
+#         chapterID=extract_chapter_ID(url)
+#         if not (check_if_chapter_exists(chapterID,already_saved_chapters)):
+#             soup=await getSoup(url)
+#             chapterTitle=await fetch_Chapter_Title(soup)
+#             logging.warning(url)
+#             fileChapterTitle = f"{bookTitle} - {chapterID} - {remove_invalid_characters(chapterTitle)}"
+#             chapterMetaData.append([chapterID,url,f"./books/raw/{bookTitle}/{fileChapterTitle}.html"])
+#             chapterContent=await RoyalRoad_Fetch_Chapter(soup)
+#             if chapterContent:
+#                 images=chapterContent.find_all('img')
+#                 images=[image['src'] for image in images]
+#                 imageDir=f"./books/raw/{bookTitle}/images/"
+#                 currentImageCount=imageCount
+#                 #logging.warning(images)
+#                 if (images):
+#                     imageCount=await save_images_in_chapter(images,imageDir,imageCount)
+#                     for img,image in zip(chapterContent.find_all('img'),images):
+#                         img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")
+#                 else:
+#                     logging.warning("Chapter has no images")
+#             else:
+#                 logging.warning("chapterContent is None")
             
             
 
-            chapterContent=chapterContent.encode('ascii')
-            store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
-            await asyncio.sleep(0.5)
-    append_order_of_contents(bookTitle, chapterMetaData)
+#             chapterContent=chapterContent.encode('ascii')
+#             store_chapter(chapterContent,bookTitle,chapterTitle,chapterID)
+#             await asyncio.sleep(0.5)
+#     append_order_of_contents(bookTitle, chapterMetaData)
 
 
 # def generate_Epub_Based_On_Stored_Order(new_epub, bookTitle):
