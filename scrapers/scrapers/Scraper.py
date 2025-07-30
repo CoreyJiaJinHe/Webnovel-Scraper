@@ -57,6 +57,7 @@ class Scraper:
                     data = data.strip().split(";")
                 logging.warning(data)
                 f.write(";".join(map(str, data))+ "\n")
+                
     #These two function are from epubproducer. They are common.
     def get_existing_order_of_contents(self, book_title):
         # Default implementation
@@ -70,6 +71,7 @@ class Scraper:
             if str(chapter_id) in chapter:
                 return True
         return False
+
     async def save_images_in_chapter(self, img_urls, save_directory, image_count):
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)

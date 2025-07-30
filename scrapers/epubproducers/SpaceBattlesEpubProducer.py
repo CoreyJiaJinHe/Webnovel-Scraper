@@ -224,12 +224,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
             except Exception as e:
                 logging.warning(f"There is no cover image:{e}")
         
-        new_epub.toc=tocList
-        new_epub.spine=tocList
-        new_epub.add_item(epub.EpubNcx())
-        new_epub.add_item(epub.EpubNav())
-        
-        self.write_order_of_contents(bookTitle, chapterMetaData)
+        self.finalize_epub(new_epub, tocList, bookTitle)
         
         # logging.warning("Attempting to store epub")
         storeEpub(bookTitle, new_epub)

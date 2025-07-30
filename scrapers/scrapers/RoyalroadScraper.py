@@ -35,6 +35,8 @@ import Scraper
 class RoyalRoadScraper(Scraper):
     async def get_soup(self,url):
         return await Scraper.get_soup(url)
+    async def remove_junk_links_from_soup(self, soup):
+        return await Scraper.remove_junk_links_from_soup(soup)
     
     async def fetch_novel_data(self, novelURL):
         soup=await self.get_soup(novelURL)

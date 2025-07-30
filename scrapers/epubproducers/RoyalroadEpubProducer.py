@@ -119,11 +119,8 @@ class RoyalRoadEpubProducer(EpubProducer):
                 logging.warning(errorText)
                 write_to_logs(errorText)
 
-        new_epub.toc = toc_list
-        new_epub.spine = toc_list
-        new_epub.add_item(epub.EpubNcx())
-        new_epub.add_item(epub.EpubNav())
-
+        self.finalize_epub(new_epub, toc_list, book_title)
+        
         try:
             dirLocation="./books/epubs/temporary/"+book_title+".epub"
             if (check_directory_exists(dirLocation)):

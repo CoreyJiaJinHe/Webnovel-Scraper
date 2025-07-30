@@ -1,16 +1,43 @@
 import bs4
 import re
+import os
 import logging
+import asyncio
+import io
+from ebooklib import epub 
+from PIL import Image
+import aiohttp
 
 import EpubProducer
 from scrapers.NovelBinScraper import NovelBinScraper
 from common import(
-    store_chapter
+    store_chapter,
+    write_to_logs, 
+    check_directory_exists, 
+    make_directory, 
+    remove_tags_from_title, 
+    store_chapter, 
+    retrieve_cover_from_storage, 
+    storeEpub, 
+    basicHeaders,
+    
+    setCookie,
+    get_first_last_chapter,
+    remove_invalid_characters,
+    create_epub_directory_url,
+    
+    interception,
+    generate_new_ID
 )
 
 
-
 class NovelBinEpubProducer(EpubProducer):
+    #this might become a common function
+    #Nevermind. This one is different. It's not extracting the ID from the URL but frm the internal storage.
+    def extract_chapter_ID(self, chapter_url):
+        return chapter_url.split(";")[0]
+
+    
     async def fetch_chapter_list(self, url):
         scraper = NovelBinScraper()
         return await scraper.fetch_chapter_list(url)
@@ -22,55 +49,79 @@ class NovelBinEpubProducer(EpubProducer):
         chapter_number=int(chapter_id%10000)
         
         return f"V{volume_number}Ch{chapter_number}"
-        
     
-    async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count, new_epub):
-        scraper = NovelBinScraper()
-        soup = await scraper.get_soup(chapter_url)
-        chapter_title = await scraper.fetch_chapter_title(soup)
-        chapter_title=await self.generate_chapter_title(chapter_id)+" "+chapter_title
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions):
+        if not book_chapter_urls:
+            errorText="Function produce_custom_epub. Error: No chapters provided for the custom epub."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
         
-        chapter_content = scraper.novelbin_scrape_chapter_page(soup)
-        chapterInsert=f'<h1>{chapter_title}</h1>'
-        chapter_content=chapterInsert+str(chapter_content)
-        chapter_content=bs4.BeautifulSoup(chapter_content,'html.parser')
-        # Save chapter content
-        currentImageCount=image_count
-        # Process images
-        images=chapter_content.find_all('img')
-        images=[image['src'] for image in images]
-        logging.warning(images)
-        image_dir = f"./books/raw/{book_title}/images/"
-        if images:
-            image_count = await self.save_images_in_chapter(images, image_dir, image_count, new_epub)
-            for img,image in zip(chapter_content.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
-                currentImageCount+=1
-        
-        encoded_chapter_content=chapter_content.encode('ascii')
-        store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
+        nbScraper= NovelBinScraper()
+        toc_list=[]
+        image_counter=0
+        current_image_counter=0
 
-        return chapter_title, chapter_content, image_count
+        try:
+            for chapter_url in book_chapter_urls:
+                logging.error (chapter_url)
+                soup=await nbScraper.get_soup(chapter_url)
+                
+                chapter_id= await nbScraper.extract_chapter_ID(chapter_url)
+                chapter_title=await nbScraper.fetch_chapter_title(soup)
+                chapter_title = remove_invalid_characters(chapter_title)
+                
+                file_chapter_title, image_counter, chapter_content = await nbScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id, image_counter)  
+                chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
+                
+                if (additionalConditions.get("exclude_images", False)):
+                    for img in chapter_content_soup.find_all('img'):
+                        img.decompose()
+                else:
+                    images=chapter_content_soup.find_all('img')
+                    images=[image['src'] for image in images]
+                    image_dir = f"./books/raw/temporary/"
+                    if images:
+                        current_image_counter=await self.retrieve_images_in_chapter(images, image_dir, current_image_counter, new_epub)
+                chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
+                toc_list.append(chapter)
+                new_epub.add_item(chapter)
+        except Exception as e:
+            errorText=f"Failed to produce custom epub. Function produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
+            return
+        
+        
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
+
+        self.finalize_epub(new_epub, toc_list, book_title)
+
+        try:
+            dirLocation="./books/epubs/temporary/"+book_title+".epub"
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
+                
     
-    
-    
-    #This grabs the numbers in the URL to treat as the ChapterID.
-    #And modifies the chapterID to be a unique increasing number
-    #The first number represents the volume if it exists, and the subsequent digits represent the order of the chapters
-    async def extract_chapter_ID(self, chapter_url):
-        chapterID=chapter_url.split("/")
-        chapterID=chapterID[len(chapterID)-1]
-        first_number=10000
-        if "vol-" in chapterID:
-            first_number=re.search(r'\d+',chapterID)
-            if (first_number):
-                first_number=first_number.group()
-            chapterID = re.sub(r'vol-+\d', '', chapterID)
-        if "volume-" in chapterID:
-            first_number=re.search(r'\d+',chapterID)
-            if (first_number):
-                first_number=first_number.group()
-            chapterID = re.sub(r'volume-+\d', '', chapterID)
-        chapterID=re.search(r'\d+',chapterID).group()
-        chapterID=int(first_number)*10000+int(chapterID)
-        return str(chapterID)
