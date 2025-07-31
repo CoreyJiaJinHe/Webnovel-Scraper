@@ -659,14 +659,19 @@ class RoyalRoadEpubProducer():
     #TODO: Working on creating a new function to generate an epub with the selected chapters without actually storing them into the repository.
     #DONE? TODO: Fix this. This is currently broken with an 'NoneType' error.
     #
+    #Create an adaptor/interface for the produce_custom_epub functions
+    async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
+        scraper=RoyalRoadScraper()
+        return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
     
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
+        
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper):
         if not book_chapter_urls:
             errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
             write_to_logs(errorText)
             return
-        rrScraper=RoyalRoadScraper()
+        
         
         toc_list = []
         image_counter=0
@@ -674,7 +679,7 @@ class RoyalRoadEpubProducer():
         try:
             for chapter_url in book_chapter_urls:
                 logging.error(chapter_url)
-                soup = await rrScraper.get_soup(chapter_url)
+                soup = await scraper.get_soup(chapter_url)
                 #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
                 
                 def extract_chapter_ID(chapter_url):
@@ -684,11 +689,11 @@ class RoyalRoadEpubProducer():
                         return match.group(1)
 
                 chapter_id = extract_chapter_ID(chapter_url)
-                chapter_title = await rrScraper.fetch_chapter_title(soup)
+                chapter_title = await scraper.fetch_chapter_title(soup)
                 chapter_title = remove_invalid_characters(chapter_title)
                 # logging.warning(chapter_id)
                 # logging.warning(chapter_title)
-                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+                file_chapter_title,image_counter,chapter_content=await scraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
                 #logging.warning(chapter_content)
                 #chapter_conte_soup appears to not be working?
                 chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')

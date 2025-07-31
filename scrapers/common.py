@@ -31,29 +31,6 @@ basicHeaders={
 }
 
 
-cookie =''
-
-
-def setCookie(newCookie):
-    global cookie
-    cookie=newCookie
-
-cloudflare_cookie=cookie
-def interception (request):
-    global cookie
-    del request.headers['User-Agent']
-    del request.headers['Accept']
-    del request.headers['Accept-Language']
-    del request.headers['Accept-Encoding']
-    del request.headers['Cookie']
-    
-    request.headers['User-Agent']=basicHeaders["User-Agent"]
-    request.headers['Accept']=basicHeaders["Accept"]
-    request.headers['Accept-Language']=basicHeaders["Accept-Language"]
-    request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
-    request.headers['Cookie']=cookie
-
-
 
 
 

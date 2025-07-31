@@ -37,14 +37,17 @@ class RoyalRoadEpubProducer(EpubProducer):
 
     async def produce_epub(self, book_title, css, new_epub):
         return await EpubProducer.produce_epub(self, book_title, css, new_epub)
+    
+    async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
+        scraper=RoyalRoadScraper()
+        return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
 
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, scraper):
         if not book_chapter_urls:
             errorText="Function: royalroad_produce_custom_epub. Error: No chapters found in the bookURL. Please check the URL or the book's availability."
             logging.warning(errorText)
             write_to_logs(errorText)
             return
-        rrScraper=RoyalRoadScraper()
         
         toc_list = []
         image_counter=0
@@ -52,7 +55,7 @@ class RoyalRoadEpubProducer(EpubProducer):
         try:
             for chapter_url in book_chapter_urls:
                 logging.error(chapter_url)
-                soup = await rrScraper.get_soup(chapter_url)
+                soup = await scraper.get_soup(chapter_url)
                 #write_to_logs(str(soup).encode("ascii", "ignore").decode("ascii"))
                 
                 def extract_chapter_ID(chapter_url):
@@ -62,11 +65,11 @@ class RoyalRoadEpubProducer(EpubProducer):
                         return match.group(1)
 
                 chapter_id = extract_chapter_ID(chapter_url)
-                chapter_title = await rrScraper.fetch_chapter_title(soup)
+                chapter_title = await scraper.fetch_chapter_title(soup)
                 chapter_title = remove_invalid_characters(chapter_title)
                 # logging.warning(chapter_id)
                 # logging.warning(chapter_title)
-                file_chapter_title,image_counter,chapter_content=await rrScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
+                file_chapter_title,image_counter,chapter_content=await scraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id,image_counter)
                 #logging.warning(chapter_content)
                 #chapter_conte_soup appears to not be working?
                 chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
@@ -86,13 +89,13 @@ class RoyalRoadEpubProducer(EpubProducer):
                         current_image_counter=await self.retrieve_images_in_chapter(images, image_dir,current_image_counter,new_epub)
                         #No need to update the image sources in the soup. It has already been done as part of process_new_chapter_non_saved.
                 
-                logging.warning(chapter_title)
-                logging.warning(file_chapter_title)
+                # logging.warning(chapter_title)
+                # logging.warning(file_chapter_title)
                 
                 #This function is ~~not~~ working for some odd reason. It is working now
                 chapter = self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content_soup, css)
-                logging.error("This should be a chapter object below this line.")
-                logging.error(chapter)
+                # logging.error("This should be a chapter object below this line.")
+                # logging.error(chapter)
                 toc_list.append(chapter)
                 new_epub.add_item(chapter)
         except Exception as e:

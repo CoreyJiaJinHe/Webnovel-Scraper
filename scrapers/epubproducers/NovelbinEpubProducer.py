@@ -50,14 +50,19 @@ class NovelBinEpubProducer(EpubProducer):
         
         return f"V{volume_number}Ch{chapter_number}"
     
-    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions):
+    
+    async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
+        scraper=NovelBinScraper(cookie=cookie)
+        return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
+
+
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper):
         if not book_chapter_urls:
             errorText="Function produce_custom_epub. Error: No chapters provided for the custom epub."
             logging.warning(errorText)
             write_to_logs(errorText)
             return
         
-        nbScraper= NovelBinScraper()
         toc_list=[]
         image_counter=0
         current_image_counter=0
@@ -65,13 +70,13 @@ class NovelBinEpubProducer(EpubProducer):
         try:
             for chapter_url in book_chapter_urls:
                 logging.error (chapter_url)
-                soup=await nbScraper.get_soup(chapter_url)
+                soup=await scraper.get_soup(chapter_url)
                 
-                chapter_id= await nbScraper.extract_chapter_ID(chapter_url)
-                chapter_title=await nbScraper.fetch_chapter_title(soup)
+                chapter_id= await scraper.extract_chapter_ID(chapter_url)
+                chapter_title=await scraper.fetch_chapter_title(soup)
                 chapter_title = remove_invalid_characters(chapter_title)
-                
-                file_chapter_title, image_counter, chapter_content = await nbScraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id, image_counter)  
+
+                file_chapter_title, image_counter, chapter_content = await scraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id, image_counter)
                 chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
                 
                 if (additionalConditions.get("exclude_images", False)):

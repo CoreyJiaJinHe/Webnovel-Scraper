@@ -37,18 +37,22 @@ from common import (
     remove_invalid_characters,
     create_epub_directory_url,
     
-    interception,
     generate_new_ID
 )
 
 
 
 class FoxaholicScraper(Scraper):
+    def __init__(self, cookie=None):
+        super().__init__()
+        self.cookie = cookie  # Store the cookie for later use
+    
+        
     async def get_soup(self,url):
         try:
             driver = webdriver.Firefox(options=firefox_options)
             driver.install_addon(path_to_extension, temporary=True)
-            driver.request_interceptor=interception
+            driver.request_interceptor=self.interception
             driver.get(url)
             soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
             driver.close()
@@ -165,7 +169,7 @@ class FoxaholicScraper(Scraper):
     async def fetch_cover_image(self,title,img_url,saveDirectory):
         try:
             driver = webdriver.Firefox()
-            driver.request_interceptor=interception
+            driver.request_interceptor=self.interception
             driver.get(img_url["src"])
             image=driver.find_element(By.CSS_SELECTOR, 'img')
             driver.close()

@@ -158,4 +158,6 @@ class EpubProducer:
 
     async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
         raise NotImplementedError("Subclasses must implement this method.")
-            
+    
+    async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
+        raise NotImplementedError("Subclasses must implement this method.")

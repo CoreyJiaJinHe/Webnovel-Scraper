@@ -7,6 +7,8 @@ import asyncio
 import re
 
 class Scraper:
+    global cookie
+
     async def fetch_novel_data(self,url):
         raise NotImplementedError("Subclasses must implement this method.")
     async def fetch_chapter_list(self,url):
@@ -113,3 +115,20 @@ class Scraper:
                 link.replace_with(p_tag)
                 chapter_content=bs4.BeautifulSoup(str(chapter_content),'html.parser')
         return chapter_content
+    
+        
+    def setCookie(self,cookie):
+        self.cookie=cookie
+    
+    def interception (self, request):
+        del request.headers['User-Agent']
+        del request.headers['Accept']
+        del request.headers['Accept-Language']
+        del request.headers['Accept-Encoding']
+        del request.headers['Cookie']
+        
+        request.headers['User-Agent']=basicHeaders["User-Agent"]
+        request.headers['Accept']=basicHeaders["Accept"]
+        request.headers['Accept-Language']=basicHeaders["Accept-Language"]
+        request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
+        request.headers['Cookie']=self.cookie

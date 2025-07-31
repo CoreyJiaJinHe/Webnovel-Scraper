@@ -228,3 +228,141 @@ class SpaceBattlesEpubProducer(EpubProducer):
         
         # logging.warning("Attempting to store epub")
         storeEpub(bookTitle, new_epub)
+
+    async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
+        sbScraper=SpaceBattlesScraper()
+        return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, sbScraper)
+
+    async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_titles, mainBookURL, additionalConditions, sbScraper):
+        if not book_chapter_titles:
+            errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+        
+        
+        existingPages=await sbScraper.fetch_chapter_list(mainBookURL)
+        if not existingPages:
+            errorText="Function: spacebattles_produce_custom_epub. Error: No chapters found in the requested book. Please check the URL or the book's availability."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return
+
+        try:
+            await sbScraper.fetch_cover_image(mainBookURL, book_title)
+        except Exception as e:
+            errorText=f"Failed to fetch cover image. Function fetch_cover_image Error: {e}"
+            write_to_logs(errorText)
+        
+        url = sbScraper.normalize_spacebattles_url(mainBookURL)
+        url = sbScraper.threadmarks_to_reader(url)
+              
+        toc_list = []
+        image_counter=0
+        exclude_images= additionalConditions.get("exclude_images", False)
+        try:
+            for pageNum in range (1, existingPages+1):
+                page_url = f"{url}page-{pageNum}/"
+                logging.warning(f"Processing page: {page_url}")
+                await asyncio.sleep(1)
+                soup = await sbScraper.get_soup(page_url)
+                #logging.warning(soup)
+                
+                found_titles = []
+                for span in soup.find_all("span", {"class": "threadmarkLabel"}):
+                    title = span.get_text(strip=True)
+                    found_titles.append(title)
+
+                # Check which found_titles are in book_chapter_titles
+                matched_titles = [title for title in found_titles if title in book_chapter_titles]
+                if not matched_titles:
+                    # No requested chapters on this page, move to next page
+                    continue
+
+                threadmarkArticles = soup.find_all("article", {"class": "message"})
+                if not threadmarkArticles:
+                    errorText = f"Failed to retrieve threadmark body. Function produce_custom_epub Error: No threadmark body found for page {pageNum}."
+                    write_to_logs(errorText)
+                    continue
+                #logging.warning(threadmarkBody)
+                
+                for threadmarkArticle in threadmarkArticles:
+                    threadmarkTitle=threadmarkArticle.find("span",{"class":"threadmarkLabel"})
+                    if not threadmarkTitle:
+                        errorText=f"Failed to retrieve threadmark title. Function produce_custom_epub Error: No threadmark title found for page {pageNum}."
+                        write_to_logs(errorText)
+                        continue
+                    chapter_title = remove_tags_from_title(threadmarkTitle.get_text())
+                    logging.warning(f"Processing chapter: {chapter_title}")
+                    
+                    if chapter_title in matched_titles:
+                        file_chapter_title, image_counter, chapter_content = await sbScraper.process_new_chapter_non_saved(
+                            threadmarkArticle, book_title, pageNum, image_counter, exclude_images
+                        )
+                        if not file_chapter_title:
+                            errorText = f"Failed to process threadmark article. Function produce_custom_epub Error: No valid chapter title found for page {pageNum}."
+                            write_to_logs(errorText)
+                            continue
+
+                        stringChapterContent=str(chapter_content)
+                        pageContent=f"<div id='chapter-start'><title>{chapter_title}</title>{stringChapterContent}</div>"
+                        #fileTitle=book_title+" - "+str(pageNum)
+                        pageContent=bs4.BeautifulSoup(str(pageContent),'html.parser')
+                        logging.warning(pageContent)
+                        logging.warning(file_chapter_title)
+                        
+                        chapter_content=pageContent.encode('ascii')
+                        #It needs to be encoded. No idea why again.
+                        chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)                            
+                        toc_list.append(chapter)
+                        new_epub.add_item(chapter)
+                        
+                        # Remove the found title from book_chapter_titles
+                        book_chapter_titles.remove(chapter_title)
+                        
+                        # If no more titles to scrape, break out of the page loop
+                        if not book_chapter_titles:
+                            logging.warning("All requested chapter titles have been scraped. Ending loop early.")
+                            break
+                if not book_chapter_titles:
+                    logging.warning("All requested chapter titles have been scraped. Ending loop early.")
+                    break                
+        except Exception as e:
+            errorText=f"Failed to process chapter for custom epub. Function spacebattles produce_custom_epub Error: {e}"
+            write_to_logs(errorText)
+            
+        
+        dirLocation=f"./books/raw/temporary/cover_image.png"
+        cover_image=None
+        if os.path.exists(dirLocation):
+            try:
+                cover_image= Image.open(dirLocation)
+            except Exception as e:
+                errorText=f"Failed to retrieve cover image. Function retrieve_cover_from_storage. Error: {e}"
+                write_to_logs(errorText)
+        if cover_image:
+            b=io.BytesIO()
+            try:
+                cover_image.save(b,'png')
+                b_image=b.getvalue()
+                cover_item=epub.EpubItem(uid='cover_image',file_name='images/cover_image.png', media_type='image/png', content=b_image)
+                new_epub.add_item(cover_item)
+            except Exception as e:
+                errorText=f"Failed to add cover image to epub. Function add_cover_image Error: {e}"
+                logging.warning(errorText)
+                write_to_logs(errorText)
+
+        new_epub.toc = toc_list
+        new_epub.spine = toc_list
+        new_epub.add_item(epub.EpubNcx())
+        new_epub.add_item(epub.EpubNav())
+        dirLocation="./books/epubs/temporary/"+book_title+".epub"
+        try:
+            
+            if (check_directory_exists(dirLocation)):
+                os.remove(dirLocation)
+            epub.write_epub(dirLocation,new_epub)
+        except Exception as e:
+            errorText=f"Error with storing epub. Function store_epub. Error: {e}"
+            write_to_logs(errorText)
+        return dirLocation
