@@ -31,8 +31,21 @@ basicHeaders={
 }
 
 
+def setCookie(cookie):
+    basicHeaders["cookie"] = cookie
 
-
+def interception (request):
+        del request.headers['User-Agent']
+        del request.headers['Accept']
+        del request.headers['Accept-Language']
+        del request.headers['Accept-Encoding']
+        del request.headers['Cookie']
+        
+        request.headers['User-Agent']=basicHeaders["User-Agent"]
+        request.headers['Accept']=basicHeaders["Accept"]
+        request.headers['Accept-Language']=basicHeaders["Accept-Language"]
+        request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
+        request.headers['Cookie']=basicHeaders["cookie"]
 
 
 def check_directory_exists(path):
@@ -44,8 +57,8 @@ def make_directory(path):
     try:
         os.makedirs(path)
     except OSError as e:
-        if e.errno!=errno.EEXIST:
-            errorText=f"Failed to make directory. Function make_directory. Error: {e}"
+        if e.errno != errno.EEXIST:
+            errorText = f"Failed to make directory. Function make_directory. Error: {e}"
             write_to_logs(errorText)
             return
 

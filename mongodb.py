@@ -228,7 +228,8 @@ def create_Entry(**kwargs):
         "lastScraped": datetime.datetime.now(),
         "totalChapters": book_data["totalChapters"],
         "directory": book_data["directory"],
-        "imported": book_data["imported"]
+        "imported": book_data["imported"],
+        "edited": book_data.get("edited", False)  # Default to False if not present
     }
     
     
@@ -264,7 +265,8 @@ def create_latest(**kwargs):
             "lastScraped": datetime.datetime.now(),
             "totalChapters": book_data["totalChapters"],
             "directory": book_data["directory"],
-            "imported": book_data["imported"]
+            "imported": book_data["imported"],
+            "edited": book_data.get("edited", False)  # Default to False if not present
         }
         db=Database.get_instance()
         savedBooks=db["Books"]
@@ -340,7 +342,8 @@ def fill_existing_records():
             "lastScraped": result["lastScraped"],
             "totalChapters": result["totalChapters"],
             "directory": result["directory"],
-            "imported": result.get("imported", False)  # Default to False if not present
+            "imported": result.get("imported", False),  # Default to False if not present
+            "edited": result.get("edited", False)  # Default to False if not present
         }
         if "lastChapter" in results:
             if not (str(result["lastChapter"]).isdigit()):
@@ -375,13 +378,29 @@ def fix_existing_record_data_types():
             "lastScraped": result["lastScraped"],
             "totalChapters": int(result["totalChapters"]),
             "directory": result["directory"],
-            "imported": result["imported"]
+            "imported": result["imported"],
+            "edited": result.get("edited", False)  # Default to False if not present
         }
         logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
 
 #fix_existing_record_data_types()
 
-
+def update_entry(record):
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    # Check if the record exists first
+    existing = savedBooks.find_one({"bookID": record["bookID"]})
+    if not existing:
+        logging.warning(f"No record found for bookID {record['bookID']}. Update aborted.")
+        return None
+    # Update the record with new values from the dict
+    result = savedBooks.update_one(
+        {"bookID": record["bookID"]},
+        {"$set": record}
+    )
+    logging.warning(f"Updated record for bookID {record['bookID']}: {result.raw_result}")
+    return result
+        
 
 
 

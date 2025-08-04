@@ -306,6 +306,93 @@ async def retrieveBook(request: Request, bookTitle: str):
         write_to_logs(errorText)
         return JSONResponse(content={"error": errorText}, status_code=400)
 
+@app.post("/api/confirm_book_is_updated/")
+async def confirmBookIsUpdated(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if not received_access_token:
+        raise credentials_exception
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (new_access_token):
+            data = await request.json()
+            bookID = data.get("bookID")
+            
+            success=mongodb.update_entry({
+                "bookID": bookID,
+                "imported": False,  #We change the import status to False to say that it does not need anymore editing.
+                "edited": True, #We change the edit status to True to say that it has been edited since last import.
+            })
+            if (success):
+                response=JSONResponse(content={"message": "Book updated successfully"}, status_code=200)
+                response.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    samesite="lax",
+                    secure=False,
+                    max_age=60 * 60 * 24,  # 1 day in seconds
+                    expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+                )
+                return response
+            else:
+                logging.error("Failed to update book")
+                return JSONResponse(content={"error": "Failed to update book"}, status_code=400)
+        else:
+            raise credentials_exception  # 401 Unauthorized
+    except Exception as e:
+        logging.error(f"Error confirming book update: {e}")
+        errorText=f"Error confirming book update: {e}"
+        write_to_logs(errorText)
+        return JSONResponse(content={"error": errorText}, status_code=404)
+
+@app.post("/api/update_book/")
+async def updateBook(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if not received_access_token:
+        raise credentials_exception  # 401 Unauthorized
+    try:
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (new_access_token):
+            
+            data = await request.json()
+            bookID = data.get("bookID")
+            bookTitle = data.get("bookTitle")
+            orderOfContents = data.get("orderOfContents", [])
+            orderOfContentsTitles = data.get("orderOfContentsTitles", [])
+            book={
+                "bookID": bookID,
+                "bookTitle": bookTitle,
+                "orderOfContents": orderOfContents,
+                "orderOfContentsTitles": orderOfContentsTitles
+            }
+            
+            success=await refactor.update_book(book)
+            if (success):
+                response=JSONResponse(content={"message": "Book updated successfully"}, status_code=200)
+                response.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    samesite="lax",
+                    secure=False,
+                    max_age=60 * 60 * 24,  # 1 day in seconds
+                    expires=60 * 60 * 24   # 1 day in seconds (for compatibility)
+                )
+                return response
+            else:
+                logging.error("Failed to update book")
+                return JSONResponse(content={"error": "Failed to update book"}, status_code=400)
+        else:
+            raise credentials_exception  # 401 Unauthorized
+    except Exception as e:
+        logging.error(f"Error updating book: {e}")
+        errorText=f"Error updating book: {e}"
+        write_to_logs(errorText)
+        return JSONResponse(content={"error": errorText}, status_code=404)
+
+
+
+
 from typing import Dict, Any
 import json
 

@@ -142,6 +142,53 @@ function DeveloperBookEditPage() {
             }
     }
 
+    //TODO: Implement a way to update the book with the new order of contents and titles
+    // This function will be called when the user clicks the "Update Book" button
+    // It will send the updated order of contents and titles to the server
+    // and update the book in the database.
+    // You can call this function after the user has made changes to the order of contents or titles.
+    // For example, you can add a button that calls this function when clicked.
+    // Make sure to handle any errors and show a success message if the update is successful.
+    // This function will also handle the case where the book title is changed.
+    // It will send the new book title along with the updated order of contents and titles.
+    // You can use the book title from the book object that was retrieved from the server.
+    async function handleBookUpdate(bookTitle) {
+        setSearchError("");
+        console.log("Updating book with title:", bookTitle);
+        console.log("Raw order of contents:", rawOrderOfContents);
+        console.log("Order of contents titles:", orderOfContentsTitles);
+        try {
+            const response = await api.post('/update_book', {
+                bookID: book ? book["bookID"] : null, // Use book ID if available
+                bookTitle: bookTitle,
+                orderOfContents: rawOrderOfContents,
+                orderOfContentsTitles: orderOfContentsTitles
+            }, { withCredentials: true });
+            if (response.status === 200) {
+                console.log("Book updated successfully:", response.data);
+                // Optionally, you can show a success message or update the UI
+            } else {
+                console.error("Failed to update book:", response.data);
+                setSearchError("Failed to update book.");
+            }
+        } catch (error) {
+            console.error("Error updating book:", error);
+            setSearchError("Error updating book.");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Handle input change and fetch recommendations
     const handleInputChange = e => {
         const value = e.target.value;    
@@ -191,7 +238,7 @@ function DeveloperBookEditPage() {
     const handleDragOver = idx => {
     if (draggedIndex === null || draggedIndex === idx) return;
     setDropTargetIndex(idx); // Just record the drop target
-};
+    };
 
     const handleDragEnd = () => {
     if (draggedIndex === null || dropTargetIndex === null || draggedIndex === dropTargetIndex) {
@@ -228,19 +275,19 @@ function DeveloperBookEditPage() {
         if (i < dropTargetIndex) insertAt--;
     });
 
-    // Insert in original order
-    draggingIndices.forEach((i, offset) => {
-    updatedTitles.splice(insertAt + offset, 0, orderOfContentsTitles[i]);
-    updatedRaw.splice(insertAt + offset, 0, rawOrderOfContents[i]);
-    updatedChecked.splice(insertAt + offset, 0, true);
-});
-    setOrderOfContentsTitles(updatedTitles);
-    setRawOrderOfContents(updatedRaw);
-    setCheckedChapters(updatedChecked);
+        // Insert in original order
+        draggingIndices.forEach((i, offset) => {
+        updatedTitles.splice(insertAt + offset, 0, orderOfContentsTitles[i]);
+        updatedRaw.splice(insertAt + offset, 0, rawOrderOfContents[i]);
+        updatedChecked.splice(insertAt + offset, 0, true);
+    });
+        setOrderOfContentsTitles(updatedTitles);
+        setRawOrderOfContents(updatedRaw);
+        setCheckedChapters(updatedChecked);
 
-    setDraggedIndex(null);
-    setDropTargetIndex(null);
-};
+        setDraggedIndex(null);
+        setDropTargetIndex(null);
+    };
     // Delete selected chapters
     const handleDelete = () => {
         const updatedTitles = orderOfContentsTitles.filter((_, idx) => !checkedChapters[idx]);
@@ -320,6 +367,32 @@ function DeveloperBookEditPage() {
                             {searchError && (
                                 <div style={{ color: 'red', marginTop: '1rem' }}>{searchError}</div>
                             )}
+                            <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                                <button
+                                    className="book-edit-save-button"
+                                    onClick={() => handleBookUpdate(searchTerm)}
+                                    style={{ padding: "0.5rem", fontWeight: "bold", background: "#1976d2", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}
+                                >
+                                    Save Changes
+                                </button>
+                                <button
+                                    className="book-edit-finish-button"
+                                    onClick={() => {/* Add your finish logic here */}}
+                                    style={{ padding: "0.5rem", fontWeight: "bold", background: "#43a047", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}
+                                >
+                                    Finish Changes
+                                </button>
+                                {orderOfContentsTitles.length > 0 && (
+                                    <button
+                                        className="book-edit-delete-button"
+                                        onClick={handleDelete}
+                                        disabled={!checkedChapters.some(Boolean)}
+                                        style={{ padding: "0.5rem", background: "#d32f2f", color: "white", fontWeight: "bold", border: "none", borderRadius: "6px", cursor: "pointer"}}
+                                    >
+                                        Delete Selected
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                     {/* Right Panel: Chapter List */}
@@ -335,42 +408,53 @@ function DeveloperBookEditPage() {
                                     margin: 0
                                 }}>Chapters</h2>
                                 {orderOfContentsTitles.length > 0 && (
-                                    <button
-                                        className="book-edit-delete-button"
-                                        onClick={handleDelete}
-                                        disabled={!checkedChapters.some(Boolean)}
-                                        style={{ marginLeft: "1rem" }}
-                                    >
-                                        Delete Selected
-                                    </button>
-                                )}
+                                <button
+                                    className="book-edit-unselect-button"
+                                    onClick={() => {
+                                        setCheckedChapters(new Array(orderOfContentsTitles.length).fill(false));
+                                        setLastCheckedIndex(null);
+                                    }}
+                                    style={{ background: "#888", color: "white", fontWeight: "bold", border: "none", borderRadius: "6px", cursor: "pointer", padding: "0.5rem 1.2rem" }}
+                                >
+                                    Unselect All
+                                </button>
+                            )}
                             </div>
                             {orderOfContentsTitles.length > 0 ? (
                                 <>
                                     <ul className="book-edit-chapter-list-items">
-                                    {orderOfContentsTitles.map((chapter, idx) => (
+                                        {orderOfContentsTitles.map((chapter, idx) => (
+                                            <li
+                                                key={idx}
+                                                draggable={checkedChapters[idx]}
+                                                onDragStart={() => handleDragStart(idx)}
+                                                onDragOver={e => { e.preventDefault(); handleDragOver(idx); }}
+                                                onDragEnd={handleDragEnd}
+                                                className={checkedChapters[idx] ? "selected" : ""}
+                                                style={{
+                                                    cursor: checkedChapters[idx] ? "grab" : "default"
+                                                }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checkedChapters[idx] || false}
+                                                    onChange={e => handleCheckbox(idx, e)}
+                                                    draggable={false}
+                                                    style={{ marginRight: 8 }}
+                                                />
+                                                {chapter}
+                                            </li>
+                                        ))}
+                                        {/* Extra drop zone for end of list */}
                                         <li
-                                            key={idx}
-                                            draggable={checkedChapters[idx]}
-                                            onDragStart={() => handleDragStart(idx)}
-                                            onDragOver={e => { e.preventDefault(); handleDragOver(idx); }}
-                                            onDragEnd={handleDragEnd}
-                                            className={checkedChapters[idx] ? "selected" : ""}
-                                            style={{
-                                                cursor: checkedChapters[idx] ? "grab" : "default"
-                                            }}
+                                            key="end-dropzone"
+                                            style={{ height: "32px", background: "#f5f5f5", border: "1px dashed #bbb", marginTop: 4, textAlign: "center", lineHeight: "32px", color: "#bbb" }}
+                                            onDragOver={e => { e.preventDefault(); handleDragOver(orderOfContentsTitles.length); }}
+                                            onDrop={handleDragEnd}
                                         >
-                                            <input
-                                            type="checkbox"
-                                            checked={checkedChapters[idx] || false}
-                                            onChange={e => handleCheckbox(idx, e)}
-                                            draggable={false}
-                                            style={{ marginRight: 8 }}
-                                        />
-                                            {chapter}
+                                            Drop here to move to end
                                         </li>
-                                    ))}
-                                </ul>
+                                    </ul>
                                 </>
                             ) : (
                                 <p style={{ color: "#aaa" }}>No chapters loaded.</p>

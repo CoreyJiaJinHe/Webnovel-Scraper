@@ -84,7 +84,8 @@ from mongodb import(
     create_Entry, 
     create_latest,
     get_all_book_titles,
-    get_Entry_Via_Title
+    get_Entry_Via_Title,
+    update_entry
 )
 
 
@@ -3398,3 +3399,93 @@ async def search_page_scrape_interface(book: dict, cookie: str, additionalCondit
 # logging.warning("Results:")
 # logging.warning(result)
 #NOTE TO SELF. TEST THE NEW FETCH_CHAPTER_TITLE_LIST FUNCTIONS FOR EACH SITE
+
+async def update_book(book: dict):
+    try:
+        bookID=book["bookID"]
+        bookTitle=book["bookTitle"]
+        orderOfContents=book["orderOfContents"]
+    except KeyError as e:
+        missing = [str(e)]
+        raise MissingBookDataException(missing)
+    
+    if ((check_existing_book_Title(bookTitle) or check_existing_book(bookID)) and orderOfContents):
+        logging.warning(f"Book {bookTitle} already exists in the database. Updating the book.")
+        def write_order_of_contents(book_title, chapter_metadata):
+            file_location = f"./books/raw/{book_title}/order_of_chapters.txt"
+            logging.warning(chapter_metadata)
+            with open(file_location, "w") as f:
+                for data in chapter_metadata:
+                    if isinstance(data, str):
+                        data = data.strip().split(";")
+                    logging.warning(data)
+                    f.write(";".join(map(str, data))+ "\n")
+        
+        write_order_of_contents(bookTitle, orderOfContents)
+        
+        try:
+            latestChapterTitle=orderOfContents[-1].split(";")[2].strip() if orderOfContents else "N/A"
+            def strip_latest_chapter_title(latestChapterTitle: str) -> str:
+                """
+                For a string like:
+                "Beneath the Dragoneye Moons/Beneath the Dragoneye Moons - 2230094 - Chapter 622 - Overthrowing the Tyrants XV.html"
+                returns: "Chapter 622 - Overthrowing the Tyrants XV"
+                """
+                # Get the last part after the last '/'
+                last_part = latestChapterTitle.split("/")[-1]
+                # Split on ' - ' and get everything after the second dash
+                parts = last_part.split(" - ")
+                # Find the index of the part that starts with 'Chapter'
+                chapter_idx = next((i for i, p in enumerate(parts) if p.strip().startswith("Chapter")), None)
+                if chapter_idx is not None:
+                    # Join 'Chapter ###' and everything after
+                    chapter_title = " - ".join(parts[chapter_idx:])
+                    # Remove .html if present
+                    if chapter_title.endswith(".html"):
+                        chapter_title = chapter_title[:-5]
+                    return chapter_title.strip()
+                # Fallback: just remove .html and return last part
+                return last_part.replace(".html", "").strip()
+            latestChapterTitle=strip_latest_chapter_title(latestChapterTitle)
+        except Exception as e:
+            errorText=f"Failed to retrieve latest chapter title from order of contents. Error: {e}"
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            latestChapterTitle="N/A"
+        
+        first,last,total=get_first_last_chapter(bookTitle)
+        
+        updated_book={
+            "bookID": bookID,
+            "bookTitle": bookTitle,
+            "firstChapter": first,
+            "lastChapterID": last,
+            "totalChapters": total,
+            "lastChapterTitle": latestChapterTitle,
+        }
+        update_entry(updated_book)
+        return True
+    else:
+        errorText=f"Book {bookTitle} does not exist in the database. Please provide a valid book ID or title."
+        logging.warning(errorText)
+        write_to_logs(errorText)
+        return None
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
