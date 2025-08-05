@@ -30,7 +30,7 @@ basicHeaders={
     "Accept-Encoding": "gzip, deflate, br",
 }
 
-
+    #TODO: Fix these. They are now broken because they were to be imported into Scraper.py.
 def setCookie(cookie):
     basicHeaders["cookie"] = cookie
 

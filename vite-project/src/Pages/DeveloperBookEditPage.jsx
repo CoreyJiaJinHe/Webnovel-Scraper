@@ -158,7 +158,8 @@ function DeveloperBookEditPage() {
         console.log("Raw order of contents:", rawOrderOfContents);
         console.log("Order of contents titles:", orderOfContentsTitles);
         try {
-            const response = await api.post('/update_book', {
+            const response = await api.post('/update_book', { 
+                //Since this is an axios instance, we can use api.post directly
                 bookID: book ? book["bookID"] : null, // Use book ID if available
                 bookTitle: bookTitle,
                 orderOfContents: rawOrderOfContents,
@@ -179,7 +180,28 @@ function DeveloperBookEditPage() {
 
 
 
+    async function handleRecordUpdate(){
+        setSearchError("");
+        console.log("Updating book record with title:", book ? book["bookName"] : "No book selected");
+        console.log("Raw order of contents:", rawOrderOfContents);
+        console.log("Order of contents titles:", orderOfContentsTitles);
+        try {
+            const response = await api.post('/confirm_book_is_updated', {
+                bookID: book ? book["bookID"] : null, // Use book ID if available
+            }, { withCredentials: true });
+            if (response.status === 200) {
+                console.log("Book record updated successfully:", response.data);
+                // Optionally, you can show a success message or update the UI
+            } else {
+                console.error("Failed to update book record:", response.data);
+                setSearchError("Failed to update book record.");
+            }
+        } catch (error) {
+            console.error("Error updating book record:", error);
+            setSearchError("Error updating book record.");
+        }
 
+    }
 
 
 
@@ -377,7 +399,7 @@ function DeveloperBookEditPage() {
                                 </button>
                                 <button
                                     className="book-edit-finish-button"
-                                    onClick={() => {/* Add your finish logic here */}}
+                                    onClick={() => handleRecordUpdate()}
                                     style={{ padding: "0.5rem", fontWeight: "bold", background: "#43a047", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}
                                 >
                                     Finish Changes

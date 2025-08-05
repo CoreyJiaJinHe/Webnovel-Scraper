@@ -37,6 +37,7 @@ export function UserProvider({ children }) {
                 setIsDeveloper(false);
                 localStorage.removeItem("loginTime");
                 logout();
+                window.location.reload();
             }
         } else {
             setIsLoggedIn(false);
@@ -70,7 +71,6 @@ export function UserProvider({ children }) {
         }
         catch (error){
         }
-
 
         
 

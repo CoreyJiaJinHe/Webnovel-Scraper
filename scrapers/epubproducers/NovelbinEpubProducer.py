@@ -13,21 +13,10 @@ from scrapers.NovelBinScraper import NovelBinScraper
 from common import(
     store_chapter,
     write_to_logs, 
-    check_directory_exists, 
-    make_directory, 
-    remove_tags_from_title, 
+    check_directory_exists,
     store_chapter, 
-    retrieve_cover_from_storage, 
-    storeEpub, 
-    basicHeaders,
-    
-    setCookie,
-    get_first_last_chapter,
+    retrieve_cover_from_storage,
     remove_invalid_characters,
-    create_epub_directory_url,
-    
-    interception,
-    generate_new_ID
 )
 
 

@@ -3072,7 +3072,9 @@ async def main_interface(url, cookie):
             lastChapterTitle=latestChapterTitle,
             lastScraped=lastScraped,
             totalChapters=total,
-            directory=directory
+            directory=directory,
+            imported=False,
+            edited=False
         )
         
         create_latest(
@@ -3086,7 +3088,9 @@ async def main_interface(url, cookie):
             lastChapterTitle=latestChapterTitle,
             lastScraped=lastScraped,
             totalChapters=total,
-            directory=directory
+            directory=directory,
+            imported=False,
+            edited=False
         )
         
         return directory

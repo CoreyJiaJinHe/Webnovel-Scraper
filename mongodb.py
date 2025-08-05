@@ -203,8 +203,10 @@ default_values = {
         #Using a default date that is unlikely to be used.
         "totalChapters":-1,
         "directory": "Template",
-        "imported": False #This is used to determine if the book was imported from a file or not.
-        #If it was, then it needs to be edited by a developer.
+        "imported": False,  # This is used to determine if the book was imported from a file or not.
+        # If it was, then it needs to be edited by a developer.
+        "edited": False #This is used to determine if the book was edited by a developer or not.
+        #If it wasn't, then it needs to be edited by a developer.
     }
 #This is dict merging.
 #Another method is to use .get(value, default_value) for each key, but that's not as clean.
