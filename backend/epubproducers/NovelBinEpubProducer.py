@@ -8,30 +8,44 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-import EpubProducer
-from scrapers.FoxaholicScraper import FoxaholicScraper
-from common import(
+
+from backend.epubproducers.EpubProducer import EpubProducer
+from backend.scrapers.NovelBinScraper import NovelBinScraper
+from backend.common import(
+    store_chapter,
     write_to_logs, 
-    check_directory_exists, 
-    remove_tags_from_title, 
-    retrieve_cover_from_storage, 
-    storeEpub,
-    remove_invalid_characters
+    check_directory_exists,
+    store_chapter, 
+    retrieve_cover_from_storage,
+    remove_invalid_characters,
 )
 
 
-class FoxaholicEpubProducer(EpubProducer):
-    #This grabs the first digit in the URL to treat as the ChapterID
+class NovelBinEpubProducer(EpubProducer):
+    #this might become a common function
+    #Nevermind. This one is different. It's not extracting the ID from the URL but frm the internal storage.
     def extract_chapter_ID(self, chapter_url):
-        chapterID=chapter_url.split("/")
-        chapterID=chapterID[len(chapterID)-2]
-        chapterID=re.search(r'\d+',chapterID).group()
-        return chapterID
+        return chapter_url.split(";")[0]
+
+    
+    async def fetch_chapter_list(self, url):
+        scraper = NovelBinScraper()
+        return await scraper.fetch_chapter_list(url)
+    
+    async def generate_chapter_title(self, chapter_id):
+        chapter_id=int(chapter_id)
+        
+        volume_number=int(chapter_id//10000)
+        chapter_number=int(chapter_id%10000)
+        
+        return f"V{volume_number}Ch{chapter_number}"
+    
     
     async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
-        scraper=FoxaholicScraper(cookie=cookie)
+        scraper=NovelBinScraper(cookie=cookie)
         return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
-    
+
+
     async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper):
         if not book_chapter_urls:
             errorText="Function produce_custom_epub. Error: No chapters provided for the custom epub."
@@ -104,3 +118,5 @@ class FoxaholicEpubProducer(EpubProducer):
             errorText=f"Error with storing epub. Function store_epub. Error: {e}"
             write_to_logs(errorText)
         return dirLocation
+                
+    

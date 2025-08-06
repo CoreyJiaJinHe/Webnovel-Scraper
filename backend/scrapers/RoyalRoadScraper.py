@@ -9,8 +9,8 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-
-from common import (
+from backend.scrapers.Scraper import Scraper
+from backend.common import(
     write_to_logs, 
     check_directory_exists, 
     make_directory, 
@@ -29,14 +29,11 @@ from common import (
     generate_new_ID
 )
 
-import Scraper
+
     
     
 class RoyalRoadScraper(Scraper):
-    async def get_soup(self,url):
-        return await Scraper.get_soup(url)
-    async def remove_junk_links_from_soup(self, soup):
-        return await Scraper.remove_junk_links_from_soup(soup)
+
     
     async def fetch_novel_data(self, novelURL):
         soup=await self.get_soup(novelURL)

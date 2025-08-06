@@ -22,7 +22,7 @@ myclient=MongoClient(MONGODB_URL)
 mydb=myclient["Webnovels"]
 savedBooks=mydb["Books"]
 
-from scrapers.common import (
+from backend.common import (
     write_to_logs, 
     check_directory_exists, 
     make_directory, 

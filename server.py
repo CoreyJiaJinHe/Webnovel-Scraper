@@ -21,8 +21,8 @@ logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
 #logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
 
 
-from scrapers.common import (write_to_logs)
-import refactor
+from backend.common import (write_to_logs)
+from backend import main as mainProgram
 import OnlineReader
 
 from passlib.context import CryptContext
@@ -366,7 +366,7 @@ async def updateBook(request: Request):
                 "orderOfContentsTitles": orderOfContentsTitles
             }
             
-            success=await refactor.update_book(book)
+            success=await mainProgram.update_book(book)
             if (success):
                 response=JSONResponse(content={"message": "Book updated successfully"}, status_code=200)
                 response.set_cookie(
@@ -408,8 +408,9 @@ async def queryBook(searchTerm: str, siteHost:str,searchConditions: str = "{}"):
         
         logging.error(f"queryBook input: {searchTerm}")
         logging.error(f"Search Conditions: {searchConditionsDict}")
+        logging.error(f"Selected Site: {siteHost}")
         # Pass searchTerm and siteHost to your search_page function
-        data = await refactor.search_page(searchTerm, siteHost, searchConditionsDict, None)
+        data = await mainProgram.search_page(searchTerm, siteHost, searchConditionsDict, None)
         logging.error(data)
         if not data:
             response = JSONResponse(content={"error": "No results found"}, status_code=404)
@@ -470,7 +471,7 @@ async def scrapeBook(request: Request):
             "mainBookURL": mainBookURL,
         }
         
-        dirLocation = await refactor.search_page_scrape_interface(book, cookie, additionalConditions)
+        dirLocation = await mainProgram.search_page_scrape_interface(book, cookie, additionalConditions)
 
 
         fileName=bookTitle
@@ -757,7 +758,7 @@ async def dev_get_reading_list(request: Request, response: Response):
         new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         if(mongodb.check_developer(username)):
             try:
-                bookLinks=await refactor.retrieve_from_royalroad_follow_list()
+                bookLinks=await mainProgram.retrieve_from_royalroad_follow_list()
                 return JSONResponse(content={"message":"Successfully retrieved Royalroad follow list"}, status_code=200)
             except Exception as e:
                 logging.error(f"Error retrieving Royal Road follow list: {e}")

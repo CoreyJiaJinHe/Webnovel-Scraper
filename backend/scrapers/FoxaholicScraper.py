@@ -21,8 +21,8 @@ firefox_options = FirefoxOptions()
 # Path to .xpi extension file
 path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
 
-import Scraper
-from common import (
+from backend.scrapers.Scraper import Scraper
+from backend.common import(
     write_to_logs, 
     check_directory_exists, 
     make_directory, 

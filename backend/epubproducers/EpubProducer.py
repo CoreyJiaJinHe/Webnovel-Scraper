@@ -8,7 +8,7 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-from common import(
+from backend.common import(
     write_to_logs,
     remove_invalid_characters,
     retrieve_cover_from_storage,
@@ -19,8 +19,6 @@ from common import(
 
 
 class EpubProducer:
-    
-    
     global basicHeaders
     #This is the basic headers used for all requests.
     basicHeaders={

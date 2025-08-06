@@ -146,7 +146,7 @@ def get_stored_chapter(bookID,chapterID):
     
 
 
-#TODO: For image links, modify the src that is currently "images/image_XX.png" to "imageDirectory/images/image_XX.png"
+#TODO: DONE For image links, modify the src that is currently "images/image_XX.png" to "imageDirectory/images/image_XX.png"
 
 def get_stored_chapter_spacebattles(bookID,pageID, chapterTitle):
     db=Database.get_instance()

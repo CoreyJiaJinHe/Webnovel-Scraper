@@ -8,9 +8,10 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-import EpubProducer
-from scrapers.RoyalRoadScraper import RoyalRoadScraper
-from common import(
+# Use absolute imports for clarity and reliability
+from backend.epubproducers.EpubProducer import EpubProducer
+from backend.scrapers.RoyalRoadScraper import RoyalRoadScraper
+from backend.common import (
     store_chapter,
     write_to_logs, 
     check_directory_exists,

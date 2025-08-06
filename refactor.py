@@ -56,7 +56,7 @@ load_dotenv(env_path, override=True)
 logLocation=os.getenv("logs")
 
 # Add these missing imports:
-from scrapers.common import (
+from backend.common import (
     write_to_logs, 
     check_directory_exists, 
     make_directory, 

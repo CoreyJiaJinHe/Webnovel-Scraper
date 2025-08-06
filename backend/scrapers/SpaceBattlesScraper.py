@@ -26,8 +26,9 @@ path_to_extension = os.getenv("LOCAL_ADBLOCK_EXTENSION")
 
 from word2number import w2n
 
-import Scraper
-from common import (
+
+from backend.scrapers.Scraper import Scraper
+from backend.common import(
     write_to_logs, 
     check_directory_exists, 
     make_directory, 
@@ -50,10 +51,6 @@ from common import (
 
 
 class SpaceBattlesScraper(Scraper):
-    async def get_soup(self,url):
-        return await Scraper.get_soup(url)    
-
-    
 
     def normalize_spacebattles_url(self, url: str) -> str:
         """Find the last occurrence of digits/ and trim everything after"""

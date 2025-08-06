@@ -1,6 +1,6 @@
 import bs4
 import aiohttp
-from common import write_to_logs, basicHeaders
+from backend.common import write_to_logs, basicHeaders
 import os
 import logging
 import asyncio

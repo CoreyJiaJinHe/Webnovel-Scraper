@@ -8,10 +8,9 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-import EpubProducer
-from scrapers.SpaceBattlesScraper import SpaceBattlesScraper
-
-from common import(
+from backend.epubproducers.EpubProducer import EpubProducer
+from backend.scrapers.SpaceBattlesScraper import SpaceBattlesScraper
+from backend.common import(
     write_to_logs,
     check_directory_exists,
     make_directory,
