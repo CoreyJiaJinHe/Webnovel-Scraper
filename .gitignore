@@ -4,6 +4,12 @@ books/
 logs/
 logs/**
 
+# Python cache
+__pycache__/
+**/__pycache__/
+backend/epubproducers/__pycache__/
+backend/scrapers/__pycache__/
+
 # Logs
 *.log
 npm-debug.log*

@@ -29,10 +29,7 @@ from backend.common import(
     remove_tags_from_title, 
     store_chapter, 
     retrieve_cover_from_storage, 
-    storeEpub, 
-    basicHeaders,
-    
-    setCookie,
+    storeEpub,
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,

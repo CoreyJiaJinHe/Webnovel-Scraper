@@ -36,14 +36,9 @@ from backend.common import(
     store_chapter, 
     retrieve_cover_from_storage, 
     storeEpub, 
-    basicHeaders,
-    
-    setCookie,
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,
-    
-    interception,
     generate_new_ID
 )
 
@@ -455,7 +450,7 @@ class SpaceBattlesScraper(Scraper):
                 try:
                     driver = webdriver.Firefox(options=firefox_options)
                     driver.install_addon(path_to_extension, temporary=True)
-                    driver.request_interceptor=interception
+                    driver.request_interceptor=self.interception
                     driver.get(url)
                     WebDriverWait(driver, 10).until(
                         lambda d: d.execute_script("return document.readyState") == "complete"

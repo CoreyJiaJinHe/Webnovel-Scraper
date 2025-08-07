@@ -30,15 +30,12 @@ from backend.common import(
     remove_tags_from_title, 
     store_chapter, 
     retrieve_cover_from_storage, 
-    storeEpub, 
-    basicHeaders,
+    storeEpub,
     
-    setCookie,
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,
     
-    interception,
     generate_new_ID
 )
 
@@ -49,7 +46,8 @@ class NovelBinScraper(Scraper):
     async def get_soup(self,url):
         try:
             driver = webdriver.Firefox()
-            driver.request_interceptor=interception
+            driver.request_interceptor=self.interception
+            driver.install_addon(path_to_extension, temporary=True)
             driver.get(url)
             await asyncio.sleep(2) #Sleep is necessary because of the javascript loading elements on page
             soup = bs4.BeautifulSoup(driver.execute_script("return document.body.innerHTML;"), 'html.parser')
@@ -68,6 +66,7 @@ class NovelBinScraper(Scraper):
         chapter_title=await self.generate_chapter_title(chapter_id)+" "+chapter_title
         chapter_content = await self.fetch_chapter_content(soup)
         
+        await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
         currentImageCount=image_count
         chapterInsert=f'<h1>{chapter_title}</h1>'
         chapter_content=chapterInsert+str(chapter_content)
@@ -134,7 +133,7 @@ class NovelBinScraper(Scraper):
             latestChapterTitle=latestChapter.find("a")
             latestChapterTitle=latestChapterTitle.get_text()
             latestChapterTitle=remove_tags_from_title(latestChapterTitle)
-            latestChapterID=self.extract_chapter_ID(latestChapter.find("a")["href"])
+            latestChapterID=await self.extract_chapter_ID(latestChapter.find("a")["href"])
             
             
         except Exception as error:
@@ -159,7 +158,7 @@ class NovelBinScraper(Scraper):
 
 
     async def fetch_cover_image(self,title,img_url,saveDirectory):
-        async with aiohttp.ClientSession(headers = basicHeaders
+        async with aiohttp.ClientSession(headers = self.basicHeaders
         ) as session:
             if not isinstance(img_url,str):
                 img_url=img_url["src"]
@@ -232,7 +231,7 @@ class NovelBinScraper(Scraper):
             
             chapterListTitles=list()
             for row in rows[:len(rows)]:
-                processChapterURL=row.find("a")["href"]
+                processChapterURL=row.find("a")
                 chapterTitle=processChapterURL.get_text()
                 chapterTitle=remove_invalid_characters(chapterTitle)
                 chapterListTitles.append(chapterTitle)
@@ -324,6 +323,14 @@ class NovelBinScraper(Scraper):
         return str(chapterID)
 
     async def query_site(self, title, additionalConditions,cookie):
+        if (self.basicHeaders.get("Cookie") is None and cookie is None):
+            errorText=f"Failed to search title. Function query_site Error: Cookie is required for NovelBin. Please provide a cookie."
+            logging.warning(errorText)
+            write_to_logs(errorText)
+            return None
+        if (cookie):
+            self.basicHeaders["Cookie"]=cookie
+
         return await self.query_novelbin(title)
         
         
@@ -349,7 +356,22 @@ class NovelBinScraper(Scraper):
             errorText=f"Failed to query novelbin. Function query_novelbin Error: {error}"
             write_to_logs(errorText)
             return "Error Occurred"
-            
+    
+    async def check_and_insert_missing_chapter_title(self, chapter_title, chapter_content):
+        # Check if chapter_title is present as a heading (h1/h2/h3) in chapter_content
+            heading_found = False
+            for heading_tag in ['h1', 'h2', 'h3']:
+                heading = chapter_content.find(heading_tag)
+                if heading and chapter_title.strip() in heading.get_text().strip():
+                    heading_found = True
+                    break
+
+            if not heading_found:
+                # Insert chapter_title as an <h1> at the start
+                new_heading = chapter_content.new_tag("h1")
+                new_heading.string = chapter_title
+                chapter_content.insert(0, new_heading)
+    
     async def process_new_chapter_non_saved(self, chapter_url, book_title, chapter_id, image_count):
         try:
             soup = await self.get_soup(chapter_url)
@@ -357,6 +379,12 @@ class NovelBinScraper(Scraper):
             chapter_title= await self.generate_chapter_title(chapter_id)+" "+chapter_title
             chapter_content = await self.fetch_chapter_content(soup)
             chapter_content = await self.remove_junk_links_from_soup(chapter_content)
+            
+            await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
+            
+            
+
+            
             #logging.warning(chapter_content)
             #logging.warning(chapter_title)
             currentImageCount=image_count

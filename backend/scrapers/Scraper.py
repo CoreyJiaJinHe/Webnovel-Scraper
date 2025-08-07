@@ -1,6 +1,6 @@
 import bs4
 import aiohttp
-from backend.common import write_to_logs, basicHeaders
+from backend.common import write_to_logs
 import os
 import logging
 import asyncio
@@ -33,7 +33,7 @@ class Scraper:
     
     async def get_soup(self,url):
         try:
-            async with aiohttp.ClientSession(headers = basicHeaders) as session:
+            async with aiohttp.ClientSession(headers = self.basicHeaders) as session:
                 async with session.get(url) as response:
                     if response.status == 200:
                         html = await response.text()
@@ -116,9 +116,8 @@ class Scraper:
     
 
     def setCookie(self,cookie):
-        basicHeaders["cookie"] = cookie
-    
-    global basicHeaders
+        self.basicHeaders["cookie"] = cookie
+
     basicHeaders={
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -132,9 +131,9 @@ class Scraper:
         del request.headers['Accept-Language']
         del request.headers['Accept-Encoding']
         del request.headers['Cookie']
-        
-        request.headers['User-Agent']=basicHeaders["User-Agent"]
-        request.headers['Accept']=basicHeaders["Accept"]
-        request.headers['Accept-Language']=basicHeaders["Accept-Language"]
-        request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
-        request.headers['Cookie']=basicHeaders["cookie"]
+
+        request.headers['User-Agent']=self.basicHeaders["User-Agent"]
+        request.headers['Accept']=self.basicHeaders["Accept"]
+        request.headers['Accept-Language']=self.basicHeaders["Accept-Language"]
+        request.headers['Accept-Encoding']=self.basicHeaders["Accept-Encoding"]
+        request.headers['Cookie']=self.basicHeaders["cookie"]

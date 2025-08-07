@@ -397,7 +397,7 @@ from typing import Dict, Any
 import json
 
 @app.get("/api/query_book/")
-async def queryBook(searchTerm: str, siteHost:str,searchConditions: str = "{}"):
+async def queryBook(searchTerm: str, siteHost:str,searchConditions: str = "{}", cookie: str = ""):
     #TODO Figure out a way to limit the amount of attempts per user
     try:
         
@@ -409,8 +409,9 @@ async def queryBook(searchTerm: str, siteHost:str,searchConditions: str = "{}"):
         logging.error(f"queryBook input: {searchTerm}")
         logging.error(f"Search Conditions: {searchConditionsDict}")
         logging.error(f"Selected Site: {siteHost}")
+        logging.error(f"Cookie: {cookie}")
         # Pass searchTerm and siteHost to your search_page function
-        data = await mainProgram.search_page(searchTerm, siteHost, searchConditionsDict, None)
+        data = await mainProgram.search_page(searchTerm, siteHost, searchConditionsDict, cookie)
         logging.error(data)
         if not data:
             response = JSONResponse(content={"error": "No results found"}, status_code=404)
@@ -483,8 +484,8 @@ async def scrapeBook(request: Request):
         #CONFIRMED: TODO: FIXED FIX THIS ERROR. It breaks the epub file.
         return FileResponse(path=dirLocation, filename=fileName, headers=headers, status_code=200)
     except Exception as e:
-        logging.error(f"Error in scrape_Book: {e}")
-        errorText = f"Error in scrape_Book: {e}"
+        errorText = f"Error in Serverside Scrape_Book: {e}"
+        logging.error(errorText)
         write_to_logs(errorText)
         return JSONResponse(content={"error": errorText}, status_code=400)
 

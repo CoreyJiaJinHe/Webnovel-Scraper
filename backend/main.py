@@ -9,13 +9,15 @@ from ebooklib import epub
 from PIL import Image
 import aiohttp
 
-from backend.epubproducers import RoyalRoadEpubProducer, FoxaholicEpubProducer, NovelBinEpubProducer, SpaceBattlesEpubProducer
+from backend.epubproducers.RoyalRoadEpubProducer import RoyalRoadEpubProducer
+from backend.epubproducers.FoxaholicEpubProducer import FoxaholicEpubProducer
+from backend.epubproducers.NovelBinEpubProducer import NovelBinEpubProducer
+from backend.epubproducers.SpaceBattlesEpubProducer import SpaceBattlesEpubProducer
 from backend.scrapers.ScraperFactory import ScraperFactory
 
 
 # Add these missing imports:
 from backend.common import (
-    setCookie,
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,
@@ -34,7 +36,7 @@ async def main_interface(url, cookie):
             return None
         
         if (cookie):
-            setCookie(cookie)
+            scraper.setCookie(cookie)
         epub_producer = None
         if "royalroad.com" in url:
             epub_producer = RoyalRoadEpubProducer()
@@ -230,7 +232,9 @@ async def search_page(input: str, selectedSite: str, searchConditions:dict, cook
             errorText="Function search_page. Error: Cookie is required for NovelBin. Please provide a cookie."
             logging.warning(errorText)
             write_to_logs(errorText)
-            return None    
+            return None
+    if (cookie):
+        scraper.setCookie(cookie)
     
     url_pattern = re.compile(r'^(https?://|www\.)', re.IGNORECASE)
     if url_pattern.match(input.strip()):
@@ -346,6 +350,8 @@ async def search_page_scrape_interface(book: dict, cookie: str, additionalCondit
     else:
         raise ValueError("Unsupported website")
     
+    epub_producer.setCookie(cookie)
+    
     style=open("style.css","r").read()
     default_css=epub.EpubItem(uid="style_nav",file_name="style/nav.css",media_type="text/css",content=style)
     
@@ -367,7 +373,8 @@ async def search_page_scrape_interface(book: dict, cookie: str, additionalCondit
     new_epub=await instantiate_new_epub(bookID,bookTitle,bookAuthor)
     
 
-    dirLocation= await epub_producer.produce_custom_epub(new_epub,bookTitle,default_css,book_chapter_urls, mainBookURL, additionalConditions)
+    dirLocation= await epub_producer.produce_custom_epub_interface(
+        new_epub,bookTitle,default_css,book_chapter_urls, mainBookURL, additionalConditions,cookie)
     logging.error(dirLocation)    
     return dirLocation
 #NOTE TO SELF. TEST THE NEW FETCH_CHAPTER_TITLE_LIST FUNCTIONS FOR EACH SITE

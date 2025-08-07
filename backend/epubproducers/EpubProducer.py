@@ -19,7 +19,6 @@ from backend.common import(
 
 
 class EpubProducer:
-    global basicHeaders
     #This is the basic headers used for all requests.
     basicHeaders={
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
@@ -28,22 +27,22 @@ class EpubProducer:
         "Accept-Encoding": "gzip, deflate, br",
     }
 
-    def setCookie(cookie):
-        basicHeaders["cookie"] = cookie
+    def setCookie(self,cookie):
+        self.basicHeaders["cookie"] = cookie
 
-    def interception (request):
+    def interception (self,request):
             del request.headers['User-Agent']
             del request.headers['Accept']
             del request.headers['Accept-Language']
             del request.headers['Accept-Encoding']
             del request.headers['Cookie']
-            
-            request.headers['User-Agent']=basicHeaders["User-Agent"]
-            request.headers['Accept']=basicHeaders["Accept"]
-            request.headers['Accept-Language']=basicHeaders["Accept-Language"]
-            request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
-            request.headers['Cookie']=basicHeaders["cookie"]
-    
+
+            request.headers['User-Agent']=self.basicHeaders["User-Agent"]
+            request.headers['Accept']=self.basicHeaders["Accept"]
+            request.headers['Accept-Language']=self.basicHeaders["Accept-Language"]
+            request.headers['Accept-Encoding']=self.basicHeaders["Accept-Encoding"]
+            request.headers['Cookie']=self.basicHeaders["cookie"]
+
     async def fetch_chapter_list(self, url):
         raise NotImplementedError("Subclasses must implement this method.")
 
@@ -181,7 +180,7 @@ class EpubProducer:
         self.storeEpub(book_title, new_epub)
 
 
-    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions):
+    async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions,scraper):
         raise NotImplementedError("Subclasses must implement this method.")
     
     async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):

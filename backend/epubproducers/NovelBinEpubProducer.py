@@ -29,7 +29,7 @@ class NovelBinEpubProducer(EpubProducer):
 
     
     async def fetch_chapter_list(self, url):
-        scraper = NovelBinScraper()
+        scraper = NovelBinScraper().setCookie(self.basicHeaders.get("cookie", ""))
         return await scraper.fetch_chapter_list(url)
     
     async def generate_chapter_title(self, chapter_id):
@@ -42,9 +42,12 @@ class NovelBinEpubProducer(EpubProducer):
     
     
     async def produce_custom_epub_interface(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions, cookie):
-        scraper=NovelBinScraper(cookie=cookie)
-        return await self.produce_custom_epub(new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
-
+        scraper=NovelBinScraper()
+        scraper.setCookie(self.basicHeaders.get("cookie", ""))
+        logging.warning(type(scraper))
+        logging.warning(f"Cookie set: {scraper.basicHeaders.get('cookie', '')}")
+        return await self.produce_custom_epub(
+            new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper)
 
     async def produce_custom_epub(self, new_epub, book_title, css, book_chapter_urls, mainBookURL, additionalConditions, scraper):
         if not book_chapter_urls:

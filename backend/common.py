@@ -23,31 +23,6 @@ from mongodb import (
 
 
 
-basicHeaders={
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
-    "Accept-Encoding": "gzip, deflate, br",
-}
-
-    #TODO: Fix these. They are now broken because they were to be imported into Scraper.py.
-def setCookie(cookie):
-    basicHeaders["cookie"] = cookie
-
-def interception (request):
-        del request.headers['User-Agent']
-        del request.headers['Accept']
-        del request.headers['Accept-Language']
-        del request.headers['Accept-Encoding']
-        del request.headers['Cookie']
-        
-        request.headers['User-Agent']=basicHeaders["User-Agent"]
-        request.headers['Accept']=basicHeaders["Accept"]
-        request.headers['Accept-Language']=basicHeaders["Accept-Language"]
-        request.headers['Accept-Encoding']=basicHeaders["Accept-Encoding"]
-        request.headers['Cookie']=basicHeaders["cookie"]
-
-
 def check_directory_exists(path):
     if os.path.exists(path):
         return True

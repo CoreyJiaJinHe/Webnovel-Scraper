@@ -251,7 +251,8 @@ function BookScraperPage() {
                 params: {
                     searchTerm: searchTerm,
                     siteHost: selectedSite,
-                    searchConditions: JSON.stringify(searchConditions && Object.keys(searchConditions).length > 0 ? searchConditions : {}) // Always send a string
+                    searchConditions: JSON.stringify(searchConditions && Object.keys(searchConditions).length > 0 ? searchConditions : {}), // Always send a string
+                    cookie: cloudflareCookie || ""
                 }
             });
 
