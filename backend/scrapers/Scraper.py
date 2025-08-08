@@ -137,3 +137,20 @@ class Scraper:
         request.headers['Accept-Language']=self.basicHeaders["Accept-Language"]
         request.headers['Accept-Encoding']=self.basicHeaders["Accept-Encoding"]
         request.headers['Cookie']=self.basicHeaders["cookie"]
+        
+        
+        
+    async def check_and_insert_missing_chapter_title(self, chapter_title, chapter_content):
+    # Check if chapter_title is present as a heading (h1/h2/h3) in chapter_content
+        heading_found = False
+        for heading_tag in ['h1', 'h2', 'h3']:
+            heading = chapter_content.find(heading_tag)
+            if heading and chapter_title.strip() in heading.get_text().strip():
+                heading_found = True
+                break
+
+        if not heading_found:
+            # Insert chapter_title as an <h1> at the start
+            new_heading = chapter_content.new_tag("h1")
+            new_heading.string = chapter_title
+            chapter_content.insert(0, new_heading)

@@ -25,15 +25,11 @@ from backend.common import (
     remove_tags_from_title, 
     store_chapter, 
     retrieve_cover_from_storage, 
-    storeEpub, 
-    basicHeaders,
-    
-    setCookie,
+    storeEpub,
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,
     
-    interception,
     generate_new_ID
 )
 
@@ -760,10 +756,10 @@ async def importing_main_interface():
             "lastChapterTitle": latestChapterTitle,
             "lastScraped": lastScraped,
             "totalChapters": total,
-            "directory": directory
-        }
-        
-        
+            "directory": directory,
+            "imported": True,
+            "edited": False
+        }        
         if existing_entry:
             merged_entry = merge_book_entries(existing_entry, new_entry)
         else:
@@ -779,7 +775,9 @@ async def importing_main_interface():
             lastChapterTitle=merged_entry["lastChapterTitle"],
             lastScraped=merged_entry["lastScraped"],
             totalChapters=merged_entry["totalChapters"],
-            directory=merged_entry["directory"]
+            directory=merged_entry["directory"],
+            imported = True,
+            edited = False
         )
         # if fileName.endswith('.epub'):
         #     dirLocation= f"./books/imported/epubs/{fileName}"
@@ -791,3 +789,10 @@ async def importing_main_interface():
 #asyncio.run(importing_main_interface())
 #compare_images()
 #asyncio.run(extract_chapter_from_book("./books/imported/epubs/DRR 4 - Paradoxical Ties - Silver Linings.epub"))
+
+
+#TODO: Create a function to import all epubs within a folder, and merge the results into existing directories
+#TODO: This means I need to check if the title corresponds to a book that exists inside the database.
+#TODO: I will probably have to add another record to the database like 'aliases' or 'alternative_titles'
+#TODO: The merging will need to consider if an existing chapter title matches the extracted chapter title.
+#TODO: If it does, then to save space, we should not let it be imported.

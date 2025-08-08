@@ -248,6 +248,7 @@ class RoyalRoadScraper(Scraper):
             chapter_title = await self.fetch_chapter_title(soup)
             chapter_content = await self.fetch_chapter_content(soup)
             chapter_content = await self.remove_junk_links_from_soup(chapter_content)
+            await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
             #logging.warning(chapter_content)
             #logging.warning(chapter_title)
             currentImageCount=image_count
@@ -278,7 +279,7 @@ class RoyalRoadScraper(Scraper):
         chapter_title = await self.fetch_chapter_title(soup)
         chapter_content = await self.fetch_chapter_content(soup)
         chapter_content = await self.remove_junk_links_from_soup(chapter_content)
-        
+        await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
         currentImageCount=image_count
         # Process images
         images=chapter_content.find_all('img')

@@ -122,7 +122,7 @@ class SpaceBattlesScraper(Scraper):
                     
             
                 try:
-                    self.fetch_cover_image(soup, bookTitle)
+                    await self.fetch_cover_image(soup, bookTitle)
                 except Exception as e:
                     errorText=f"Failed to get cover image. There might be no cover. Or a different error. Function fetch_novel_data Error: {e}"
                     write_to_logs(errorText)

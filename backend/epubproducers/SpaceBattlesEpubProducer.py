@@ -18,7 +18,8 @@ from backend.common import(
     retrieve_stored_image,
     remove_tags_from_title,
     retrieve_cover_from_storage,
-    storeEpub
+    storeEpub,
+    remove_invalid_characters
 )
 
 
@@ -129,6 +130,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
                                 continue
                     imageCount=currentImageCount
                     chapter=epub.EpubHtml(title=chapter_title, file_name=f"{bookTitle} - {pageNum} - {chapter_title}.xhtml", lang='en')
+                    chapter_content=str(chapter_soup)
                     chapter_content=chapter_soup.encode('ascii')
                     chapter.set_content(chapter_content)
                     chapter.add_item(css)
@@ -270,6 +272,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
                 found_titles = []
                 for span in soup.find_all("span", {"class": "threadmarkLabel"}):
                     title = span.get_text(strip=True)
+                    title=remove_invalid_characters(title)
                     found_titles.append(title)
 
                 # Check which found_titles are in book_chapter_titles
@@ -310,7 +313,7 @@ class SpaceBattlesEpubProducer(EpubProducer):
                         logging.warning(pageContent)
                         logging.warning(file_chapter_title)
                         
-                        chapter_content=pageContent.encode('ascii')
+                        #chapter_content=pageContent.encode('ascii')
                         #It needs to be encoded. No idea why again.
                         chapter=self.create_epub_chapter(chapter_title, file_chapter_title, chapter_content, css)                            
                         toc_list.append(chapter)

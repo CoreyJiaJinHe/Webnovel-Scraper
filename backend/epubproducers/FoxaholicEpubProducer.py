@@ -52,7 +52,6 @@ class FoxaholicEpubProducer(EpubProducer):
 
                 file_chapter_title, image_counter, chapter_content = await scraper.process_new_chapter_non_saved(chapter_url, book_title, chapter_id, image_counter)
                 chapter_content_soup=bs4.BeautifulSoup(str(chapter_content),'html.parser')
-                
                 if (additionalConditions.get("exclude_images", False)):
                     for img in chapter_content_soup.find_all('img'):
                         img.decompose()
