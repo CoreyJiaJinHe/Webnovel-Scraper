@@ -768,6 +768,67 @@ async def dev_get_reading_list(request: Request, response: Response):
         raise credentials_exception
 
 
+@app.get("/api/dev/get_imported_books/")
+async def get_imported_books(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if(mongodb.check_developer(username)):
+            try:
+                imported_books = mongodb.get_all_imported_books()
+                return JSONResponse(content=imported_books, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving imported books: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve imported books"}, status_code=500)
+    else:
+        raise credentials_exception
+    
+
+@app.get("/api/dev/get_total_imported_books/")
+async def get_total_imported_books(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if(mongodb.check_developer(username)):
+            try:
+                total_imported_books = mongodb.get_total_imported_books()
+                return JSONResponse(content={"total_imported_books": total_imported_books}, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving total imported books: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve total imported books"}, status_code=500)
+    else:
+        raise credentials_exception
+
+@app.get("/api/dev/get_imported_non_edited_books/")
+async def get_imported_non_edited_books(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (mongodb.check_developer(username)):
+            try:
+                imported_non_edited_books = mongodb.get_total_non_edited_books()
+                return JSONResponse(content=imported_non_edited_books, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving imported non-edited books: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve imported non-edited books"}, status_code=500)
+    else:
+        raise credentials_exception
+    
+@app.get("/api/dev/get_total_imported_non_edited_books/")
+async def get_total_imported_non_edited_books(request: Request):
+    received_access_token=request.cookies.get("access_token")
+    if (received_access_token):
+        new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
+        if (mongodb.check_developer(username)):
+            try:
+                total_imported_non_edited_books = mongodb.get_all_non_edited_books()
+                return JSONResponse(content={"total_imported_non_edited_books": total_imported_non_edited_books}, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving total imported non-edited books: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve total imported non-edited books"}, status_code=500)
+    else:
+        raise credentials_exception
+
 @app.get("/api/getBookChapterList/{book_id}")
 async def getBookChapterList(book_id: str):
     try:

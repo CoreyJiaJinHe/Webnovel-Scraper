@@ -723,31 +723,48 @@ def get_all_book_titles():
 
 
 
+def get_total_imported_books() -> int:
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}, "imported": True})
+    total_imported=0
+    for result in results:
+        total_imported+=1
+    return total_imported
 
+def get_all_imported_books() -> list:
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}, "imported": True})
+    all_imported=[]
+    for result in results:
+        #logging.warning(result)
+        data = [[result["bookID"], result["bookName"], result["bookAuthor"], result["imported"]]]
+        all_imported.append(data)
+    return all_imported
 
+logging.warning(get_total_imported_books())
+logging.warning(get_all_imported_books())
 
+#We only care about editing books that have been imported as their contents may be out of order.
+def get_total_non_edited_books()-> int:
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}, "imported": True, "edited": False})
+    total_edited=0
+    for result in results:
+        total_edited+=1
+    return total_edited
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def get_all_non_edited_books() -> list:
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}, "imported": True, "edited": False})
+    all_non_edited=[]
+    for result in results:
+        data = [[result["bookID"], result["bookName"], result["bookAuthor"], result["edited"]]]
+        all_non_edited.append(data)
+    return all_non_edited
 
 
 
