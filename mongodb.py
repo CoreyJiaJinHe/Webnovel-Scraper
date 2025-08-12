@@ -743,8 +743,8 @@ def get_all_imported_books() -> list:
         all_imported.append(data)
     return all_imported
 
-logging.warning(get_total_imported_books())
-logging.warning(get_all_imported_books())
+# logging.warning(get_total_imported_books())
+# logging.warning(get_all_imported_books())
 
 #We only care about editing books that have been imported as their contents may be out of order.
 def get_total_non_edited_books()-> int:
