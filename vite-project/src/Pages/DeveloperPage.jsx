@@ -21,16 +21,14 @@ export function DeveloperPage() {
     verifiedState, setVerifiedState,
     isDeveloper,setIsDeveloper} = useUser();
 
-  const [bookCounts, setBookCounts] = useState({
-    RoyalRoad: 0,
-    NovelBin: 0,
-    Spacebattles: 0,
-    Foxaholic: 0,
-    Other: 0,
-  });
+  const [bookCounts, setBookCounts] = useState({});
+  
+  const [importedBooksTotal, setImportedBooksTotal] = useState(0);
+  const [importedNonEditedBooksTotal, setImportedNonEditedBooksTotal] = useState(0);
+
   const [usersToVerify, setUsersToVerify]=useState([]);
 
-  useEffect(()=>{tokenLogin(),fetchBookCounts(),fetchUsersToVerify()},[])
+  useEffect(()=>{tokenLogin(),fetchBookCounts(),fetchUsersToVerify(), fetchImportedBooksTotals()},[])
 
 
   async function fetchUsersToVerify(){
@@ -79,41 +77,49 @@ export function DeveloperPage() {
     return false;
   }
 
-  async function fetchBookCounts() {
-    try {
-      const response = await axios.get(`${API_URL}/allBooks/`, { withCredentials: true });
-      if (response.status === 200 && Array.isArray(response.data)) {
-        //console.log(response.data);
-        const counts = {
-          RoyalRoad: 0,
-          NovelBin: 0,
-          Spacebattles: 0,
-          Foxaholic: 0,
-          Other: 0,
-        };
-        // Loop through each [source, booksArr] pair
-        response.data.forEach(([source, booksArr]) => {
-        const normalizedSource = (source || "").toLowerCase();
-        const numBooks = Array.isArray(booksArr) ? booksArr.length : 0;
-
-        if (normalizedSource.includes("royalroad")) {
-          counts.RoyalRoad += numBooks;
-        } else if (normalizedSource.includes("novelbin")) {
-          counts.NovelBin += numBooks;
-        } else if (normalizedSource.includes("spacebattles")) {
-          counts.Spacebattles += numBooks;
-        } else if (normalizedSource.includes("foxaholic")) {
-          counts.Foxaholic += numBooks;
-        } else {
-          counts.Other += numBooks;
-        }
+  
+async function fetchBookCounts() {
+  try {
+    const response = await axios.get(`${API_URL}/allBooks/`, { withCredentials: true });
+    if (response.status === 200 && Array.isArray(response.data)) {
+      const counts = {};
+      response.data.forEach(([source, booksArr]) => {
+        // Normalize the source name
+        let label = source || "Other";
+        // Remove protocol, www., subdomains, and TLDs
+        label = label
+          .replace(/^(https?:\/\/)?(www\.)?/i, "") // remove protocol and www
+          .replace(/^forums\./i, "") // remove 'forums.' prefix
+          .replace(/\..*$/, "") // remove everything after first dot (TLD and subdomains)
+          .toLowerCase();
+        // Capitalize first letter
+        label = label.charAt(0).toUpperCase() + label.slice(1);
+        counts[label] = Array.isArray(booksArr) ? booksArr.length : 0;
       });
-
-      console.log("Book counts:", counts);
       setBookCounts(counts);
+    }
+  } catch (error) {
+    console.error("Failed to fetch book counts:", error);
+  }
+}
+  async function fetchImportedBooksTotals() {
+    try {
+      const response = await axios.get(`${API_URL}/dev/get_total_imported_books/`, { withCredentials: true });
+      
+      if (response.status === 200 && Array.isArray(response.data)) {
+        setImportedBooksTotal(Number(response.data) || 0);
       }
     } catch (error) {
-      console.error("Failed to fetch book counts:", error);
+      console.error("Failed to fetch imported books:", error);
+    }
+    try{
+      const response = await axios.get(`${API_URL}/dev/get_total_imported_non_edited_books/`, { withCredentials: true });
+      
+      if (response.status === 200 && Array.isArray(response.data)) {
+        setImportedNonEditedBooksTotal(Number(response.data) || 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch imported non-edited books:", error);
     }
   }
 
@@ -154,6 +160,36 @@ export function DeveloperPage() {
       console.error("Failed to retrieve followed list from RoyalRoad:", error);
     }
   }
+  const [importedBooks,setImportedBooks]=useState([]);
+
+  async function retrieve_imported_books(){
+    try {
+      const response = await axios.get(`${API_URL}/dev/get_imported_books/`, { withCredentials: true });
+      if (response.status === 200 && Array.isArray(response.data)) {
+        // Process the imported books data
+        console.log("Imported books:", response.data);
+      }
+    } catch (error) {
+      console.error("Failed to retrieve imported books:", error);
+    }
+  }
+
+  const [importedNonEditedBooks,setImportedNonEditedBooks]=useState([]);
+  async function retrieve_imported_non_edited_books(){
+    try{
+      const response = await axios.get(`${API_URL}/dev/get_imported_non_edited_books/`, { withCredentials: true });
+      if (response.status === 200 && Array.isArray(response.data)) {
+        // Process the non-edited imported books data
+        console.log("Non-edited imported books:", response.data);
+      }
+    } catch (error) {
+      console.error("Failed to retrieve non-edited imported books:", error);
+    }
+  }
+
+  async function retrieve_available_books(){
+    
+  }
 
 
   return (
@@ -161,14 +197,32 @@ export function DeveloperPage() {
     <NavBar/>
     <div className="developer-page-main-container">
         <div className="developer-page-left-statistics-panel">
-          <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Books</h1>
+          <h1 style={{textDecoration: "underline", marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Book Statistics</h1>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li><strong>RoyalRoad:</strong> {bookCounts.RoyalRoad}</li>
-            <li><strong>NovelBin:</strong> {bookCounts.NovelBin}</li>
-            <li><strong>Spacebattles:</strong> {bookCounts.Spacebattles}</li>
-            <li><strong>Foxaholic:</strong> {bookCounts.Foxaholic}</li>
-            <li><strong>Other:</strong> {bookCounts.Other}</li>
+            {Object.entries(bookCounts)
+              .sort(([a], [b]) => {
+                const order = [
+                  "Royalroad",
+                  "Spacebattles",
+                  "Novelbin",
+                  "Foxaholic"
+                ];
+                const idxA = order.findIndex(site => a.toLowerCase() === site.toLowerCase());
+                const idxB = order.findIndex(site => b.toLowerCase() === site.toLowerCase());
+                if (idxA === -1 && idxB === -1) return a.localeCompare(b); // both unknown, sort alphabetically
+                if (idxA === -1) return 1; // a is unknown, put after b
+                if (idxB === -1) return -1; // b is unknown, put after a
+                return idxA - idxB; // sort by order
+              })
+              .map(([site, count]) => (
+                <li key={site}>
+                  <strong>{site}:</strong> {count}
+                </li>
+              ))}
           </ul>
+          <h1 style={{textDecoration: "underline", margin: "1rem 0", fontSize: "2rem", fontWeight: "bold" }}>Imported Books:</h1>
+              <p>Imported: {importedBooksTotal || 0}</p>
+              <p>Non-Edited: {importedNonEditedBooksTotal || 0}</p>
         </div>
         {/*TODO*/}
         <div className={"developer-page-center-panel"}>
@@ -179,8 +233,23 @@ export function DeveloperPage() {
               <p>Retrieve my followed list from RoyalRoad</p>
               <button className="button">Retrieve</button>
             </div>
+            <div className="developer-page-action-card">
+              <p>See imported books</p>
+              <button className="button" onClick={retrieve_imported_books}>View</button>
+            </div>
+            <div className="developer-page-action-card">
+              <p>See imported books that need action</p>
+              <button className="button" onClick={retrieve_imported_non_edited_books}>View</button>
+            </div>
+            <div className="developer-page-action-card">
+              <p>See available books to import</p>
+              <button className="button" onClick={retrieve_available_books}>View</button>
+            </div>
           </div>
         </div>
+
+
+
           {/* Right panel */}
         <div className="developer-page-right-users-panel">
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>

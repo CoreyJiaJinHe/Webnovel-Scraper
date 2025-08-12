@@ -792,7 +792,7 @@ async def get_total_imported_books(request: Request):
         if(mongodb.check_developer(username)):
             try:
                 total_imported_books = mongodb.get_total_imported_books()
-                return JSONResponse(content={"total_imported_books": total_imported_books}, status_code=200)
+                return JSONResponse(content=total_imported_books, status_code=200)
             except Exception as e:
                 logging.error(f"Error retrieving total imported books: {e}")
                 return JSONResponse(content={"error": "Failed to retrieve total imported books"}, status_code=500)
@@ -806,7 +806,7 @@ async def get_imported_non_edited_books(request: Request):
         new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         if (mongodb.check_developer(username)):
             try:
-                imported_non_edited_books = mongodb.get_total_non_edited_books()
+                imported_non_edited_books = mongodb.get_all_non_edited_books()
                 return JSONResponse(content=imported_non_edited_books, status_code=200)
             except Exception as e:
                 logging.error(f"Error retrieving imported non-edited books: {e}")
@@ -821,8 +821,8 @@ async def get_total_imported_non_edited_books(request: Request):
         new_access_token,username,userID,verifiedStatus=await authenticate_token(received_access_token)
         if (mongodb.check_developer(username)):
             try:
-                total_imported_non_edited_books = mongodb.get_all_non_edited_books()
-                return JSONResponse(content={"total_imported_non_edited_books": total_imported_non_edited_books}, status_code=200)
+                total_imported_non_edited_books = mongodb.get_total_non_edited_books()
+                return JSONResponse(content=total_imported_non_edited_books, status_code=200)
             except Exception as e:
                 logging.error(f"Error retrieving total imported non-edited books: {e}")
                 return JSONResponse(content={"error": "Failed to retrieve total imported non-edited books"}, status_code=500)
