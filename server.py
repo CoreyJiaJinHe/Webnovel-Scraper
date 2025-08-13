@@ -23,6 +23,8 @@ logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
 
 from backend.common import (write_to_logs)
 from backend import main as mainProgram
+import epubimporter as epubimporter
+
 import OnlineReader
 
 from passlib.context import CryptContext
@@ -829,6 +831,53 @@ async def get_total_imported_non_edited_books(request: Request):
     else:
         raise credentials_exception
 
+
+
+@app.post("/api/dev/fetch_available_books_for_import/")
+async def fetch_available_books_for_import(request: Request):
+    received_access_token = request.cookies.get("access_token")
+    logging.warning(received_access_token)
+    
+        
+    if received_access_token:
+        new_access_token, username, userID, verifiedStatus = await authenticate_token(received_access_token)
+        logging.warning(username)
+        logging.warning(userID)
+        logging.warning(verifiedStatus)
+        if mongodb.check_developer(username):
+            try:
+                available_books = epubimporter.get_epubs_to_import()
+                return JSONResponse(content=available_books, status_code=200)
+            except Exception as e:
+                logging.error(f"Error retrieving available books for import: {e}")
+                return JSONResponse(content={"error": "Failed to retrieve available books for import"}, status_code=500)
+            
+    else:
+        raise credentials_exception
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.get("/api/getBookChapterList/{book_id}")
 async def getBookChapterList(book_id: str):
     try:
@@ -864,13 +913,6 @@ async def getBookChapters(bookID: str, chapterID: str, chapterTitle: str):
     except Exception as e:
         logging.error(f"Error retrieving chapter content: {e}")
         return JSONResponse(content={"error": "Failed to retrieve chapter content"}, status_code=500)
-
-
-
-
-
-
-
 
 
 

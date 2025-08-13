@@ -187,8 +187,23 @@ async function fetchBookCounts() {
     }
   }
 
-  async function retrieve_available_books(){
-    
+  const [availableBooksForImport, setAvailableBooksForImport] = useState([]);
+  const [sanitizedBooksForImport, setSanitizedBooksForImport] = useState([]);
+
+  // Update your retrieve_available_books function:
+  async function retrieve_available_books() {
+    try {
+      const response = await axios.post(`${API_URL}/dev/fetch_available_books_for_import/`, {}, { withCredentials: true });
+      if (response.status === 200 && Array.isArray(response.data)) {
+        setAvailableBooksForImport(response.data);
+        // Create a sanitized version for display
+        const sanitized = response.data.map(str => str.replace(/_/g, " "));
+        setSanitizedBooksForImport(sanitized);
+        console.log("Available books for import:", response.data);
+      }
+    } catch (error) {
+      console.error("Failed to retrieve available books for import:", error);
+    }
   }
 
 
@@ -196,6 +211,7 @@ async function fetchBookCounts() {
     <>
     <NavBar/>
     <div className="developer-page-main-container">
+      <div className="developer-page-left-column">
         <div className="developer-page-left-statistics-panel">
           <h1 style={{textDecoration: "underline", marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Book Statistics</h1>
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -224,6 +240,71 @@ async function fetchBookCounts() {
               <p>Imported: {importedBooksTotal || 0}</p>
               <p>Non-Edited: {importedNonEditedBooksTotal || 0}</p>
         </div>
+
+        <div className="developer-page-left-import-panel">
+          <h1
+            style={{
+              textDecoration: "underline",
+              margin: 0,
+              padding: "1rem 0 0.5rem 0",
+              fontSize: "1rem",
+              fontWeight: "bold",
+              background: "#f5f5f5",
+              zIndex: 1,
+            }}
+          >
+            Available Books for Import
+          </h1>
+          <div style={{ overflowY: "auto", maxHeight: "300px", padding: "0 1rem" }}>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {availableBooksForImport.length === 0 ? (
+                <li>No books available for import.</li>
+              ) : (
+                availableBooksForImport.map((bookLabel, idx) => (
+                  <li
+                    key={bookLabel || idx}
+                    style={{
+                      marginBottom: "0.75rem",
+                      background: "#f5f5f5",
+                      borderRadius: "8px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
+                      padding: "1px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      minHeight: "48px",
+                      wordBreak: "break-word"
+                    }}
+                  >
+                    <span style={{ fontSize: "0.95rem", flex: 1, marginRight: "1rem", wordBreak: "break-word" }}>
+                      {sanitizedBooksForImport[idx]}
+                    </span>
+                    <button
+                      style={{
+                        padding: "2px 10px",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#1976d2",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                      className="button"
+                      onClick={() => {
+                        // Use the original string here
+                        // importBook(bookLabel);
+                      }}
+                    >
+                      Import
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
         {/*TODO*/}
         <div className={"developer-page-center-panel"}>
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Available Actions</h1>

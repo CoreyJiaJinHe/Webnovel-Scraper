@@ -352,8 +352,9 @@ def get_epubs_to_import():
     dirLocation= "./books/imported/epubs"
     dir_list=os.listdir(dirLocation)
     #print(f"Files in {dirLocation}:")
-    #print(dir_list)
-    override=True
+    # print(dir_list)
+    # write_to_logs(f"Files in {dirLocation}: {dir_list}")
+    override=False
     if (override):
         filtered_list = [f for f in dir_list if "DIE RESPAWN REPEAT" in f]
         return filtered_list
