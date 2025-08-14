@@ -205,8 +205,10 @@ default_values = {
         "directory": "Template",
         "imported": False,  # This is used to determine if the book was imported from a file or not.
         # If it was, then it needs to be edited by a developer.
-        "edited": False #This is used to determine if the book was edited by a developer or not.
+        "edited": False, #This is used to determine if the book was edited by a developer or not.
         #If it wasn't, then it needs to be edited by a developer.
+        "aliases":[] #This is used to store any alternative titles or names for the book.
+
     }
 #This is dict merging.
 #Another method is to use .get(value, default_value) for each key, but that's not as clean.
@@ -231,7 +233,8 @@ def create_Entry(**kwargs):
         "totalChapters": book_data["totalChapters"],
         "directory": book_data["directory"],
         "imported": book_data["imported"],
-        "edited": book_data.get("edited", False)  # Default to False if not present
+        "edited": book_data.get("edited", False),  # Default to False if not present
+        "aliases": book_data.get("aliases", [])  # Default to empty list if not present
     }
     
     
@@ -268,7 +271,8 @@ def create_latest(**kwargs):
             "totalChapters": book_data["totalChapters"],
             "directory": book_data["directory"],
             "imported": book_data["imported"],
-            "edited": book_data.get("edited", False)  # Default to False if not present
+            "edited": book_data.get("edited", False),  # Default to False if not present
+            "aliases": book_data.get("aliases", [])  # Default to empty list if not present
         }
         db=Database.get_instance()
         savedBooks=db["Books"]
@@ -345,7 +349,8 @@ def fill_existing_records():
             "totalChapters": result["totalChapters"],
             "directory": result["directory"],
             "imported": result.get("imported", False),  # Default to False if not present
-            "edited": result.get("edited", False)  # Default to False if not present
+            "edited": result.get("edited", False),  # Default to False if not present
+            "aliases": result.get("aliases", [])  # Default to empty list if not present
         }
         if "lastChapter" in results:
             if not (str(result["lastChapter"]).isdigit()):
@@ -381,7 +386,8 @@ def fix_existing_record_data_types():
             "totalChapters": int(result["totalChapters"]),
             "directory": result["directory"],
             "imported": result["imported"],
-            "edited": result.get("edited", False)  # Default to False if not present
+            "edited": result.get("edited", False),  # Default to False if not present
+            "aliases": result.get("aliases", [])  # Default to empty list if not present
         }
         logging.warning(savedBooks.replace_one({"_id": result["_id"]}, book))
 
