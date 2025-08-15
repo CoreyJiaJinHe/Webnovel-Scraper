@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import logging
 import asyncio
 import threading 
-import refactor as scrape
+import backend.main as scrape
 import queue
 
 load_dotenv()

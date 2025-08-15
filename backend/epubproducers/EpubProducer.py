@@ -143,7 +143,7 @@ class EpubProducer:
                 f.write(";".join(str(data))+ "\n")
 
     #This is a common function that can be used by all EpubProducer classes, unless it is Spacebattles. In that case, it will be overridden.
-    async def produce_epub(self, url, book_title, css, new_epub):
+    async def produce_epub(self, book_title, css, new_epub):
         already_saved_chapters = self.get_existing_order_of_contents(book_title)
         toc_list = []
         image_count = 0
@@ -177,7 +177,7 @@ class EpubProducer:
         logging.warning("Finalizing epub")
         self.finalize_epub(new_epub, toc_list, book_title)
 
-        self.storeEpub(book_title, new_epub)
+        storeEpub(book_title, new_epub)
 
 
     async def produce_custom_epub(self, new_epub, book_title, css,book_chapter_urls, mainBookURL,additionalConditions,scraper):

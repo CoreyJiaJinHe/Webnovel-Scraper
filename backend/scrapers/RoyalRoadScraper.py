@@ -69,7 +69,7 @@ class RoyalRoadScraper(Scraper):
                 
                 
                 try:
-                    self.fetch_cover_image(soup, bookTitle)
+                    await self.fetch_cover_image(soup, bookTitle)
                 
                 except Exception as e:
                     errorText=f"Failed to get cover image for Royalroad. Function fetch_cover_image Error: {e}"
@@ -219,6 +219,8 @@ class RoyalRoadScraper(Scraper):
             write_to_logs(errorText)
             return
         existingChapters = self.get_existing_order_of_contents(book_title)
+        logging.warning(book_url)
+        logging.warning(book_title)
         
         chapter_metadata = []
         image_counter=0 
@@ -248,7 +250,7 @@ class RoyalRoadScraper(Scraper):
             chapter_title = await self.fetch_chapter_title(soup)
             chapter_content = await self.fetch_chapter_content(soup)
             chapter_content = await self.remove_junk_links_from_soup(chapter_content)
-            await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
+            chapter_content = await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
             #logging.warning(chapter_content)
             #logging.warning(chapter_title)
             currentImageCount=image_count
@@ -275,29 +277,39 @@ class RoyalRoadScraper(Scraper):
     
 
     async def process_new_chapter(self, chapter_url, book_title, chapter_id, image_count):
-        soup = await self.get_soup(chapter_url)
-        chapter_title = await self.fetch_chapter_title(soup)
-        chapter_content = await self.fetch_chapter_content(soup)
-        chapter_content = await self.remove_junk_links_from_soup(chapter_content)
-        await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
-        currentImageCount=image_count
-        # Process images
-        images=chapter_content.find_all('img')
-        images=[image['src'] for image in images]
-        logging.warning(images)
-        image_dir = f"./books/raw/{book_title}/images/"
-        if images:
-            image_count = await self.save_images_in_chapter(images, image_dir, image_count)
-            for img,image in zip(chapter_content.find_all('img'),images):
-                img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
-                currentImageCount+=1
-        
-        encoded_chapter_content=chapter_content.encode('ascii')
-        file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
-        store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
+        try:
+            #logging.warning(f"Processing chapter: {chapter_url}")
+            soup = await self.get_soup(chapter_url)
+            #logging.warning(f"Grabbing chapter_title from soup")
+            chapter_title = await self.fetch_chapter_title(soup)
+            #logging.warning(f"Grabbing chapter_content from soup")
+            chapter_content = await self.fetch_chapter_content(soup)
+            #logging.warning(f"Checking and inserting missing chapter title if needed")
+            chapter_content = await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
+            #logging.warning(f"Removing junk links from chapter_content")
+            chapter_content = await self.remove_junk_links_from_soup(chapter_content)
+            #logging.warning(f"Moving onto images")
+            currentImageCount=image_count
+            # Process images
+            images=chapter_content.find_all('img')
+            images=[image['src'] for image in images]
+            #logging.warning(images)
+            image_dir = f"./books/raw/{book_title}/images/"
+            if images:
+                image_count = await self.save_images_in_chapter(images, image_dir, image_count)
+                for img,image in zip(chapter_content.find_all('img'),images):
+                    img['src']=img['src'].replace(image,f"images/image_{currentImageCount}.png")       
+                    currentImageCount+=1
+            
+            encoded_chapter_content=chapter_content.encode('ascii')
+            file_chapter_title = f"{book_title} - {chapter_id} - {remove_invalid_characters(chapter_title)}"
+            store_chapter(encoded_chapter_content, book_title, chapter_title, chapter_id)
 
-        return file_chapter_title, currentImageCount
-    
+            return file_chapter_title, currentImageCount
+        except Exception as e:
+            errorText=f"Failed to process new chapter. Function Royalroad Scraper process_new_chapter Error: {e}"
+            logging.warning(errorText)
+            write_to_logs(errorText)
     
             
     #Extracts the chapter ID from the URL. Royalroad has unique IDs that increase with each chapter.

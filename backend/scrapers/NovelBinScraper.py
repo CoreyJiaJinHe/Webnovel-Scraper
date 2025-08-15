@@ -66,7 +66,7 @@ class NovelBinScraper(Scraper):
         chapter_title=await self.generate_chapter_title(chapter_id)+" "+chapter_title
         chapter_content = await self.fetch_chapter_content(soup)
         
-        await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
+        chapter_content = await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
         currentImageCount=image_count
         
         # Process images
@@ -365,7 +365,7 @@ class NovelBinScraper(Scraper):
             chapter_content = await self.fetch_chapter_content(soup)
             chapter_content = await self.remove_junk_links_from_soup(chapter_content)
             
-            await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
+            chapter_content = await self.check_and_insert_missing_chapter_title(chapter_title, chapter_content)
             
             
 

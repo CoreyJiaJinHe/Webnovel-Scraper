@@ -206,6 +206,18 @@ async function fetchBookCounts() {
     }
   }
 
+  async function importBook(bookLabel) {
+    try{
+      const response = await axios.post(`${API_URL}/dev/import_book/`, { bookLabel }, { withCredentials: true });
+      if (response.status === 200) {
+        console.log("Book imported successfully:", response.data);
+      }
+    }
+    catch (error){
+      console.error("Failed to import book:", error);
+    }
+
+  }
 
   return (
     <>
@@ -292,8 +304,7 @@ async function fetchBookCounts() {
                       }}
                       className="button"
                       onClick={() => {
-                        // Use the original string here
-                        // importBook(bookLabel);
+                        importBook(bookLabel);
                       }}
                     >
                       Import

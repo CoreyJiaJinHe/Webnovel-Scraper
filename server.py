@@ -855,17 +855,17 @@ async def fetch_available_books_for_import(request: Request):
     else:
         raise credentials_exception
 
-
-
-
-
-
-
-
-
-
-
-
+@app.post("/api/dev/import_book/")
+async def import_book(request: Request):
+    book_to_import=await request.json()
+    book_to_import=book_to_import.get("bookLabel")
+    logging.warning(book_to_import)
+    try:
+        result = await epubimporter.import_main_interface(book_to_import)
+        return JSONResponse(content=result, status_code=200)
+    except Exception as e:
+        logging.error(f"Error importing book: {e}")
+        return JSONResponse(content={"error": "Failed to import book"}, status_code=500)
 
 
 

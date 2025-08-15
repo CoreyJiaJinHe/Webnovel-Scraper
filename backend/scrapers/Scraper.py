@@ -142,15 +142,35 @@ class Scraper:
         
     async def check_and_insert_missing_chapter_title(self, chapter_title, chapter_content):
     # Check if chapter_title is present as a heading (h1/h2/h3) in chapter_content
-        heading_found = False
-        for heading_tag in ['h1', 'h2', 'h3']:
-            heading = chapter_content.find(heading_tag)
-            if heading and chapter_title.strip() in heading.get_text().strip():
-                heading_found = True
-                break
-
-        if not heading_found:
-            # Insert chapter_title as an <h1> at the start
-            new_heading = chapter_content.new_tag("h1")
-            new_heading.string = chapter_title
-            chapter_content.insert(0, new_heading)
+        logging.warning(f"chapter_content type: {type(chapter_content)}")
+        if chapter_content is None:
+            errorText = "chapter_content is None in check_and_insert_missing_chapter_title"
+            write_to_logs(errorText)
+            return
+        try:
+            heading_found = False
+            for heading_tag in ['h1', 'h2', 'h3']:
+                heading = chapter_content.find(heading_tag)
+                if heading and chapter_title.strip() in (heading.get_text() or "").strip():
+                    heading_found = True
+                    break
+            logging.warning(f"Heading found: {heading_found}")
+            if not heading_found:
+                # Try to create a new heading tag
+                soup = getattr(chapter_content, 'soup', None)
+                if soup is None:
+                    soup = chapter_content if isinstance(chapter_content, bs4.BeautifulSoup) else bs4.BeautifulSoup(str(chapter_content), 'html.parser')
+                new_heading = soup.new_tag("h1")
+                new_heading.string = chapter_title
+                logging.warning("Attempting to insert new heading at the top of chapter_content")
+                # Insert at the top if possible, else append
+                if hasattr(chapter_content, "insert"):
+                    chapter_content.insert(0, new_heading)
+                else:
+                    chapter_content.append(new_heading)
+                logging.warning("Heading inserted successfully.")
+                #logging.warning(chapter_content.prettify())
+        except Exception as e:
+            errorText = f"Failed to check and insert missing chapter title. Function Scraper check_and_insert_missing_chapter_title Error: {e}"
+            write_to_logs(errorText)
+        return chapter_content

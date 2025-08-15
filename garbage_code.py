@@ -89,6 +89,232 @@ async def open_link(url):
 
 asyncio.run(open_link("https://novelbin.com/b/alantina-online-the-greatest-sword-mage-reborn-as-a-weak-npc/chapter-78-rare-drops-part-1"))
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# async def extract_chapter_from_book(dirLocation):
+    
+#     fileName=dirLocation.split("/")[-1]
+#     if not fileName.endswith('.epub'):
+#         errorText=f"Function extract_chapter_from_book Error: {fileName} is not an epub file."
+#         write_to_logs(errorText)
+#         return
+    
+    
+#     volume_number = extract_volume_or_book_number(fileName)
+#     chapterID=0
+#     if volume_number:
+#         chapterID = volume_number * 10000
+    
+#     chapter_metadata = []
+#     book = epub.read_epub(dirLocation)
+#     bookTitle=await process_book_title(book)
+#     def get_existing_order_of_contents(book_title):
+#         # Default implementation
+#         dir_location = f"./books/imported/{book_title}/order_of_chapters.txt"
+#         if os.path.exists(dir_location):
+#             with open(dir_location, "r") as f:
+#                 return f.readlines()
+#         return []
+    
+#     existingChapters = get_existing_order_of_contents(bookTitle)
+#     existingChapters = [line.strip().split(";") for line in existingChapters if line.strip()]
+    
+    
+#     image_dir = f"./books/imported/{bookTitle}/images/"
+#     cover_dir=f"./books/imported/{bookTitle}/"
+#     try:
+#         numberofImages=os.listdir(image_dir)
+#         currentImageCounter=len(numberofImages)-1 if numberofImages else 0
+#     except Exception as e:
+#         errorText=f"Failed to get number of images in {image_dir}. Function extract_chapter_from_book Error: {e}"
+#         logging.error(errorText)
+#         write_to_logs(errorText)
+#         currentImageCounter=0
+#         numberofImages=[]
+                
+    
+#     #Cover Image Only
+#     images = book.get_items_of_type(ebooklib.ITEM_IMAGE)
+#     if images:
+#         for image in images:
+#             if ("cover" in image.file_name):
+#                 image_path = f"{cover_dir}cover_image.png"
+#                 if not os.path.exists(cover_dir):
+#                     os.makedirs(cover_dir)
+#                 if not os.path.exists(image_path):
+#                     with open(image_path, "wb") as f:
+#                         f.write(image.get_content())
+#                 else:
+#                     image_bytes = image.get_content()
+#                     if not is_image_duplicate(image_bytes,image_dir):
+#                         existingImages=get_all_files_in_directory(cover_dir)
+#                         cover_image_count = sum(1 for f in existingImages if "cover_image" in f)
+#                         image_path = f"{cover_dir}cover_image_{cover_image_count}.png"
+#                         try:
+#                             with open(image_path, "wb") as f:
+#                                 f.write(image.get_content())
+#                         except Exception as e:
+#                             errorText=f"Failed to write cover image bytes to file. Function extract_chapter_from_book Error: {e}, file:{bookTitle}"
+#                             write_to_logs(errorText)
+#                             continue
+#                     else:
+#                         logging.warning(f"Cover Image already exists in {image_dir}. Skipping.")
+    
+#     #reset counter
+#     currentImageCounter=len(numberofImages)-1 if numberofImages else 0
+#     for item in book.get_items():
+#         if item.get_type() == ebooklib.ITEM_DOCUMENT:
+#             print('==================================')
+#             print('NAME : ', item.get_name())
+#             print('----------------------------------')
+#             #print(item.get_content())
+#             #print('==================================')
+            
+#             soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
+            
+#             title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
+#             if title=="":
+#                 title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
+#             if title=="":
+#                 title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
+#             if title=="":
+#                 continue
+            
+#             chapterContent = soup
+#             img_tags = chapterContent.find_all('img')
+#             image_dir = f"./books/imported/{bookTitle}/images/"
+#             if not os.path.exists(image_dir):
+#                 os.makedirs(image_dir)
+#             images = [img['src'] for img in img_tags if img.has_attr('src')]
+#             if (images):
+#                 logging.warning(images)
+
+#             # Get all image items in the book for matching
+#             image_items = {img_item.file_name: img_item for img_item in book.get_items_of_type(ebooklib.ITEM_IMAGE)}
+
+#             for img in img_tags:
+#                 img_src = img['src']
+#                 # Try to find the corresponding image item in the epub
+#                 matched_item = None
+#                 for file_name, img_item in image_items.items():
+#                     if img_src in file_name or file_name in img_src:
+#                         matched_item = img_item
+#                         break
+#                 if not matched_item:
+#                     continue  # Skip if not found in epub
+
+#                 image_bytes = matched_item.get_content()
+#                 image_path = f"{image_dir}image_{currentImageCounter}.png"
+
+#                 # Check for duplicate in directory
+#                 if not is_image_duplicate(image_bytes, image_dir):
+#                     # Save new image and update src
+#                     with open(image_path, "wb") as f:
+#                         logging.warning(f"Saving image {currentImageCounter} to {image_path}")
+#                         try:
+#                             f.write(image_bytes)
+#                             img['src'] = f"images/image_{currentImageCounter}.png"
+#                             currentImageCounter += 1
+
+#                         except Exception as e:
+#                             errorText=f"Failed to write image bytes to file. Function extract_chapter_from_book Error: {e}"
+#                             write_to_logs(errorText)
+#                             continue
+#                 else:
+#                     # If duplicate, find the existing image index to point to
+#                     # Loop through files to find the match and set src accordingly
+#                     for idx, file in enumerate(sorted(os.listdir(image_dir))):
+#                         file_path = os.path.join(image_dir, file)
+#                         epub_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+#                         existing_img = Image.open(file_path).convert("RGB")
+#                         try:
+#                             if epub_img.size == existing_img.size:
+#                                 diff = ImageChops.difference(epub_img, existing_img)
+#                                 if not diff.getbbox():
+#                                     img['src'] = f"images/{file}"
+#                                     break
+#                         except Exception:
+#                             continue
+            
+            
+#             #logging.warning(f"Chapter Title: {title}")
+#             fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
+#             logging.warning(f"File Title: {fileTitle}")
+#             store_chapter_version_two(chapterContent, bookTitle, fileTitle)
+#             chapter_metadata.append([chapterID,title,f"./books/imported/{bookTitle}/{fileTitle}.html"])
+#             chapterID+=1
+            
+    
+    
+#     def merge_chapter_lists_preserve_order(list1, list2):
+#         """
+#         Merge two lists of chapters, preserving order and removing duplicates.
+#         Duplicates are detected by chapter title (case-insensitive, stripped).
+#         Returns a merged list with unique chapters, order: all from list1, then unique from list2.
+#         """
+#         def chapter_key(chapter):
+#             # chapter_metadata is saved as [ID, Title, FilePath]
+#             # We assume the title is always at index 1, and it can be a list
+#             if isinstance(chapter, list):
+#                 return chapter[1].strip().lower()
+#             return chapter.strip().lower()
+
+#         seen = set()
+#         merged = []
+#         chapterID=0
+#         # Add all chapters from list1, marking them as seen
+#         for chapter in list1:
+#             key = chapter_key(chapter)
+#             if key not in seen:
+#                 merged.append(chapter)
+#                 seen.add(key)
+#                 chapterID+=1
+
+#         # Add only new chapters from list2
+#         for chapter in list2:
+#             key = chapter_key(chapter)
+#             if key not in seen:
+#                 chapter=[chapterID,chapter[1],chapter[2]]
+#                 merged.append(chapter)
+#                 seen.add(key)
+#                 chapterID+=1
+#         logging.warning(merged)
+#         return merged
+    
+#     merged_chapter_metadata=merge_chapter_lists_preserve_order(existingChapters, chapter_metadata)
+#     #logging.warning(merged_chapter_metadata)
+#     def write_order_of_contents(book_title, chapter_metadata):
+#         file_location = f"./books/imported/{book_title}/order_of_chapters.txt"
+#         #logging.warning(chapter_metadata)
+#         with open(file_location, "w") as f:
+#             for data in chapter_metadata:
+#                 if isinstance(data, str):
+#                     data = data.strip().split(";")
+#                 #logging.warning(data)
+#                 f.write(";".join(map(str, data))+ "\n")
+#     write_order_of_contents(bookTitle, merged_chapter_metadata)
+    
+#     #Create directory for the book
+#     #make_directory(f"./books/imported/{bookTitle}")
+
+
 # def test_compare_images():
 #     img1_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image.png')
 #     img2_path = os.path.join('books', 'imported', 'DIE RESPAWN REPEAT', 'images', 'cover_image - Copy.png')
