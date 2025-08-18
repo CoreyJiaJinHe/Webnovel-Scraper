@@ -71,7 +71,7 @@ def extract_volume_or_book_number(fileName):
         if match:
             return int(match.group(1))
         return None
-    
+
 def fuzzy_similarity(newBookTitle, existingBookTitles):
     """
     Returns the string from existingBookTitles with the highest similarity to newBookTitle,
@@ -976,3 +976,7 @@ async def import_all_main_interface():
 #TODO: I will probably have to add another record to the database like 'aliases' or 'alternative_titles'
 #TODO: The merging will need to consider if an existing chapter title matches the extracted chapter title.
 #TODO: If it does, then to save space, we should not let it be imported.
+
+
+async def check_for_already_imported(bookName):
+    

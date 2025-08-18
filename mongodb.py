@@ -189,7 +189,7 @@ def check_recently_scraped(bookID):
     return False
 
 #Requires 10 inputs. BookID, bookName, bookAuthor, bookDescription, WebsiteHost, firstChapter#, lastChapter#, totalChapters, directory
-
+dt = datetime.datetime.strptime("1970-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
 default_values = {
         "bookID": 0,
         "bookName": "Template",
@@ -199,7 +199,7 @@ default_values = {
         "firstChapter": -1,
         "lastChapterID": -1,
         "lastChapterTitle": "N/A",
-        "lastScraped": "1970-01-01 00:00:00",
+        "lastScraped": dt,
         #Using a default date that is unlikely to be used.
         "totalChapters":-1,
         "directory": "Template",
@@ -408,7 +408,6 @@ def update_entry(record):
     )
     logging.warning(f"Updated record for bookID {record['bookID']}: {result.raw_result}")
     return result
-        
 
 
 
@@ -423,17 +422,142 @@ def update_entry(record):
 
 
 
+def fuzzy_similarity(newBookTitle, existingBookTitles):
+    """
+    Returns the string from existingBookTitles with the highest similarity to newBookTitle,
+    based on the longest common subsequence ratio.
+    """
+    def normalize_string(s):
+        return re.sub(r'[\W_]+', '', s).lower()  # removes all non-alphanumeric chars and lowercases
+
+    # Dynamic programming approach for LCS
+    def levenshtein_distance(s1, s2):
+        m, n = len(s1), len(s2)
+        # Initialize distance matrix
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = i
+        for j in range(n + 1):
+            dp[0][j] = j
+        # Compute distances
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                cost = 0 if s1[i - 1] == s2[j - 1] else 1
+                dp[i][j] = min(
+                    dp[i - 1][j] + 1,      # Deletion
+                    dp[i][j - 1] + 1,      # Insertion
+                    dp[i - 1][j - 1] + cost  # Substitution
+                )
+        return dp[m][n]
+
+    best_match = None
+    best_score = 0.0
+    newBookTitle = normalize_string(newBookTitle)
+    for book in existingBookTitles:
+        if not newBookTitle or not book:
+            continue
+        book= normalize_string(book)
+        #logging.warning(f"Comparing '{newBookTitle}' with '{book}'")
+        lev_dist = levenshtein_distance(newBookTitle, book)
+        max_len = max(len(newBookTitle), len(book))
+        score = 1 - (lev_dist / max_len) if max_len > 0 else 0.0
+        if score > best_score:
+            best_score = score
+            best_match = book
+    #logging.warning(f"Best match for '{newBookTitle}' is '{best_match}' with score {best_score:.2f}")
+    return best_match, best_score
 
 
+index_imported_book_record={
+    "bookID": -1,
+    "bookName": "Index",
+    "bookAuthor": "Developer",
+    "lastImported": dt,
+    "fileNames": []
+}
+
+template_imported_book_record={
+    "bookID":0,
+    "bookName":"Template",
+    "bookAuthor":"Template",
+    "lastImported": dt,
+    "fileNames": []
+}
+
+# db=Database.get_instance()
+# savedBooks=db["ImportedBooks"]
+# savedBooks.insert_one(index_imported_book_record)
+# savedBooks.insert_one(template_imported_book_record)
 
 
+def create_imported_book_record(record: dict):
+    db=Database.get_instance()
+    savedBooks=db["ImportedBooks"]
+    existing = (
+        savedBooks.find_one({"bookName": record["bookName"], "bookID": {"$ne": 0}}) or
+        savedBooks.find_one({
+            "fileNames": {
+                "$elemMatch": {
+                    "$regex": f"^{re.escape(record['bookName'])}$",
+                    "$options": "i"
+                }
+            },
+            "bookID": {"$ne": 0}
+        })
+    )
+    book = {
+        "bookID": record["bookID"],
+        "bookName": record["bookName"],
+        "bookAuthor": record["bookAuthor"],
+        "lastImported": record["lastImported"],
+        "fileNames": record["fileNames"]
+    }
 
+    if existing:
+        logging.warning(f"Imported book record for '{record['bookName']}' already exists.")
+    else:
+        logging.warning(f"Creating new imported book record for '{record['bookName']}'.")
+        logging.warning(savedBooks.insert_one(book))
 
+def update_impported_book_record(record: dict):
+    db=Database.get_instance()
+    savedBooks=db["ImportedBooks"]
+    existing = (
+        savedBooks.find_one({"bookName": record["bookName"], "bookID": {"$ne": 0}}) or
+        savedBooks.find_one({
+            "fileNames": {
+                "$elemMatch": {
+                    "$regex": f"^{re.escape(record['bookName'])}$",
+                    "$options": "i"
+                }
+            },
+            "bookID": {"$ne": 0}
+        })
+    )
+    
+    if existing:
+        # Prepare the update
+        new_file_name = record["fileNames"][0] if isinstance(record["fileNames"], list) and record["fileNames"] else None
+        update_fields = {}
 
+        # Append new file name if not already present
+        if new_file_name and new_file_name not in existing.get("fileNames", []):
+            update_fields["fileNames"] = existing.get("fileNames", []) + [new_file_name]
+        else:
+            update_fields["fileNames"] = existing.get("fileNames", [])
 
+        # Update lastImported
+        update_fields["lastImported"] = datetime.datetime.now()
 
-
-
+        # Perform the update
+        result = savedBooks.update_one(
+            {"_id": existing["_id"]},
+            {"$set": {"lastImported": update_fields["lastImported"]},
+             "$addToSet": {"fileNames": new_file_name} if new_file_name else {}}
+        )
+        logging.warning(f"Updated imported book record for '{record['bookName']}': {result.raw_result}")
+    else:
+        logging.warning(f"No existing record found for '{record['bookName']}'")
 
 
 
