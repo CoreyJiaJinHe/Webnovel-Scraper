@@ -38,6 +38,13 @@ def get_Entry_Via_ID(bookID):
     savedBooks=db["Books"]
     results=savedBooks.find_one({"bookID":bookID})
     return results
+
+def get_Entry_Via_Title(bookTitle):
+    db=Database.get_instance()
+    savedBooks=db["Books"]
+    results=savedBooks.find_one({"bookName": bookTitle, "bookID": {"$nin": [0, -1]}})
+    return results
+
 #Retrieve latest book data from MongoDB
 def getLatest():
     db=Database.get_instance()
@@ -450,7 +457,6 @@ def fuzzy_similarity(newBookTitle, existingBookTitles):
                 )
         return dp[m][n]
 
-    best_match = None
     best_score = 0.0
     newBookTitle = normalize_string(newBookTitle)
     for book in existingBookTitles:
@@ -463,9 +469,8 @@ def fuzzy_similarity(newBookTitle, existingBookTitles):
         score = 1 - (lev_dist / max_len) if max_len > 0 else 0.0
         if score > best_score:
             best_score = score
-            best_match = book
     #logging.warning(f"Best match for '{newBookTitle}' is '{best_match}' with score {best_score:.2f}")
-    return best_match, best_score
+    return best_score
 
 
 index_imported_book_record={
@@ -488,13 +493,32 @@ template_imported_book_record={
 # savedBooks=db["ImportedBooks"]
 # savedBooks.insert_one(index_imported_book_record)
 # savedBooks.insert_one(template_imported_book_record)
+record = {
+    "bookID":0,
+    "bookName":"New Book",
+    "bookAuthor":"New Author",
+    "lastImported": dt,
+    "fileName": "File Name"
+}
+def check_required_fields_import(record: dict):
+    # Ensure required fields are present
+    required_fields = ["bookID", "bookName"]
+    missing_fields = [field for field in required_fields if field not in record or record[field] is None]
+    if missing_fields:
+        logging.warning(f"Missing required fields in record: {', '.join(missing_fields)}. Aborting.")
+        return False
+    return True
 
 
 def create_imported_book_record(record: dict):
+    if not check_required_fields_import(record):
+        return
+
+    #Record should be a dictionary with bookID, bookName, bookAuthor, lastImported and fileName
     db=Database.get_instance()
     savedBooks=db["ImportedBooks"]
     existing = (
-        savedBooks.find_one({"bookName": record["bookName"], "bookID": {"$ne": 0}}) or
+        savedBooks.find_one({"bookName": record["bookName"], "bookID": {"$nin": [0, -1]}}) or
         savedBooks.find_one({
             "fileNames": {
                 "$elemMatch": {
@@ -502,15 +526,15 @@ def create_imported_book_record(record: dict):
                     "$options": "i"
                 }
             },
-            "bookID": {"$ne": 0}
+        "bookID": {"$nin": [0, -1]}
         })
     )
     book = {
         "bookID": record["bookID"],
         "bookName": record["bookName"],
         "bookAuthor": record["bookAuthor"],
-        "lastImported": record["lastImported"],
-        "fileNames": record["fileNames"]
+        "lastImported": datetime.datetime.now(),
+        "fileNames": [record["fileName"]]
     }
 
     if existing:
@@ -519,7 +543,28 @@ def create_imported_book_record(record: dict):
         logging.warning(f"Creating new imported book record for '{record['bookName']}'.")
         logging.warning(savedBooks.insert_one(book))
 
-def update_impported_book_record(record: dict):
+def check_existing_imported_book_via_title(bookName: str):
+    db=Database.get_instance()
+    savedBooks=db["ImportedBooks"]
+    results=savedBooks.find_one({"bookName": bookName, "bookID": {"$nin": [0, -1]}})
+    if results:
+        return True
+    return False
+
+
+def check_existing_imported_book_via_ID(bookID: str):
+    db=Database.get_instance()
+    savedBooks=db["ImportedBooks"]
+    results=savedBooks.find_one({"bookID": bookID})
+    if results:
+        return True
+    return False
+
+
+def update_imported_book_record(record: dict):
+    if not check_required_fields_import(record):
+        return
+    
     db=Database.get_instance()
     savedBooks=db["ImportedBooks"]
     existing = (
@@ -537,23 +582,20 @@ def update_impported_book_record(record: dict):
     
     if existing:
         # Prepare the update
-        new_file_name = record["fileNames"][0] if isinstance(record["fileNames"], list) and record["fileNames"] else None
-        update_fields = {}
+        current_file_name = record["fileName"]
+        existing_file_names = existing.get("fileNames", [])
 
-        # Append new file name if not already present
-        if new_file_name and new_file_name not in existing.get("fileNames", []):
-            update_fields["fileNames"] = existing.get("fileNames", []) + [new_file_name]
-        else:
-            update_fields["fileNames"] = existing.get("fileNames", [])
+        fuzzy = fuzzy_similarity(current_file_name, existing_file_names)
 
-        # Update lastImported
-        update_fields["lastImported"] = datetime.datetime.now()
-
-        # Perform the update
+        update_query = {
+            "$set": {"lastImported": datetime.datetime.now()}
+        }
+        if current_file_name and fuzzy < 0.9:
+            update_query["$addToSet"] = {"fileNames": current_file_name}
+        
         result = savedBooks.update_one(
             {"_id": existing["_id"]},
-            {"$set": {"lastImported": update_fields["lastImported"]},
-             "$addToSet": {"fileNames": new_file_name} if new_file_name else {}}
+            update_query
         )
         logging.warning(f"Updated imported book record for '{record['bookName']}': {result.raw_result}")
     else:

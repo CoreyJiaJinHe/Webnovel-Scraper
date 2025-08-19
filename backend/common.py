@@ -38,6 +38,23 @@ def make_directory(path):
             return
 
 
+import unicodedata
+
+def strip_accents(s):
+    return ''.join(c for c in unicodedata.normalize('NFD',s) if unicodedata.category(c) !='Mn')
+
+
+def sanitize_title(text):
+    text = re.sub(r"[\(\[]*?[\)\]]", "", text)
+    invalid_chars = '—-<>:;"\\/|?*()【】'    
+    for char in invalid_chars:
+        text = text.replace(char, '')
+
+    text = strip_accents(text)
+    text = re.sub(r'\s+', ' ', text)
+    # Replace any character that is NOT A-Za-z0-9 ,!'- with ''
+    text = re.sub(r"[^A-Za-z0-9,!'\-.\s]", '', text)
+    return text.strip()
 
 def remove_non_english_characters(text):
     invalid_chars = '【】'
@@ -45,23 +62,16 @@ def remove_non_english_characters(text):
         text = text.replace(char, '')
     text = re.sub(r'\s+', ' ', text)
     # Replace any character that is NOT A-Za-z0-9 ,!'- with ''
-    text = re.sub(r"[^A-Za-z0-9,!'\-\s]", '', text)
+    text = re.sub(r"[^A-Za-z0-9,!'\-.\s]", '', text)
     return text.strip()
 
-
-import unicodedata
-
-def strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD',s) if unicodedata.category(c) !='Mn')
-
-
 def remove_invalid_characters(inputString):
-    invalid_chars = '—.-<>:;"\/\\|?*()'
+    invalid_chars = '—-<>:;"\\/|?*()【】'
     for char in invalid_chars:
         inputString=inputString.replace(char,' ')
     
     inputString=strip_accents(inputString)
-#    inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
+#   inputString=re.sub(r"[\(\[].*?[\)\]]", "", inputString)
     inputString=remove_non_english_characters(inputString)
     return inputString.strip()
 
@@ -123,7 +133,8 @@ def storeEpub(bookTitle,new_epub):
         errorText=f"Error with storing epub. Function store_epub. Error: {e}"
         write_to_logs(errorText)
     
-
+#TODO: Modify this later to use sanitize instead of remove_invalid_characters method
+#Or make it a constraint that all bookTitles and chapterTitles are to be sanitized ahead of time.
 def store_chapter(content, bookTitle, chapterTitle, chapterID):
     try:
         # Remove invalid characters from file name

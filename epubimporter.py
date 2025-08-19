@@ -29,7 +29,7 @@ from backend.common import (
     get_first_last_chapter,
     remove_invalid_characters,
     create_epub_directory_url,
-    
+    sanitize_title,
     generate_new_ID
 )
 
@@ -42,7 +42,11 @@ from mongodb import(
     create_Entry, 
     create_latest,
     get_all_book_titles,
-    get_Entry_Via_Title
+    get_Entry_Via_Title,
+    create_imported_book_record,
+    update_imported_book_record,
+    check_existing_imported_book_via_title,
+    check_existing_imported_book_via_ID
 )
 
 
@@ -468,44 +472,33 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
             errorText=f"Function extract_from_epub Error: {fileName} is not an epub file."
             write_to_logs(errorText)
             return
+
+        bookTitle = fileName[:-5] if fileName.lower().endswith('.epub') else fileName
     except Exception as e:
         errorText=f"Function extract_from_epub Error: {e}, file:{fileName}"
         write_to_logs(errorText)
         logging.warning(errorText)
+        return 
 
     volume_number = extract_volume_or_book_number(fileName)
     chapterID=0
     if volume_number:
         chapterID = volume_number * 10000
-    
     chapter_metadata = []
     book = epub.read_epub(dirLocation)
     
     def get_existing_order_of_contents(book_title):
         # Default implementation
-        dir_location = f"./books/raw/{book_title}/order_of_chapters.txt"
-        if os.path.exists(dir_location):
-            with open(dir_location, "r") as f:
+        dirLocation=f"./books/raw/{book_title}/order_of_chapters.txt"
+        if os.path.exists(dirLocation):
+            with open(dirLocation, "r") as f:
                 return f.readlines()
         return []
     
     existingChapters = get_existing_order_of_contents(bookTitle)
     existingChapters = [line.strip().split(";") for line in existingChapters if line.strip()]
     
-    
-    image_dir = f"./books/raw/{bookTitle}/images/"
     cover_dir=f"./books/raw/{bookTitle}/"
-    try:
-        numberofImages=os.listdir(image_dir)
-        currentImageCounter=len(numberofImages)-1 if numberofImages else 0
-    except Exception as e:
-        errorText=f"Failed to get number of images in {image_dir}. Function extract_chapter_from_book Error: {e}"
-        logging.error(errorText)
-        write_to_logs(errorText)
-        currentImageCounter=0
-        numberofImages=[]
-                
-    
     #Cover Image Only
     images = book.get_items_of_type(ebooklib.ITEM_IMAGE)
     if images:
@@ -532,9 +525,17 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                             continue
                     else:
                         logging.warning(f"Cover Image already exists in {image_dir}. Skipping.")
-    
-    #reset counter
-    currentImageCounter=len(numberofImages)-1 if numberofImages else 0
+
+    image_dir = f"./books/raw/{bookTitle}/images/"    
+    try:
+        numberofImages = [f for f in os.listdir(image_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+        currentImageCounter = len(numberofImages)
+    except Exception as e:
+        errorText=f"Failed to get number of images in {image_dir}. Function extract_chapter_from_book Error: {e}"
+        logging.error(errorText)
+        write_to_logs(errorText)
+        currentImageCounter=0
+        numberofImages=[]
     
     # Get all image items in the book for matching
     image_items = {img_item.file_name: img_item for img_item in book.get_items_of_type(ebooklib.ITEM_IMAGE)}
@@ -549,6 +550,45 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
             
             soup= bs4.BeautifulSoup(item.get_content(), 'html.parser')
             
+            item_name = item.get_name().lower()
+            # Check for cover.xhtml and if cover image hasn't been saved yet
+            if "cover.xhtml" in item_name:
+                cover_dir = f"./books/raw/{bookTitle}/"
+                image_dir = f"{cover_dir}images/"
+                cover_image_path = f"{cover_dir}cover_image.png"
+                if not os.path.exists(cover_dir):
+                    os.makedirs(cover_dir)
+                if not os.path.exists(cover_image_path):
+                    soup = bs4.BeautifulSoup(item.get_content(), 'html.parser')
+                    # Try to find the first <img> or <image> tag
+                    cover_img_tag = soup.find('img')
+                    if not cover_img_tag:
+                        cover_img_tag = soup.find('image')
+                    if cover_img_tag:
+                        # Get the image source
+                        img_src = cover_img_tag.get('src') or cover_img_tag.get('xlink:href')
+                        if img_src:
+                            # Find the corresponding image item in the epub
+                            matched_item = None
+                            for file_name, img_item in image_items.items():
+                                if img_src in file_name or file_name in img_src:
+                                    matched_item = img_item
+                                    break
+                            if matched_item:
+                                image_bytes = matched_item.get_content()
+                                # Duplicate check before saving
+                                if not is_image_duplicate(image_bytes, cover_dir):
+                                    try:
+                                        with open(cover_image_path, "wb") as f:
+                                            f.write(image_bytes)
+                                        logging.warning(f"Saved cover image from {item_name} to {cover_image_path}")
+                                    except Exception as e:
+                                        errorText = f"Failed to write cover image from {item_name}. Error: {e}"
+                                        write_to_logs(errorText)
+                                else:
+                                    logging.warning(f"Duplicate cover image detected in {cover_dir}. Skipping save.")
+                continue
+            
             title =soup.find('h1').get_text(strip=True) if soup.find('h1') else ""
             if title=="":
                 title=soup.find('h2').get_text(strip=True) if soup.find('h2') else ""
@@ -558,6 +598,27 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                 continue
             
             chapterContent = soup
+            #Convert <image> tags to <img> tags
+            for svg_tag in chapterContent.find_all('svg'):
+                svg_tag.unwrap()
+            
+            for image_tag in chapterContent.find_all('image'):
+                # Create a new <img> tag
+                img_tag = chapterContent.new_tag('img')
+                # Copy relevant attributes (commonly xlink:href, width, height)
+                if image_tag.has_attr('xlink:href'):
+                    img_tag['src'] = image_tag['xlink:href']
+                if image_tag.has_attr('width'):
+                    img_tag['width'] = image_tag['width']
+                if image_tag.has_attr('height'):
+                    img_tag['height'] = image_tag['height']
+                # Copy any other attributes you want as needed
+
+                # Replace <image> with <img>
+                image_tag.replace_with(img_tag)
+            
+            
+            
             #Discover if images exist in current chapter
             img_tags = chapterContent.find_all('img')
             image_dir = f"./books/raw/{bookTitle}/images/"
@@ -582,43 +643,85 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                     continue  # Skip if not found in epub
 
                 image_bytes = matched_item.get_content()
+                logging.warning(f"Image bytes length for {matched_item.file_name}: {len(image_bytes) if image_bytes else 'None'}")
                 image_path = f"{image_dir}image_{currentImageCounter}.png"
-
+                
+                
+                
+                if image_bytes:
                 # Check for duplicate in directory
-                if not is_image_duplicate(image_bytes, image_dir):
-                    # Save new image and update src
-                    with open(image_path, "wb") as f:
-                        logging.warning(f"Saving image {currentImageCounter} to {image_path}")
+                    if not is_image_duplicate(image_bytes, image_dir):
+                        # Save new image and update src
                         try:
-                            f.write(image_bytes)
-                            img['src'] = f"images/image_{currentImageCounter}.png"
-                            currentImageCounter += 1
-
+                            with open(image_path, "wb") as f:
+                                logging.warning(f"Saving image {currentImageCounter} to {image_path}")
+                                f.write(image_bytes)
+                                img['src'] = f"images/image_{currentImageCounter}.png"
+                                currentImageCounter += 1
+                                logging.warning(f"Image {currentImageCounter} saved successfully.")
                         except Exception as e:
                             errorText=f"Failed to write image bytes to file. Function extract_chapter_from_book Error: {e}"
                             write_to_logs(errorText)
                             continue
+                    else:
+                        # If duplicate, find the existing image index to point to
+                        # Loop through files to find the match and set src accordingly
+                        for idx, file in enumerate(sorted(os.listdir(image_dir))):
+                            file_path = os.path.join(image_dir, file)
+                            epub_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                            existing_img = Image.open(file_path).convert("RGB")
+                            try:
+                                if epub_img.size == existing_img.size:
+                                    diff = ImageChops.difference(epub_img, existing_img)
+                                    logging.warning(f"Comparing {file} with epub image.")
+                                    if not diff.getbbox():
+                                        logging.warning(f"Duplicate image found: {file}. Updating src.")
+                                        img['src'] = f"images/{file}"
+                                        break
+                            except Exception:
+                                continue
                 else:
-                    # If duplicate, find the existing image index to point to
-                    # Loop through files to find the match and set src accordingly
-                    for idx, file in enumerate(sorted(os.listdir(image_dir))):
-                        file_path = os.path.join(image_dir, file)
-                        epub_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-                        existing_img = Image.open(file_path).convert("RGB")
-                        try:
-                            if epub_img.size == existing_img.size:
-                                diff = ImageChops.difference(epub_img, existing_img)
-                                if not diff.getbbox():
-                                    img['src'] = f"images/{file}"
-                                    break
-                        except Exception:
-                            continue
-            
+                    # If image_bytes is invalid, remove the image from the chapter content
+                    logging.warning(f"Invalid image bytes for {matched_item.file_name}. Removing image from chapter content.")
+                    img.decompose()
+                    continue
             
             #logging.warning(f"Chapter Title: {title}")
-            fileTitle= f"{bookTitle} - {remove_invalid_characters(title)}"
+
+
+            logging.warning(f"Chapter Title: {title}")
+            fileTitle= f"{bookTitle} - {sanitize_title(title)}"
             logging.warning(f"File Title: {fileTitle}")
-            store_chapter(chapterContent, bookTitle, fileTitle, chapterID)
+            
+            #Temporary method. Do not keep.
+            def store_chapter(content, bookTitle, chapterTitle, chapterID):
+                try:
+                    # Check if the folder for the book exists
+                    bookDirLocation = "./books/raw/" + bookTitle
+                    if not check_directory_exists(bookDirLocation):
+                        make_directory(bookDirLocation)
+
+                    # Check if the chapter already exists
+                    title = f"{bookTitle} - {chapterID} - {chapterTitle}"
+                    dirLocation = f"./books/raw/{bookTitle}/{title}.html"
+                    #logging.warning(dirLocation)
+
+                    if check_directory_exists(dirLocation):
+                        return
+
+                    # Write the chapter content to the file with UTF-8 encoding
+                    chapterDirLocation = "./books/raw/" + bookTitle + "/"
+                    completeName = os.path.join(chapterDirLocation, f"{title}.html")
+                    with open(completeName, "w", encoding="utf-8") as f:
+                        if not isinstance(content, str):
+                            content = content.decode("utf-8")  # Decode bytes to string if necessary
+                        f.write(content)
+                except Exception as e:
+                    errorText=f"Storing chapter failed. Function store_chapter Error: {e}"
+                    write_to_logs(errorText)
+            
+            
+            store_chapter(str(chapterContent), bookTitle, fileTitle, chapterID)
             chapter_metadata.append([chapterID,title,f"./books/raw/{bookTitle}/{fileTitle}.html"])
             chapterID+=1
             
@@ -663,13 +766,13 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
     #logging.warning(merged_chapter_metadata)
     def write_order_of_contents(chapter_metadata, file_location):
         #logging.warning(chapter_metadata)
-        with open(file_location, "w") as f:
+        mode = "w"
+        with open(file_location, mode, encoding="utf-8") as f:
             for data in chapter_metadata:
                 if isinstance(data, str):
                     data = data.strip().split(";")
-                #logging.warning(data)
-                f.write(";".join(map(str, data))+ "\n")
-    write_order_of_contents(merged_chapter_metadata,f"./books/raws/{bookTitle}/order_of_chapters.txt")
+                f.write(";".join(map(str, data)) + "\n")
+    write_order_of_contents(merged_chapter_metadata,f"./books/raw/{bookTitle}/order_of_chapters.txt")
     
     #Create directory for the book
     #make_directory(f"./books/imported/{bookTitle}")
@@ -700,11 +803,63 @@ def is_image_duplicate(epub_image_bytes, directory):
                         return True  # Duplicate found
                 except Exception:
                     continue
+        return False
     except Exception as e:
         errorText=f"Failed to compare images in directory {directory}. Function is_image_duplicate Error: {e}"
         logging.error(errorText)
         write_to_logs(errorText)
         return False # No duplicate found
+
+
+def get_prefix_from_origin(origin):
+    """
+    Returns the correct prefix for a given origin.
+    """
+    origin_prefix_map = {
+        "royalroad.com": "rr",
+        "scribblehub.com": "sb",
+        "forums.spacebattles.com": "sb",
+        "novelbin.me": "nb",
+        "foxaholic.com": "fx",
+        "Unknown": "un"
+    }
+    # Normalize origin to lower-case for matching
+    return origin_prefix_map.get(str(origin).lower(), "un")
+
+
+        
+def ensure_bookid_prefix(bookID, prefix):
+    """
+    Ensures the bookID starts with one of the valid prefixes ('rr', 'sb', 'fx').
+    If not, prepends the given prefix.
+    """
+    valid_prefixes = ("rr", "sb", "fx","nb","un")
+    if any(bookID.startswith(p) for p in valid_prefixes):
+        return bookID
+    return f"{prefix}{bookID}"
+
+def merge_book_entries(existing, new):
+            """
+            Merge two book records (dicts), preferring valid data from 'existing'.
+            If 'existing' has an empty string, None, "N/A", or "Unknown", use the value from 'new'.
+            """
+            merged = {}
+            invalid_values = ("", None, "N/A", "Unknown")
+            for key in set(existing.keys()).union(new.keys()):
+                old_val = existing.get(key, "")
+                new_val = new.get(key, "")
+                # Special handling for bookID
+                if key == "bookID":
+                # If old is 'un...' and new is not, use new
+                    if str(old_val).startswith("un") and not str(new_val).startswith("un") and new_val:
+                        merged[key] = new_val
+                    else:
+                        merged[key] = old_val if old_val not in invalid_values else new_val
+                else:
+                    merged[key] = old_val if old_val not in invalid_values else new_val
+                # Use old value if it's not in invalid_values, otherwise use new value
+                merged[key] = old_val if old_val not in invalid_values else new_val
+            return merged
 
 async def import_main_interface(fileName):
     try:
@@ -740,57 +895,12 @@ async def import_main_interface(fileName):
             
         directory = create_epub_directory_url(bookTitle)
         
-        def get_prefix_from_origin(origin):
-            """
-            Returns the correct prefix for a given origin.
-            """
-            origin_prefix_map = {
-                "royalroad.com": "rr",
-                "scribblehub.com": "sb",
-                "forums.spacebattles.com": "sb",
-                "novelbin.me": "nb",
-                "foxaholic.com": "fx",
-                "Unknown": "un"
-            }
-            # Normalize origin to lower-case for matching
-            return origin_prefix_map.get(str(origin).lower(), "un")
         prefix=get_prefix_from_origin(origin)
         
         
-        def ensure_bookid_prefix(bookID, prefix):
-            """
-            Ensures the bookID starts with one of the valid prefixes ('rr', 'sb', 'fx').
-            If not, prepends the given prefix.
-            """
-            valid_prefixes = ("rr", "sb", "fx","nb","un")
-            if any(bookID.startswith(p) for p in valid_prefixes):
-                return bookID
-            return f"{prefix}{bookID}"
-        
         bookID=ensure_bookid_prefix(bookID, prefix)
         
-        def merge_book_entries(existing, new):
-            """
-            Merge two book records (dicts), preferring valid data from 'existing'.
-            If 'existing' has an empty string, None, "N/A", or "Unknown", use the value from 'new'.
-            """
-            merged = {}
-            invalid_values = ("", None, "N/A", "Unknown")
-            for key in set(existing.keys()).union(new.keys()):
-                old_val = existing.get(key, "")
-                new_val = new.get(key, "")
-                # Special handling for bookID
-                if key == "bookID":
-                # If old is 'un...' and new is not, use new
-                    if str(old_val).startswith("un") and not str(new_val).startswith("un") and new_val:
-                        merged[key] = new_val
-                    else:
-                        merged[key] = old_val if old_val not in invalid_values else new_val
-                else:
-                    merged[key] = old_val if old_val not in invalid_values else new_val
-                # Use old value if it's not in invalid_values, otherwise use new value
-                merged[key] = old_val if old_val not in invalid_values else new_val
-            return merged
+        
 
         existing_entry= get_Entry_Via_Title(match[1])
         bestmatch,bookScore=fuzzy_similarity(bookTitle, match[1])
@@ -842,6 +952,26 @@ async def import_main_interface(fileName):
             edited = False,
             aliases=merged_entry["aliases"]
         )
+        
+        
+        check1=check_existing_imported_book_via_title(merged_entry["bookName"])
+        check2= check_existing_imported_book_via_ID(merged_entry["bookID"])
+
+        if check1 or check2:
+            update_imported_book_record({
+                "bookID": merged_entry["bookID"],
+                "bookName": merged_entry["bookName"],
+                "bookAuthor": merged_entry["bookAuthor"],
+                "fileName": fileName
+            })
+        else:
+            create_imported_book_record({
+                "bookID": merged_entry["bookID"],
+                "bookName": merged_entry["bookName"],
+                "bookAuthor": merged_entry["bookAuthor"],
+                "fileName": fileName
+            })
+        
     except Exception as e:
         errorText=f"Function import_main_interface Error: {e}, file:{fileName}"
         logging.error(errorText)
@@ -871,58 +1001,11 @@ async def import_all_main_interface():
         
         directory = create_epub_directory_url(bookTitle)
         
-        def get_prefix_from_origin(origin):
-            """
-            Returns the correct prefix for a given origin.
-            """
-            origin_prefix_map = {
-                "royalroad.com": "rr",
-                "scribblehub.com": "sb",
-                "forums.spacebattles.com": "sb",
-                "novelbin.me": "nb",
-                "foxaholic.com": "fx",
-                "Unknown": "un"
-            }
-            # Normalize origin to lower-case for matching
-            return origin_prefix_map.get(str(origin).lower(), "un")
+        
         prefix=get_prefix_from_origin(origin)
-        
-        
-        def ensure_bookid_prefix(bookID, prefix):
-            """
-            Ensures the bookID starts with one of the valid prefixes ('rr', 'sb', 'fx').
-            If not, prepends the given prefix.
-            """
-            valid_prefixes = ("rr", "sb", "fx","nb","un")
-            if any(bookID.startswith(p) for p in valid_prefixes):
-                return bookID
-            return f"{prefix}{bookID}"
         
         bookID=ensure_bookid_prefix(bookID, prefix)
         
-        def merge_book_entries(existing, new):
-            """
-            Merge two book records (dicts), preferring valid data from 'existing'.
-            If 'existing' has an empty string, None, "N/A", or "Unknown", use the value from 'new'.
-            """
-            merged = {}
-            invalid_values = ("", None, "N/A", "Unknown")
-            for key in set(existing.keys()).union(new.keys()):
-                old_val = existing.get(key, "")
-                new_val = new.get(key, "")
-                # Special handling for bookID
-                if key == "bookID":
-                # If old is 'un...' and new is not, use new
-                    if str(old_val).startswith("un") and not str(new_val).startswith("un") and new_val:
-                        merged[key] = new_val
-                    else:
-                        merged[key] = old_val if old_val not in invalid_values else new_val
-                else:
-                    merged[key] = old_val if old_val not in invalid_values else new_val
-                # Use old value if it's not in invalid_values, otherwise use new value
-                merged[key] = old_val if old_val not in invalid_values else new_val
-            return merged
-
         existing_entry= get_Entry_Via_Title(bookTitle)
         
         new_entry = {
@@ -959,6 +1042,24 @@ async def import_all_main_interface():
             imported = True,
             edited = False
         )
+
+        check1=check_existing_imported_book_via_title(merged_entry["bookName"])
+        check2= check_existing_imported_book_via_ID(merged_entry["bookID"])
+
+        if check1 or check2:
+            update_imported_book_record({
+                "bookID": merged_entry["bookID"],
+                "bookName": merged_entry["bookName"],
+                "bookAuthor": merged_entry["bookAuthor"],
+                "fileName": fileName
+            })
+        else:
+            create_imported_book_record({
+                "bookID": merged_entry["bookID"],
+                "bookName": merged_entry["bookName"],
+                "bookAuthor": merged_entry["bookAuthor"],
+                "fileName": fileName
+            })
         # if fileName.endswith('.epub'):
         #     dirLocation= f"./books/imported/epubs/{fileName}"
         #     logging.warning(f"Extracting from file: {fileName}")
@@ -978,5 +1079,5 @@ async def import_all_main_interface():
 #TODO: If it does, then to save space, we should not let it be imported.
 
 
-async def check_for_already_imported(bookName):
+# async def check_for_already_imported(bookName):
     
