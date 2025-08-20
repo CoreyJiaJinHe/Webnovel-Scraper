@@ -911,8 +911,13 @@ def get_all_imported_books() -> list:
     all_imported=[]
     for result in results:
         #logging.warning(result)
-        data = [[result["bookID"], result["bookName"], result["bookAuthor"], result["imported"]]]
-        all_imported.append(data)
+        book = {
+            "bookID": result["bookID"],
+            "bookName": result["bookName"],
+            "bookAuthor": result["bookAuthor"],
+            "edited": result["edited"]
+        }
+        all_imported.append(book)
     return all_imported
 
 # logging.warning(get_total_imported_books())
@@ -934,8 +939,13 @@ def get_all_non_edited_books() -> list:
     results = savedBooks.find({"bookID": {"$nin": ["-1", "0"]}, "imported": True, "edited": False})
     all_non_edited=[]
     for result in results:
-        data = [[result["bookID"], result["bookName"], result["bookAuthor"], result["edited"]]]
-        all_non_edited.append(data)
+        book = {
+            "bookID": result["bookID"],
+            "bookName": result["bookName"],
+            "bookAuthor": result["bookAuthor"],
+            "edited": result["edited"]
+        }
+        all_non_edited.append(book)
     return all_non_edited
 
 

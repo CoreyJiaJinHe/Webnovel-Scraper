@@ -472,8 +472,9 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
             errorText=f"Function extract_from_epub Error: {fileName} is not an epub file."
             write_to_logs(errorText)
             return
-
-        bookTitle = fileName[:-5] if fileName.lower().endswith('.epub') else fileName
+        override=False
+        if override:
+            bookTitle = fileName[:-5] if fileName.lower().endswith('.epub') else fileName
     except Exception as e:
         errorText=f"Function extract_from_epub Error: {e}, file:{fileName}"
         write_to_logs(errorText)
@@ -596,6 +597,12 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                 title=soup.find('h3').get_text(strip=True) if soup.find('h3') else ""
             if title=="":
                 continue
+            if title.lower().startswith(bookTitle.lower()):
+                # Remove bookTitle and any following separators (space, dash, colon, etc.)
+                title = title[len(bookTitle):].lstrip(" -:–—")
+                
+            if not title.lower().startswith("chapter"):
+                title = f"Chapter {title}"   
             
             chapterContent = soup
             #Convert <image> tags to <img> tags
@@ -690,7 +697,7 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
 
 
             logging.warning(f"Chapter Title: {title}")
-            fileTitle= f"{bookTitle} - {sanitize_title(title)}"
+            fileTitle= f"{bookTitle} - {chapterID} - {sanitize_title(title)}"
             logging.warning(f"File Title: {fileTitle}")
             
             #Temporary method. Do not keep.
@@ -721,10 +728,17 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                     write_to_logs(errorText)
             
             
-            store_chapter(str(chapterContent), bookTitle, fileTitle, chapterID)
-            chapter_metadata.append([chapterID,title,f"./books/raw/{bookTitle}/{fileTitle}.html"])
+            store_chapter(str(chapterContent), bookTitle, sanitize_title(title), chapterID)
+            chapter_metadata.append([chapterID, f"imported from epub, {sanitize_title(title)}",f"./books/raw/{bookTitle}/{fileTitle}.html"])
             chapterID+=1
-            
+    
+    # if len(chapter_metadata) > 20:
+    #     logging.warning(
+    #         f"Merged chapters (showing first 5 and last 5 of {len(chapter_metadata)}):\n"
+    #         f"{chapter_metadata[:5]} ... {chapter_metadata[-5:]}"
+    #     )
+    # else:
+    #     logging.warning(chapter_metadata)          
     
     
     def merge_chapter_lists_preserve_order(list1, list2):
@@ -737,7 +751,7 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
             # chapter_metadata is saved as [ID, Title, FilePath]
             # We assume the title is always at index 1, and it can be a list
             if isinstance(chapter, list):
-                return chapter[1].strip().lower()
+                return chapter[2].strip().lower()
             return chapter.strip().lower()
 
         seen = set()
@@ -755,10 +769,13 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
         for chapter in list2:
             key = chapter_key(chapter)
             if key not in seen:
-                chapter=[chapterID,chapter[1],chapter[2]]
-                merged.append(chapter)
+                # If chapter is a list, preserve its structure, but update the ID
+                if isinstance(chapter, list) and len(chapter) == 3:
+                    merged.append([chapterID, chapter[1], chapter[2]])
+                else:
+                    merged.append(chapter)
                 seen.add(key)
-                chapterID+=1
+                chapterID += 1
         logging.warning(merged)
         return merged
     
@@ -772,6 +789,14 @@ async def extract_from_epub(dirLocation, bookTitle)-> None:
                 if isinstance(data, str):
                     data = data.strip().split(";")
                 f.write(";".join(map(str, data)) + "\n")
+    
+    if len(merged_chapter_metadata) > 20:
+        logging.warning(
+            f"Merged chapters (showing first 5 and last 5 of {len(merged_chapter_metadata)}):\n"
+            f"{merged_chapter_metadata[:5]} ... {merged_chapter_metadata[-5:]}"
+        )
+    else:
+        logging.warning(merged_chapter_metadata)
     write_order_of_contents(merged_chapter_metadata,f"./books/raw/{bookTitle}/order_of_chapters.txt")
     
     #Create directory for the book
@@ -887,16 +912,19 @@ async def import_main_interface(fileName):
         origin=book["origin"]
         lastScraped=book["lastScraped"]
         latestChapterTitle=book["latestChapterTitle"]
-
-        await extract_from_epub(f"./books/imported/epubs/{fileName}", bookTitle)
-        
+        try:
+            await extract_from_epub(f"./books/imported/epubs/{fileName}", bookTitle)
+        except Exception as e:
+            errorText=f"Failed to extract from epub. Function import_main_interface Error: {e}, file:{fileName}"
+            logging.error(errorText)
+            write_to_logs(errorText)
+            return    
         
         first,last,total=get_first_last_chapter(bookTitle)
             
         directory = create_epub_directory_url(bookTitle)
         
         prefix=get_prefix_from_origin(origin)
-        
         
         bookID=ensure_bookid_prefix(bookID, prefix)
         

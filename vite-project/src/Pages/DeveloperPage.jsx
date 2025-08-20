@@ -26,6 +26,9 @@ export function DeveloperPage() {
   const [importedBooksTotal, setImportedBooksTotal] = useState(0);
   const [importedNonEditedBooksTotal, setImportedNonEditedBooksTotal] = useState(0);
 
+  const [displayedBooks, setDisplayedBooks] = useState([]);
+  const [displayedBooksTitle, setDisplayedBooksTitle] = useState("");
+
   const [usersToVerify, setUsersToVerify]=useState([]);
 
   useEffect(()=>{tokenLogin(),fetchBookCounts(),fetchUsersToVerify(), fetchImportedBooksTotals()},[])
@@ -168,6 +171,9 @@ async function fetchBookCounts() {
       if (response.status === 200 && Array.isArray(response.data)) {
         // Process the imported books data
         console.log("Imported books:", response.data);
+        setImportedBooks(response.data);
+        setDisplayedBooks(response.data);
+        setDisplayedBooksTitle("Imported Books");
       }
     } catch (error) {
       console.error("Failed to retrieve imported books:", error);
@@ -181,6 +187,9 @@ async function fetchBookCounts() {
       if (response.status === 200 && Array.isArray(response.data)) {
         // Process the non-edited imported books data
         console.log("Non-edited imported books:", response.data);
+        setImportedNonEditedBooks(response.data);
+        setDisplayedBooks(response.data);
+        setDisplayedBooksTitle("Books That Need Action");
       }
     } catch (error) {
       console.error("Failed to retrieve non-edited imported books:", error);
@@ -317,6 +326,7 @@ async function fetchBookCounts() {
         </div>
       </div>
         {/*TODO*/}
+        <div className={"developer-page-center-panel"} style={{display: "flex", flexDirection: "column"}}>
         <div className={"developer-page-center-panel"}>
           <h1 style={{ marginTop: 0, fontSize: "2rem", fontWeight: "bold", color: "#222" }}>Available Actions</h1>
           <hr></hr>
@@ -327,11 +337,25 @@ async function fetchBookCounts() {
             </div>
             <div className="developer-page-action-card">
               <p>See imported books</p>
-              <button className="button" onClick={retrieve_imported_books}>View</button>
+              <button
+                className="button"
+                onClick={async () => {
+                  await retrieve_imported_books();
+                  setDisplayedBooks(importedBooks);
+                  setDisplayedBooksTitle("Imported Books");
+                }}
+              >View</button>
             </div>
             <div className="developer-page-action-card">
               <p>See imported books that need action</p>
-              <button className="button" onClick={retrieve_imported_non_edited_books}>View</button>
+              <button
+                className="button"
+                onClick={async () => {
+                  await retrieve_imported_non_edited_books();
+                  setDisplayedBooks(importedNonEditedBooks);
+                  setDisplayedBooksTitle("Books That Need Action");
+                }}
+              >View</button>
             </div>
             <div className="developer-page-action-card">
               <p>See available books to import</p>
@@ -339,8 +363,41 @@ async function fetchBookCounts() {
             </div>
           </div>
         </div>
+          <div className="developer-page-half-width-panel"
+          
+        >
+          <h2 style={{ marginTop: 0 }}>{displayedBooksTitle}</h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+            {displayedBooks.map((book, idx) => (
+              <div
+                key={book.bookID || idx}
+                style={{
+                  background: "#fff",
+                  borderRadius: "6px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
+                  padding: "1rem",
+                  minWidth: "200px",
+                  maxWidth: "250px",
+                  flex: "1 1 200px"
+                }}
+              >
+                <div><strong>ID:</strong> {book.bookID}</div>
+                <div><strong>Name:</strong> {book.bookName}</div>
+                <div><strong>Author:</strong> {book.author || book.bookAuthor}</div>
+                <div>
+                  <strong>Edited:</strong>{" "}
+                  {book.edited !== undefined
+                    ? book.edited
+                      ? <span style={{ color: "green" }}>Yes</span>
+                      : <span style={{ color: "red" }}>No</span>
+                    : "Unknown"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-
+        </div>
 
           {/* Right panel */}
         <div className="developer-page-right-users-panel">

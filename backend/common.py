@@ -52,6 +52,7 @@ def sanitize_title(text):
 
     text = strip_accents(text)
     text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"  ", " ", text)
     # Replace any character that is NOT A-Za-z0-9 ,!'- with ''
     text = re.sub(r"[^A-Za-z0-9,!'\-.\s]", '', text)
     return text.strip()
