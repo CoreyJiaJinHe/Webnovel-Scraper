@@ -53,6 +53,11 @@
     margin-right: 24px;
 }
 
+.developer-page-center-actions-panel{
+    display: flex;
+    flex-direction: column;
+}
+
 .developer-page-half-width-panel {
     margin-top: 2rem;
     margin-left: 0;

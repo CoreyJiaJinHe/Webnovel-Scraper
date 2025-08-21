@@ -16,6 +16,7 @@ import './CSS/DownloadPage.css'
 import './CSS/OnlineReaderPage.css'
 import './CSS/BookScraperPage.css'
 import './CSS/DeveloperBookEditPage.css'
+import './CSS/ReactComponents.css'
 
 import {
   createBrowserRouter,
